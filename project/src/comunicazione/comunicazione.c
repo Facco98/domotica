@@ -1,35 +1,49 @@
-#include "comunicazione.h"
+#include "comunicazione/comunicazione.h"
 #include <string.h>
 #include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
-void send_msg( const char* pipe, const char* messaggio ){
+static boolean send_msg( const string pipe, const string messaggio ){
 
-    int fifo_pipe = open(pipe, O_WRONLY | O_NONBLOCK );
+  boolean res = FALSE;
+  int fifo_pipe = open(pipe, O_WRONLY | O_NONBLOCK );
+  if( fifo_pipe >= 0 ){
     write(fifo_pipe, messaggio, strlen(messaggio)+1);
     close(fifo_pipe);
+    res = TRUE;
+  }
+  return res;
 
 }
 
-void manda_messaggio( const int id_destinatario, const char* base_path, const char* messaggio ){
+boolean manda_messaggio( const int id_destinatario, const string base_path, const string messaggio ){
 
   char percorso[100];
   sprintf( percorso, "%s/%d", base_path, id_destinatario );
-  send_msg( percorso, messaggio );
+  return send_msg( percorso, messaggio );
 
 }
 
-void read_msg( const char* pipe, char* str, int lunghezza_massima ){
+static boolean read_msg( const string pipe, string str, int lunghezza_massima ){
 
+  boolean res = FALSE;
   int fifo_pipe = open(pipe, O_RDONLY);
-  read(fifo_pipe, str, lunghezza_massima);
-  close(fifo_pipe);
+  if( fifo_pipe > 0 ){
+    read(fifo_pipe, str, lunghezza_massima);
+    close(fifo_pipe);
+    res = TRUE;
+  }
+  return res;
 
 }
 
-void leggi_messaggio( const int id, const char* base_path, char* str, int lunghezza_massima ){
+boolean leggi_messaggio( const int id, const string base_path, string str, int lunghezza_massima ){
 
   char percorso[100];
   sprintf( percorso, "%s/%d",base_path, id );
-  read_msg( percorso, str, lunghezza_massima );
+  return read_msg( percorso, str, lunghezza_massima );
 
 }

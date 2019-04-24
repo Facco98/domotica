@@ -1,12 +1,10 @@
 #ifndef PROGETTODOMOTICA_COMUNICAZIONE_H
 #define PROGETTODOMOTICA_COMUNICAZIONE_H
 
-#include <unistd.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <sys/stat.h>
 
-void manda_messaggio( const int id_destinatario, const char* base_path, const char* messaggio );
-void leggi_messaggio( const int id, const char* base_path, char* str, int lunghezza_massima );
+#include "strutture_dati/tipi_base.h"
+
+boolean manda_messaggio( const int id_destinatario, const string base_path, const string messaggio );
+boolean leggi_messaggio( const int id, const string base_path, string str, int lunghezza_massima );
 
 #endif

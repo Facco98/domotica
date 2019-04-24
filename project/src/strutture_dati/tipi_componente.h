@@ -1,7 +1,7 @@
-#ifndef PROGETTODOMOTICA_COMUNICAZIONE_H
-#define PROGETTODOMOTICA_COMUNICAZIONE_H
+#ifndef PROGETTODOMOTICA_TIPI_COMPONENTI_H
+#define PROGETTODOMOTICA_TIPI_COMPONENTI_H
 
-typedef enum boolean {FALSE, TRUE} boolean;
+#include "strutture_dati/tipi_base.h"
 
 typedef union string_or_int{
 
@@ -17,6 +17,5 @@ typedef struct registro{
   boolean da_calcolare;
 
 } registro;
-
 
 #endif
