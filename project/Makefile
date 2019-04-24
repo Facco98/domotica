@@ -8,7 +8,7 @@ COMPILED_LIBRARIES_FOLDER=$(OUT_FOLDER)/libraries
 COMUNICAZIONE_LIB=$(COMPILED_LIBRARIES_FOLDER)/comunicazione.o
 
 STRUTTURE_DATI_LIB=$(COMPILED_LIBRARIES_FOLDER)/tipi_base.o $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o \
-		 							 $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o
+$(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o
 
 LIBS=$(STRUTTURE_DATI_LIB) $(COMUNICAZIONE_LIB)
 
@@ -30,6 +30,7 @@ run:
 
 # Generazione della cartella di output
 $(OUT_FOLDER):
+
 	@echo "Sto creando la cartella $(OUT_FOLDER)"
 	@mkdir $(OUT_FOLDER)
 
@@ -42,19 +43,21 @@ $(COMPILED_LIBRARIES_FOLDER): $(OUT_FOLDER)
 	@mkdir $(COMPILED_LIBRARIES_FOLDER)
 
 $(COMPILED_LIBRARIES_FOLDER)/comunicazione.o: $(COMPILED_LIBRARIES_FOLDER)/tipi_base.o $(SRC_FOLDER)/comunicazione/comunicazione.c \
-																							$(SRC_FOLDER)/comunicazione/comunicazione.h
+$(SRC_FOLDER)/comunicazione/comunicazione.h
 	@echo "Sto compilando la dipendenza 'comunicazione'"
 	gcc -std=gnu90 -c $(SRC_FOLDER)/comunicazione/comunicazione.c -o $(COMPILED_LIBRARIES_FOLDER)/comunicazione.o -I $(SRC_FOLDER)
 
 $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o: $(COMPILED_LIBRARIES_FOLDER)/tipi_base.o $(SRC_FOLDER)/strutture_dati/coda_stringhe.c \
-																							$(SRC_FOLDER)/strutture_dati/coda_stringhe.h
-	@echo "Sto compilando la dipendenza 'strutture_dati'"
+$(SRC_FOLDER)/strutture_dati/coda_stringhe.h
+	@echo "Sto compilando la dipendenza 'coda_stringhe'"
 	gcc -std=gnu90 -c $(SRC_FOLDER)/strutture_dati/coda_stringhe.c -o $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o -I $(SRC_FOLDER)
 
 $(COMPILED_LIBRARIES_FOLDER)/tipi_base.o: $(SRC_FOLDER)/strutture_dati/tipi_base.h
+	@echo "Sto compilando la dipendenza 'tipi_base'"
 	gcc -std=gnu90 -c $(SRC_FOLDER)/strutture_dati/tipi_base.h -o $(COMPILED_LIBRARIES_FOLDER)/tipi_base.o -I $(SRC_FOLDER)
 
 $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o: $(SRC_FOLDER)/strutture_dati/tipi_componente.h
+	@echo "Sto compilando la dipendenza 'tipi_componente'"
 	gcc -std=gnu90 -c $(SRC_FOLDER)/strutture_dati/tipi_componente.h -o $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o -I $(SRC_FOLDER)
 
 # Regole per la generazione dei componenti.
