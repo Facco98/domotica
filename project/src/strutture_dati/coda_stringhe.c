@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+* Crea una nuova coda.
+* Return: puntatore alla coda di stringhe appena creata.
+*/
 coda_stringhe* crea_coda(){
 
   coda_stringhe* res = (coda_stringhe*) malloc(sizeof(coda_stringhe));
@@ -12,7 +16,10 @@ coda_stringhe* crea_coda(){
 
 }
 
-
+/*
+* Distrugge la coda deallocando anche tutti i nodi.
+* coda: la coda che deve essere distrutta.
+*/
 void distruggi_coda(coda_stringhe* coda){
 
   if( coda != NULL){
@@ -31,7 +38,12 @@ void distruggi_coda(coda_stringhe* coda){
 
 }
 
-
+/*
+* Inserisce un elemento in una coda
+* coda: coda alla quale deve essere aggiunto l'elemento.
+* valore: stringa che deve essere aggiunta alla coda-
+* Return: FALSE in caso di errori, TRUE altrimenti.
+*/
 boolean inserisci(coda_stringhe* coda, const string valore){
 
   boolean res = FALSE;
@@ -61,7 +73,14 @@ boolean inserisci(coda_stringhe* coda, const string valore){
 
 }
 
-
+/*
+* Funzione che legge il primo elemento della lista e lo rimuove.
+* coda: la coda dalla quale prelevare l'elemento
+* output: dove mettere il primo elemento della coda.
+* distruggi_se_vuota: se settato a TRUE e si tenta di rimuovere l'unico elemento della coda,
+* la coda viene anche distrutta.
+* Return: TRUE se output è stato settato correttamente, FALSE altrimenti.
+*/
 boolean primo(coda_stringhe* coda, string output, boolean distruggi_se_vuota){
 
   boolean res = FALSE;
@@ -82,7 +101,13 @@ boolean primo(coda_stringhe* coda, string output, boolean distruggi_se_vuota){
   return res;
 }
 
-
+/*
+* Funzione che "splitta" una stringa e ne ritorna una coda.
+* str: la stringa da splittare. Questo valore viene modificato.
+* separatore: stringa per cui eseguire lo split
+* Return: puntatore a una coda i cui elementi sono le sottostringhe separate dal separatore
+* specificato.
+*/
 coda_stringhe* crea_coda_da_stringa(string str, const string separatore){
 
   coda_stringhe* coda = crea_coda();

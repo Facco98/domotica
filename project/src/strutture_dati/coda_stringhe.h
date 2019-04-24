@@ -3,6 +3,9 @@
 
 #include "strutture_dati/tipi_base.h"
 
+/*
+* Struttura dati che rappresenta un nodo della coda
+*/
 typedef struct nodo_stringa{
 
   string valore;
@@ -10,6 +13,12 @@ typedef struct nodo_stringa{
 
 } nodo_stringa;
 
+/*
+* Struttura dati che rappresenta una coda di stringhe.
+* n: numero di elementi nella coda.
+* testa: puntatore alla testa della coda.
+* coda: puntatore alla coda della coda.
+*/
 typedef struct coda_stringhe{
 
   int n;
@@ -17,6 +26,10 @@ typedef struct coda_stringhe{
   nodo_stringa* coda;
 
 } coda_stringhe;
+
+/*
+* Dichiarazione delle funzioni per operare sulle code.
+*/
 
 coda_stringhe* crea_coda();
 void distruggi_coda(coda_stringhe* coda);

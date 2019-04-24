@@ -6,6 +6,12 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
+/*
+* Funzione interna per mandare un messaggio a una pipe FIFO
+* pipe: percorso della pipe
+* messaggio: stringa contenente il messaggio da inviare
+* Return: FALSE in caso di errori, TRUE altrimenti.
+*/
 static boolean send_msg( const string pipe, const string messaggio ){
 
   boolean res = FALSE;
@@ -19,6 +25,14 @@ static boolean send_msg( const string pipe, const string messaggio ){
 
 }
 
+
+/*
+* Funzione esposta per mandare un messaggio.
+* id_destinatario: id del componente destinatario
+* base_path: stringa contenente il percorso dove cercare la pipe
+* messaggio: stringa contenente il messaggio da inviare
+* Return: FALSE in caso di errori, TRUE altrimenti.
+*/
 boolean manda_messaggio( const int id_destinatario, const string base_path, const string messaggio ){
 
   char percorso[100];
@@ -27,6 +41,14 @@ boolean manda_messaggio( const int id_destinatario, const string base_path, cons
 
 }
 
+
+/*
+* Funzione interna per leggere un messaggio da una pipe FIFO
+* pipe: stringa contenente il percorso della pipe FIFO
+* str: dove verrà messo il messaggio letto.
+* lunghezza_massima: lunghezza massima del messaggio da leggere.
+* Return: FALSE in caso di errori, TRUE altrimenti.
+*/
 static boolean read_msg( const string pipe, string str, int lunghezza_massima ){
 
   boolean res = FALSE;
@@ -40,6 +62,15 @@ static boolean read_msg( const string pipe, string str, int lunghezza_massima ){
 
 }
 
+
+/*
+* Funzione interna per leggere un messaggio.
+* id: identificativo del componente
+* base_path: percorso dove verrà cercata la pipe FIFO
+* str: dove verrà messo il messaggio letto.
+* lunghezza_massima: lunghezza massima del messaggio da leggere.
+* Return: FALSE in caso di errori, TRUE altrimenti.
+*/
 boolean leggi_messaggio( const int id, const string base_path, string str, int lunghezza_massima ){
 
   char percorso[100];
