@@ -8,5 +8,6 @@
 */
 boolean manda_messaggio( const int id_destinatario, const string base_path, const string messaggio );
 boolean leggi_messaggio( const int id, const string base_path, string str, int lunghezza_massima );
+boolean crea_pipe( const int id, const string base_path);
 
 #endif

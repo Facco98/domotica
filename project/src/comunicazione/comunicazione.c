@@ -78,3 +78,21 @@ boolean leggi_messaggio( const int id, const string base_path, string str, int l
   return read_msg( percorso, str, lunghezza_massima );
 
 }
+
+/*
+* Funzione esposta che crea la pipe
+* id: identificativo del componente
+* base_path: percorso dove verrà cercata la pipe FIFO
+* Return: FALSE in caso di errori, TRUE altrimenti.
+*/
+
+boolean crea_pipe( const int id, const string base_path){
+
+  char percorso[100];
+  sprintf(percorso, "%s/%d", base_path, id );
+  boolean res = FALSE;
+  if( mkfifo(percorso, 0666) >= 0 )
+    res = TRUE;
+  return res;
+
+}

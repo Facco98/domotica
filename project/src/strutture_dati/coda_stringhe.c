@@ -48,7 +48,7 @@ boolean inserisci(coda_stringhe* coda, const string valore){
 
   boolean res = FALSE;
   nodo_stringa* nuovo_nodo = (nodo_stringa*) malloc(sizeof(nodo_stringa));
-  nuovo_nodo -> valore = (string) malloc(sizeof(char) * strlen(valore));
+  nuovo_nodo -> valore = (string) malloc(sizeof(char) * ( strlen(valore)+1 ));
   strcpy(nuovo_nodo->valore, valore);
   nuovo_nodo -> succ = NULL;
   if( coda != NULL ){
