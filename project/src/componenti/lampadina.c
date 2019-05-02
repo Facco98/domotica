@@ -67,9 +67,6 @@ int main( int argn, char** argv ){
   int id;
   id = atoi(argv[1]);
 
-  printf("id: %d\n", id);
-
-
   /*
   * E' possibile fornire anche gli altri valori al posto di quelli standard in questo
   * ordine: stato tempo_di_utilizzo.
@@ -100,7 +97,6 @@ int main( int argn, char** argv ){
 
     char stampa[100];
     stampa_registro(registri[i], stampa);
-    printf(" >> %s\n", stampa);
 
   }
 
