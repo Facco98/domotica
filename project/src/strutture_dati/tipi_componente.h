@@ -32,6 +32,9 @@ extern const char PERCORSO_BASE_DEFAULT[];
 /*
 * Dichiarazione delle funzioni di utilità per lavorare sui tipi dei componenti.
 */
-int cerca_registro_da_nome(registro* registri[], int n, string nome);
+int cerca_registro_da_nome( registro* registri[], const int n, const string nome);
+boolean stampa_registro(const registro* r, string output);
+extern boolean calcola_registro_intero( const registro* r, int* res );
+extern boolean calcola_registro_stringa( const registro* r, string output);
 
 #endif
