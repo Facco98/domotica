@@ -32,7 +32,6 @@ int main( int argn, char** argv ){
 
     char comando[20];
     primo(coda, comando, TRUE);
-    printf("Comando: %s\n", comando);
 
     coda_stringhe* da_gestire = crea_coda();
     gestisci_comando(coda, comando, dispositivi_collegati, &numero_collegati, id, da_gestire);
@@ -77,7 +76,6 @@ void gestisci_comando( coda_stringhe* separata, string comando, int dispositivi_
       int id_figlio = dispositivi_collegati[i];
       sprintf(messaggio, "STATUSGET %d", id);
       manda_messaggio(id_figlio, (string) PERCORSO_BASE_DEFAULT, messaggio);
-      printf("INVIATO: %s to %d\n", messaggio, id_figlio);
       boolean flag = FALSE;
       char msg[1024];
       while(flag == FALSE){
@@ -130,7 +128,6 @@ void gestisci_comando( coda_stringhe* separata, string comando, int dispositivi_
     char messaggio[30];
     sprintf(messaggio, "STATUSGET %d", id);
     manda_messaggio(id_comp, (string) PERCORSO_BASE_DEFAULT, messaggio);
-    printf("INVIATO: %s to %d\n", messaggio, id_comp);
     boolean flag = FALSE;
     char msg[1025];
     while(flag == FALSE){
