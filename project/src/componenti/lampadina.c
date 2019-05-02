@@ -141,7 +141,6 @@ void ascolta_e_interpreta( int* id, registro* registri[], int numero_registri, b
     perror("Errore in lettura");
   //fgets(messaggio, 99, stdin);
 
-  printf("Ricevuto qualcosa: %s\n", messaggio);
   strtok(messaggio, "\n");
 
   // Creo la coda di stringhe.
@@ -185,7 +184,6 @@ void gestisci_LABELUP( coda_stringhe* separata, registro* registri[], boolean* a
     char nuovo_stato[20];
     primo(separata, nuovo_stato, TRUE);
 
-    printf("[LABELUP]: %s\n", nuovo_stato);
     if( strcmp(nuovo_stato, "ON") == 0 ){
       if( *accesa == FALSE ){
         accensione = (long) time(NULL);
