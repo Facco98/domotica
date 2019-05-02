@@ -28,11 +28,6 @@ void gestisci_LABELUP( coda_stringhe* args, registro* registri[], boolean* stato
 void gestisci_STATUSGET( coda_stringhe* args, registro* registri[], int numero_registri, int id);
 
 /*
-* Funzione per la terminazione del processo.
-*/
-void termina(int x);
-
-/*
 * Indica quando è stata accesa.
 */
 long accensione;
@@ -217,6 +212,6 @@ void gestisci_STATUSGET( coda_stringhe* separata, registro* registri[], int nume
       strcat( res, str );
 
     }
-    manda_messaggio(atoi(indice_ric), (string) PERCORSO_BASE_DEFAULT, res);x
+    manda_messaggio(atoi(indice_ric), (string) PERCORSO_BASE_DEFAULT, res);
 
 }
