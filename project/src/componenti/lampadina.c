@@ -13,17 +13,19 @@
 * Funzione che calcola il valore di un registro intero.
 * Return: FALSE in caso di errori, TRUE altrimenti.
 */
-boolean calcola_registro_intero( registro* registro, int* res );
+boolean calcola_registro_intero( const registro* registro, int* res );
 
 /*
 * Funzione principale: sta in ascolto e interpreta i messaggi che arrivano.
 */
-void ascolta_e_interpreta( int* id, registro* registri[], int numero_registri, boolean* accesa );
+void ascolta_e_interpreta( int* id, registro* registri[], int numero_registri, boolean* accesa);
 
 /*
 * Funzione per gestire il messaggio LABELUP, aggiornamento di un interruttore
 */
 void gestisci_LABELUP( coda_stringhe* args, registro* registri[], boolean* stato );
+
+void gestisci_STATUSGET( coda_stringhe* args, registro* registri[], int numero_registri, int id);
 
 /*
 * Funzione per la terminazione del processo.
@@ -65,6 +67,8 @@ int main( int argn, char** argv ){
   int id;
   id = atoi(argv[1]);
 
+  printf("id: %d\n", id);
+
 
   /*
   * E' possibile fornire anche gli altri valori al posto di quelli standard in questo
@@ -85,11 +89,21 @@ int main( int argn, char** argv ){
     tempo_utilizzo.valore.integer = atoi(tempo);
   }
 
-  //crea_pipe(id, (string) PERCORSO_BASE_DEFAULT);
+  crea_pipe(id, (string) PERCORSO_BASE_DEFAULT);
 
   /*
   * Sto perennemente in ascolto sulla mia pipe FIFO
   */
+
+  int i;
+  for( i = 0; i < numero_registri; i++ ){
+
+    char stampa[100];
+    stampa_registro(registri[i], stampa);
+    printf(" >> %s\n", stampa);
+
+  }
+
   while(1){
 
     ascolta_e_interpreta( &id, registri, numero_registri, &accesa );
@@ -98,8 +112,13 @@ int main( int argn, char** argv ){
 
 }
 
+boolean calcola_registro_stringa( const registro* registro, string res ){
 
-boolean calcola_registro_intero( registro* registro, int* res ){
+  return TRUE;
+
+}
+
+boolean calcola_registro_intero( const registro* registro, int* res ){
 
   if( registro -> da_calcolare == FALSE || registro -> is_intero == FALSE )
     return FALSE;
@@ -118,10 +137,11 @@ void ascolta_e_interpreta( int* id, registro* registri[], int numero_registri, b
   registro* tempo_utilizzo = registri[0];
   // Quando arriva un messaggio lo leggo e tolgo il \n finale, se presente.
   char messaggio[100];
-  //while( !leggi_messaggio(id, "/tmp", messaggio, 99))
-    //perror("Errore in lettura");
-  fgets(messaggio, 99, stdin);
+  while( !leggi_messaggio(*id, "/tmp", messaggio, 99))
+    perror("Errore in lettura");
+  //fgets(messaggio, 99, stdin);
 
+  printf("Ricevuto qualcosa: %s\n", messaggio);
   strtok(messaggio, "\n");
 
   // Creo la coda di stringhe.
@@ -132,39 +152,21 @@ void ascolta_e_interpreta( int* id, registro* registri[], int numero_registri, b
   if(!primo(separata, nome_comando, TRUE) )
     exit(140);
 
-  if( strcmp(nome_comando, "LABELUP") == 0 ){
+  if( strcmp(nome_comando, "STATUSGET") == 0 ){
+
+    gestisci_STATUSGET(separata, registri, numero_registri, *id);
+
+  } else if( strcmp(nome_comando, "LABELUP") == 0 ){
 
     gestisci_LABELUP(separata, registri, accesa);
 
-  } else if( strcmp(nome_comando, "REGGET") == 0 ){
+  } else if( strcmp(nome_comando, "REMOVE") == 0 ){
 
-    // Recupero il nome del registro richiesto e lo restituisco.
-    char nome_registro[10];
-    primo(separata, nome_registro, TRUE);
+    exit(0);
 
-    int indice_registro = cerca_registro_da_nome(registri, numero_registri, nome_registro);
+  } else {
 
-    char indice_ric[10];
-    primo(separata, indice_ric, TRUE);
-
-    char risposta[100];
-    if( registri[indice_registro] -> is_intero == TRUE ){
-      int valore = registri[indice_registro] -> valore.integer;
-      printf("DA CALCOLARE: %d\n",registri[indice_registro] -> da_calcolare == TRUE);
-      if( registri[indice_registro] -> da_calcolare == TRUE ){
-
-        calcola_registro_intero(registri[indice_registro], &valore);
-
-      }
-      sprintf(risposta, "REGGETRES %s %d", nome_registro, valore);
-    }
-    else
-      sprintf(risposta, "REGGETRES %s %s", nome_registro, registri[indice_registro] -> valore.str);
-
-    //if( !manda_messaggio( atoi(indice_ric), "/tmp", risposta) )
-      //perror("La FIFO specificata non esiste\n");
-
-    printf("[TO: %d]: %s\n", atoi(indice_ric), risposta);
+    printf("Comando non supportato: %s\n", nome_comando);
 
   }
 
@@ -203,5 +205,24 @@ void gestisci_LABELUP( coda_stringhe* separata, registro* registri[], boolean* a
     }
 
   }
+
+}
+
+void gestisci_STATUSGET( coda_stringhe* separata, registro* registri[], int numero_registri, int id ){
+
+    char indice_ric[10];
+    primo(separata, indice_ric, TRUE);
+    int i = 0;
+    char res[1024*2];
+    sprintf(res, "STATUSGETRES BULB, id: %d ", id );
+    for( i = 0; i < numero_registri; i++ ){
+
+      char str[1024];
+      stampa_registro(registri[i], str);
+      strcat(res, " ");
+      strcat( res, str );
+
+    }
+    manda_messaggio(atoi(indice_ric), (string) PERCORSO_BASE_DEFAULT, res);x
 
 }
