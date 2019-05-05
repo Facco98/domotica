@@ -1,6 +1,7 @@
 #include "strutture_dati/tipi_componente.h"
 
 const char PERCORSO_BASE_DEFAULT[] = "/tmp";
+const int ID_UNIVERSALE = 0;
 
 int cerca_registro_da_nome( registro* registri[], const int n, const string nome){
 

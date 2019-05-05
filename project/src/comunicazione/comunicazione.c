@@ -6,25 +6,35 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
+char GET_STATUS[] = "STATUSGET";
+char GET_STATUS_RESPONSE[] = "STATUSGETRES";
+char ID[] = "ID";
+char UPDATE_LABEL[] = "LABELUP";
+char REMOVE[] = "REMOVE";
+
+/*
+* Il file descriptor dell'ultimo file aperto.
+*/
+int file = -1;
+
 /*
 * Funzione interna per mandare un messaggio a una pipe FIFO
 * pipe: percorso della pipe
 * messaggio: stringa contenente il messaggio da inviare
 * Return: FALSE in caso di errori, TRUE altrimenti.
 */
-static boolean send_msg( const string pipe, const string messaggio ){
+boolean send_msg( const string pipe, const string messaggio ){
 
   boolean res = FALSE;
-  int fifo_pipe = open(pipe, O_WRONLY | O_NONBLOCK );
-  if( fifo_pipe >= 0 ){
-    write(fifo_pipe, messaggio, strlen(messaggio)+1);
-    close(fifo_pipe);
+  file = open(pipe, O_WRONLY | O_NONBLOCK );
+  if( file >= 0 ){
+    write(file, messaggio, strlen(messaggio)+1);
+    close(file);
     res = TRUE;
   }
   return res;
 
 }
-
 
 /*
 * Funzione esposta per mandare un messaggio.
@@ -49,13 +59,13 @@ boolean manda_messaggio( const int id_destinatario, const string base_path, cons
 * lunghezza_massima: lunghezza massima del messaggio da leggere.
 * Return: FALSE in caso di errori, TRUE altrimenti.
 */
-static boolean read_msg( const string pipe, string str, int lunghezza_massima ){
+boolean read_msg( const string pipe, string str, int lunghezza_massima ){
 
   boolean res = FALSE;
-  int fifo_pipe = open(pipe, O_RDONLY);
-  if( fifo_pipe > 0 ){
-    read(fifo_pipe, str, lunghezza_massima);
-    close(fifo_pipe);
+  int file = open(pipe, O_RDONLY);
+  if( file > 0 ){
+    read(file, str, lunghezza_massima);
+    close(file);
     res = TRUE;
   }
   return res;

@@ -7,7 +7,7 @@ COMPILED_LIBRARIES_FOLDER=$(OUT_FOLDER)/libraries
 COMUNICAZIONE_LIB=$(COMPILED_LIBRARIES_FOLDER)/comunicazione.o
 
 STRUTTURE_DATI_LIB=$(COMPILED_LIBRARIES_FOLDER)/tipi_base.o $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o \
-$(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o
+$(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o $(COMPILED_LIBRARIES_FOLDER)/lista_stringhe.o
 
 LIBS=$(STRUTTURE_DATI_LIB) $(COMUNICAZIONE_LIB)
 
@@ -46,7 +46,12 @@ $(SRC_FOLDER)/comunicazione/comunicazione.h
 	@echo "Sto compilando la dipendenza 'comunicazione'"
 	gcc -std=gnu90 -c $(SRC_FOLDER)/comunicazione/comunicazione.c -o $(COMPILED_LIBRARIES_FOLDER)/comunicazione.o -I $(SRC_FOLDER)
 
-$(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o: $(COMPILED_LIBRARIES_FOLDER)/tipi_base.o $(SRC_FOLDER)/strutture_dati/coda_stringhe.c \
+$(COMPILED_LIBRARIES_FOLDER)/lista_stringhe.o: $(COMPILED_LIBRARIES_FOLDER)/tipi_base.o $(SRC_FOLDER)/strutture_dati/lista_stringhe.c \
+$(SRC_FOLDER)/strutture_dati/lista_stringhe.h
+	@echo "Sto compilando la dipendenza 'lista_stringhe'"
+	gcc -std=gnu90 -c $(SRC_FOLDER)/strutture_dati/lista_stringhe.c -o $(COMPILED_LIBRARIES_FOLDER)/lista_stringhe.o -I $(SRC_FOLDER)
+
+$(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o: $(COMPILED_LIBRARIES_FOLDER)/lista_stringhe.o $(SRC_FOLDER)/strutture_dati/coda_stringhe.c \
 $(SRC_FOLDER)/strutture_dati/coda_stringhe.h
 	@echo "Sto compilando la dipendenza 'coda_stringhe'"
 	gcc -std=gnu90 -c $(SRC_FOLDER)/strutture_dati/coda_stringhe.c -o $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o -I $(SRC_FOLDER)
@@ -58,6 +63,8 @@ $(COMPILED_LIBRARIES_FOLDER)/tipi_base.o: $(SRC_FOLDER)/strutture_dati/tipi_base
 $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o: $(SRC_FOLDER)/strutture_dati/tipi_componente.h $(SRC_FOLDER)/strutture_dati/tipi_componente.c
 	@echo "Sto compilando la dipendenza 'tipi_componente'"
 	gcc -std=gnu90 -c $(SRC_FOLDER)/strutture_dati/tipi_componente.c -o $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o -I $(SRC_FOLDER)
+
+
 
 # Regole per la generazione dei componenti.
 componenti:

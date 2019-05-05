@@ -28,7 +28,7 @@ void distruggi_coda(coda_stringhe* coda){
 
       nodo_stringa* tmp = coda->testa;
       coda -> testa = coda -> testa -> succ;
-      free(tmp -> valore);
+      free(tmp -> val);
       free(tmp);
 
     }
@@ -48,8 +48,8 @@ boolean inserisci(coda_stringhe* coda, const string valore){
 
   boolean res = FALSE;
   nodo_stringa* nuovo_nodo = (nodo_stringa*) malloc(sizeof(nodo_stringa));
-  nuovo_nodo -> valore = (string) malloc(sizeof(char) * ( strlen(valore)+1 ));
-  strcpy(nuovo_nodo->valore, valore);
+  nuovo_nodo -> val = (string) malloc(sizeof(char) * ( strlen(valore)+1 ));
+  strcpy(nuovo_nodo->val, valore);
   nuovo_nodo -> succ = NULL;
   if( coda != NULL ){
     if( coda -> coda == NULL ){
@@ -65,7 +65,7 @@ boolean inserisci(coda_stringhe* coda, const string valore){
     res = TRUE;
   } else{
 
-    free(nuovo_nodo ->valore);
+    free(nuovo_nodo ->val);
     free(nuovo_nodo);
 
   }
@@ -88,8 +88,8 @@ boolean primo(coda_stringhe* coda, string output, boolean distruggi_se_vuota){
 
     nodo_stringa* tmp = coda->testa;
     coda->testa = coda->testa -> succ;
-    strcpy(output, tmp -> valore);
-    free(tmp -> valore);
+    strcpy(output, tmp -> val);
+    free(tmp -> val);
     free(tmp);
     res = TRUE;
 

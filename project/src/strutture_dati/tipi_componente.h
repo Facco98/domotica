@@ -3,6 +3,7 @@
 
 #include "strutture_dati/tipi_base.h"
 #include <string.h>
+#include <stdio.h>
 
 /*
 * Struttura dati che rappresenta un intero o una stringa.
@@ -28,6 +29,7 @@ typedef struct registro{
 } registro;
 
 extern const char PERCORSO_BASE_DEFAULT[];
+extern const int ID_UNIVERSALE;
 
 /*
 * Dichiarazione delle funzioni di utilità per lavorare sui tipi dei componenti.

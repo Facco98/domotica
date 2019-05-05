@@ -1,18 +1,25 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include "comunicazione/comunicazione.h"
 #include "strutture_dati/tipi_componente.h"
 #include "strutture_dati/coda_stringhe.h"
+#include "strutture_dati/lista_stringhe.h"
 
-void gestisci_comando( coda_stringhe* separata, string comando, int dispositivi_collegati[], int* numero_collegati,
-  int id, coda_stringhe* da_gestire );
+/*
+* Funzione che gestisce i comandi da tastiera.
+*/
+void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* lista_pipes, coda_stringhe* da_gestire );
+
+const int id = 0;
 
 int main( int argn, char** argv ){
 
-  const int id = 0;
-  int numero_collegati = 1;
-  int dispositivi_collegati[1024];
-  dispositivi_collegati[0] = 10;
+
+  lista_stringhe* lista_figli = crea_lista();
+  append(lista_figli, "/tmp/10");
 
   registro num;
   strcpy(num.nome, "num");
@@ -21,7 +28,7 @@ int main( int argn, char** argv ){
   printf("Centralina\n");
   printf("Digita help per una lista dei comandi disponibili\n");
 
-  crea_pipe( id, (string) PERCORSO_BASE_DEFAULT );
+  crea_pipe(id, (string) PERCORSO_BASE_DEFAULT);
   while(1){
 
     printf(">>");
@@ -34,13 +41,13 @@ int main( int argn, char** argv ){
     primo(coda, comando, TRUE);
 
     coda_stringhe* da_gestire = crea_coda();
-    gestisci_comando(coda, comando, dispositivi_collegati, &numero_collegati, id, da_gestire);
+    gestisci_comando(coda, comando, lista_figli, da_gestire);
 
     while(primo(da_gestire, str, TRUE)){
       strtok(str, "\n");
       coda = crea_coda_da_stringa(str, " ");
       primo(coda, comando, TRUE);
-      gestisci_comando(coda, comando, dispositivi_collegati, &numero_collegati, id, da_gestire);
+      gestisci_comando(coda, comando, lista_figli, da_gestire);
     }
 
   }
@@ -53,8 +60,7 @@ boolean prefix(const string pre, const string str){
     return FALSE;
 }
 
-void gestisci_comando( coda_stringhe* separata, string comando, int dispositivi_collegati[], int* numero_collegati,
-  int id, coda_stringhe* da_gestire){
+void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* lista_pipes, coda_stringhe* da_gestire){
 
   if( strcmp(comando, "help") == 0 ){
 
@@ -69,33 +75,73 @@ void gestisci_comando( coda_stringhe* separata, string comando, int dispositivi_
 
   } else if( strcmp(comando, "list") == 0 ){
 
-    int i;
-    for( i = 0; i < *numero_collegati; i++ ){
+    nodo_stringa* it = lista_pipes -> testa;
+    nodo_stringa* tmp = NULL;
+    while(it != NULL){
 
+      if( tmp != NULL ){
+        free(tmp);
+        tmp = NULL;
+      }
+
+      string pipe_figlio = it -> val;
       char messaggio[1024];
-      int id_figlio = dispositivi_collegati[i];
-      sprintf(messaggio, "STATUSGET %d", id);
-      manda_messaggio(id_figlio, (string) PERCORSO_BASE_DEFAULT, messaggio);
+      sprintf(messaggio, "%s %d", GET_STATUS, ID_UNIVERSALE);
+      send_msg(pipe_figlio, messaggio);
       boolean flag = FALSE;
       char msg[1024];
-      while(flag == FALSE){
+      coda_stringhe* coda = crea_coda();
+      while(flag == FALSE && it != NULL){
 
-        leggi_messaggio(id, (string) PERCORSO_BASE_DEFAULT, msg, 1023);
-        if( prefix("STATUSGETRES", msg) == TRUE )
+        if( read_msg(pipe_figlio, msg, 1023) == FALSE ){
+          rimuovi_nodo(lista_pipes, it);
+          tmp = it;
           flag = TRUE;
-        else
-          inserisci(da_gestire, messaggio);
+        } else {
+          if( prefix(GET_STATUS_RESPONSE, msg) == TRUE ){
+            flag = TRUE;
+            printf("%s\n", msg+12);
+          } else
+            inserisci(coda, msg);
+        }
       }
-      printf("%s\n", msg+12);
+
+      while(primo(coda, msg, TRUE))
+        send_msg(pipe_figlio, msg);
+      it = it -> succ;
 
     }
+
+    if( tmp != NULL )
+      free(tmp);
 
   } else if( strcmp( comando, "del") == 0 ){
 
     char tmp[100];
     primo(separata, tmp, TRUE);
     int id_comp = atoi(tmp);
-    manda_messaggio(id_comp, (string) PERCORSO_BASE_DEFAULT, "REMOVE");
+    sprintf(tmp, "%s %d", REMOVE, id_comp);
+    nodo_stringa* it = lista_pipes -> testa;
+    nodo_stringa* l = NULL;
+    while( it != NULL ){
+
+      string pipe = it -> val;
+
+      if( l != NULL ){
+        free(l);
+        l = NULL;
+      }
+      if( send_msg(pipe, tmp) == FALSE ){
+
+        rimuovi_nodo(lista_pipes, it);
+        l = it;
+
+      }
+      it = it -> succ;
+    }
+
+    if( l == NULL )
+      free(l);
 
   } else if( strcmp(comando, "switch") == 0 ){
 
@@ -106,18 +152,49 @@ void gestisci_comando( coda_stringhe* separata, string comando, int dispositivi_
     primo(separata, pos, TRUE);
 
     char msg[100];
-    sprintf(msg, "LABELUP %s %s", label, pos);
-    manda_messaggio(id_dispositivo, (string) PERCORSO_BASE_DEFAULT, msg );
+    sprintf(msg, "%s %d %s %s",UPDATE_LABEL ,id_dispositivo, label, pos);
+
+    nodo_stringa* it = lista_pipes -> testa;
+    nodo_stringa* tmp  = NULL;
+    while( it != NULL){
+
+      if( tmp != NULL ){
+
+        free(tmp);
+        tmp = NULL;
+
+      }
+
+      string pipe = it -> val;
+
+      if( send_msg(pipe, msg ) == FALSE ){
+
+        rimuovi_nodo(lista_pipes, it);
+        tmp = it;
+
+      }
+
+      it = it -> succ;
+
+    }
+
 
 
   } else if( strcmp(comando, "exit") == 0 ){
 
-    for( int i = 0; i < *numero_collegati; i++ ){
+    nodo_stringa* it = lista_pipes -> testa;
+    while(it != NULL){
 
-      int id_figlio = dispositivi_collegati[i];
-      manda_messaggio(id_figlio, (string) PERCORSO_BASE_DEFAULT, "REMOVE");
+      char msg[200];
+      sprintf(msg, "%s %d", REMOVE, ID_UNIVERSALE);
+      send_msg(it -> val, msg);
+      it = it -> succ;
 
     }
+
+    char percorso[50];
+    sprintf(percorso, "%s/%d", PERCORSO_BASE_DEFAULT, id);
+    unlink(percorso);
     exit(0);
 
   } else if( strcmp(comando, "info") == 0 ){
@@ -125,21 +202,50 @@ void gestisci_comando( coda_stringhe* separata, string comando, int dispositivi_
     char tmp[20];
     primo(separata, tmp, TRUE);
     int id_comp = atoi(tmp);
-    char messaggio[30];
-    sprintf(messaggio, "STATUSGET %d", id);
-    manda_messaggio(id_comp, (string) PERCORSO_BASE_DEFAULT, messaggio);
+    char msg[200];
+    nodo_stringa* it = lista_pipes -> testa;
+    nodo_stringa* l = NULL;
     boolean flag = FALSE;
-    char msg[1025];
-    while(flag == FALSE){
 
-      leggi_messaggio(id, (string) PERCORSO_BASE_DEFAULT, msg, 1024);
-      if( prefix("STATUSGETRES", msg) == TRUE )
-        flag = TRUE;
-      else
-        inserisci(da_gestire, msg);
+    while( it != NULL && flag == FALSE ){
+      if( l != NULL ){
+        rimuovi_nodo(lista_pipes, it);
+        free(l);
+        l = NULL;
+      }
+
+      string pipe = it -> val;
+
+      sprintf(msg, "%s %d", ID, id_comp);
+      if( send_msg(pipe, msg)==FALSE || read_msg(pipe, msg, 199)==FALSE ){
+
+        rimuovi_nodo(lista_pipes, it);
+        l = it;
+        it = it -> succ;
+
+      } else {
+
+        if( strcmp(msg,"TRUE") == 0 )
+          flag = TRUE;
+        else
+          it = it -> succ;
+      }
+
     }
-    printf("%s\n", msg+12);
+    if( it != NULL ){
+      sprintf(msg, "%s %d", GET_STATUS, id_comp);
+      string pipe = it -> val;
+      if( send_msg(pipe, msg) == FALSE || read_msg(pipe, msg, 199) == FALSE ){
+        rimuovi_nodo(lista_pipes, it);
+        free(it);
+      } else
+        printf("%s\n", msg+12);
 
+    } else{
+
+      printf("Non collegato direttamente\n");
+
+    }
 
   } else {
 
