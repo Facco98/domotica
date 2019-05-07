@@ -49,6 +49,8 @@ void gestisci_ID(coda_stringhe* separata);
 */
 void termina(int x);
 
+void crea_processi_supporto(registro* registri[], int numero_registri, boolean* accesa);
+
 /*
 * Indica quando è stata accesa.
 */
@@ -59,8 +61,10 @@ long accensione;
 */
 int id;
 
+char pipe_interna[50];
+char pipe_esterna[50];
 
-
+pid_t figli[2];
 
 int main( int argn, char** argv ){
 
@@ -110,17 +114,15 @@ int main( int argn, char** argv ){
     tempo_utilizzo.valore.integer = atoi(tempo);
   }
 
-  crea_pipe(id, (string) PERCORSO_BASE_DEFAULT);
-  signal(SIGINT, termina);
+  sprintf(pipe_interna, "%s/%d_int", (string) PERCORSO_BASE_DEFAULT, id);
+  sprintf(pipe_esterna, "%s/%d_ext", (string) PERCORSO_BASE_DEFAULT, id);
 
   /*
   * Sto perennemente in ascolto sulla mia pipe FIFO
   */
-  while(1){
 
-    ascolta_e_interpreta( registri, numero_registri, &accesa );
+  crea_processi_supporto(registri, numero_registri, &accesa);
 
-  }
 
 }
 
@@ -149,7 +151,7 @@ void ascolta_e_interpreta( registro* registri[], int numero_registri, boolean* a
   registro* tempo_utilizzo = registri[0];
   // Quando arriva un messaggio lo leggo e tolgo il \n finale, se presente.
   char messaggio[100];
-  while( !leggi_messaggio(id, "/tmp", messaggio, 99))
+  while( read_msg(pipe_interna, messaggio, 99) == FALSE)
     perror("Errore in lettura");
   //fgets(messaggio, 99, stdin);
 
@@ -235,6 +237,7 @@ void gestisci_LABELUP( coda_stringhe* separata, registro* registri[], boolean* a
     }
   } else
     distruggi_coda(separata);
+  send_msg(pipe_interna, "DONE");
 
 }
 
@@ -255,7 +258,7 @@ void gestisci_STATUSGET( coda_stringhe* separata, registro* registri[], int nume
         strcat( res, str );
 
       }
-      manda_messaggio(id, (string) PERCORSO_BASE_DEFAULT, res);
+      send_msg(pipe_interna, res);
     }
 
 }
@@ -265,18 +268,69 @@ void gestisci_ID(coda_stringhe* separata){
   char tmp[10];
   primo(separata, tmp, TRUE);
   if( atoi(tmp) == id )
-    manda_messaggio(id, (string) PERCORSO_BASE_DEFAULT, "TRUE");
+    send_msg(pipe_interna, "TRUE");
   else
-    manda_messaggio(id, (string) PERCORSO_BASE_DEFAULT, "FALSE");
+    send_msg(pipe_interna, "FALSE");
 
 }
 
 void termina(int x){
 
+  kill(figli[0], SIGKILL);
+  kill(figli[1], SIGKILL);
   close(file);
+
   char pipe[50];
   sprintf(pipe, "/tmp/%d", id);
   unlink(pipe);
+  unlink(pipe_esterna);
+  unlink(pipe_interna);
   exit(0);
+
+}
+
+void crea_processi_supporto(registro* registri[], int numero_registri, boolean* accesa){
+
+  pid_t pid = fork();
+  if( pid == 0 ){
+
+    mkfifo(pipe_esterna, 0666);
+    while(1){
+
+      char msg[200];
+      read_msg(pipe_esterna, msg, 200);
+      send_msg(pipe_interna, msg);
+
+    }
+
+  } else if( pid > 0 ){
+
+    figli[0] = pid;
+    pid = fork();
+    if( pid == 0 ){
+
+      while(1){
+        crea_pipe(id, (string) PERCORSO_BASE_DEFAULT);
+        char msg[200];
+        leggi_messaggio(id, (string) PERCORSO_BASE_DEFAULT, msg, 199);
+        send_msg(pipe_interna, msg);
+        read_msg(pipe_interna, msg, 199);
+        if( strcmp(msg, "DONE") != 0 )
+          manda_messaggio(id, (string) PERCORSO_BASE_DEFAULT, msg);
+
+      }
+
+    } else if( pid > 0 ) {
+
+      figli[1] = pid;
+      signal(SIGINT, termina);
+      mkfifo(pipe_interna, 0666);
+      while(1){
+        ascolta_e_interpreta(registri, numero_registri, accesa);
+      }
+
+    }
+
+  }
 
 }
