@@ -1,5 +1,9 @@
 #include "strutture_dati/lista_stringhe.h"
 
+/*
+* Crea una lista di stringhe.
+* Return: un puntatore alla lista appena creata.
+*/
 lista_stringhe* crea_lista(){
 
   lista_stringhe* res = (lista_stringhe*) malloc(sizeof(lista_stringhe));
@@ -9,6 +13,13 @@ lista_stringhe* crea_lista(){
 
 }
 
+/*
+* Ritorna il valore ad un dato indice.
+* lista: la lista da cui estrapolare il valore.
+* index: indice dell'elememnto desiderato.
+* output: variabile in cui verrà copiata la stringa.
+* Return: FALSE in caso di errori, TRUE altrimenti.
+*/
 boolean get(lista_stringhe* lista, int index, string output){
 
   boolean res = TRUE;
@@ -26,7 +37,12 @@ boolean get(lista_stringhe* lista, int index, string output){
 
 }
 
-
+/*
+* Funzione che inserisce un elemento in coda a una lista.
+* lista: la lista su cui operare.
+* val: valore da inserire in coda.
+* Return: FALSE in caso di errori, TRUE altrimenti.
+*/
 boolean append(lista_stringhe* lista, string val){
 
   boolean res = TRUE;
@@ -50,6 +66,11 @@ boolean append(lista_stringhe* lista, string val){
 
 }
 
+/*
+* Funzione che inserisce un elemento in testa a una lista.
+* lista: lista su cui operare
+* val: valore da inserire in testa.
+*/
 boolean prepend(lista_stringhe* lista, string val){
 
   boolean res = TRUE;
@@ -57,8 +78,14 @@ boolean prepend(lista_stringhe* lista, string val){
   nodo -> succ = lista -> testa;
   nodo -> val = (string) malloc(sizeof(char) * (strlen(val) + 1));
   nodo -> prec = NULL;
+  return res;
 
 }
+
+/*
+* Funzione che dealloca una lista di stringhe.
+* lista: la lista da deallocare.
+*/
 
 void distruggi( lista_stringhe* lista ){
 
@@ -77,6 +104,11 @@ void distruggi( lista_stringhe* lista ){
   }
 }
 
+/*
+* Funzione che rimuove un dato nodo dalla lista, senza deallocarne il contenuto.
+* lista: la lista su cui operare.
+* nodo: il nodo da rimuovere dalla lista.
+*/
 void rimuovi_nodo(lista_stringhe* lista, nodo_stringa* nodo){
 
   if( lista -> testa == nodo ){

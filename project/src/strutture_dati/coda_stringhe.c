@@ -8,11 +8,7 @@
 */
 coda_stringhe* crea_coda(){
 
-  coda_stringhe* res = (coda_stringhe*) malloc(sizeof(coda_stringhe));
-  res->n = 0;
-  res->testa = NULL;
-  res->coda = NULL;
-  return res;
+  return crea_lista();
 
 }
 
@@ -22,19 +18,7 @@ coda_stringhe* crea_coda(){
 */
 void distruggi_coda(coda_stringhe* coda){
 
-  if( coda != NULL){
-
-    while( coda -> testa != NULL ){
-
-      nodo_stringa* tmp = coda->testa;
-      coda -> testa = coda -> testa -> succ;
-      free(tmp -> val);
-      free(tmp);
-
-    }
-    coda -> n = 0;
-    free(coda);
-  }
+  distruggi(coda);
 
 }
 
@@ -46,30 +30,7 @@ void distruggi_coda(coda_stringhe* coda){
 */
 boolean inserisci(coda_stringhe* coda, const string valore){
 
-  boolean res = FALSE;
-  nodo_stringa* nuovo_nodo = (nodo_stringa*) malloc(sizeof(nodo_stringa));
-  nuovo_nodo -> val = (string) malloc(sizeof(char) * ( strlen(valore)+1 ));
-  strcpy(nuovo_nodo->val, valore);
-  nuovo_nodo -> succ = NULL;
-  if( coda != NULL ){
-    if( coda -> coda == NULL ){
-
-      coda->testa = coda->coda = nuovo_nodo;
-
-    } else {
-
-      coda->coda -> succ = nuovo_nodo;
-      coda->coda = nuovo_nodo;
-    }
-    coda -> n++;
-    res = TRUE;
-  } else{
-
-    free(nuovo_nodo ->val);
-    free(nuovo_nodo);
-
-  }
-  return res;
+  return append(coda, valore);
 
 }
 

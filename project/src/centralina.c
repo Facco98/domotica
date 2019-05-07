@@ -54,11 +54,6 @@ int main( int argn, char** argv ){
 
 }
 
-boolean prefix(const string pre, const string str){
-    if(strncmp(pre, str, strlen(pre)) == 0)
-      return TRUE;
-    return FALSE;
-}
 
 void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* lista_pipes, coda_stringhe* da_gestire){
 
