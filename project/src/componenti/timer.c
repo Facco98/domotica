@@ -25,6 +25,14 @@ void termina (int x);
 //gestisce la creazione di una nuova componente
 void gestisci_SPAWN(coda_stringhe* istruzioni);
 
+//gestisce la richeista dello stato del componente collegato
+void gestisci_STATUSGET(coda_stringhe* istruzioni);
+
+//gestisce la rimozione dei componenti
+void gestisci_REMOVE(coda_stringhe* istruzioni);
+
+void ascolta_e_interpreta();
+
 
 
 
@@ -145,7 +153,7 @@ void ascolta_e_interpreta()
 
   if( strcmp( comando, GET_STATUS ) == 0 ) //stato del componente collegato
   {
-    gestisci_STATUSGET(istruzioni);
+    gestisci_STATUSGET(istruzioni); //OK
   }
   else if( strcmp(comando, UPDATE_LABEL) == 0 ) //aggiornamento interruttori
   {
@@ -173,7 +181,37 @@ void ascolta_e_interpreta()
 
 void gestisci_STATUSGET(coda_stringhe* istruzioni)
 {
-  
+  char id_ric[50];
+  primo(istruzioni, id_ric, TRUE);
+  int id_comp = atoi(id_ric);
+
+  if( id_comp == id || id_comp == ID_UNIVERSALE )
+  {
+    // Creo il messaggio contenente la risposta.
+    char response[200];
+    sprintf(response, "%s TIMER id: %d\n" ,GET_STATUS_RESPONSE, id);
+
+    char msg[200];
+    sprintf(msg, "%s %d", GET_STATUS, ID_UNIVERSALE );
+    if( pipe_figlio == NULL ||send_msg(pipe_figlio, msg) == FALSE || read_msg(pipe_figlio, msg, 199) == FALSE  )
+    {
+      pipe_figlio = NULL;
+    }
+    else
+    {
+      strcat(response, msg+strlen(GET_STATUS_RESPONSE)+1);
+    }
+    // Rispondo sulla pipe_interna.
+    send_msg(pipe_interna, response);
+    free(response);
+
+  }
+  else
+  {
+    send_msg(pipe_interna, "DONE");
+  }
+
+
 }
 
 void gestisci_ID(coda_stringhe* istruzioni)
@@ -211,7 +249,10 @@ void termina (int x)
   //mando al figlio messaggio di morte
   char msg[50];
   sprintf(msg, "%s %d", REMOVE, ID_UNIVERSALE);
-  send_msg(pipe_figlio, msg);
+  if(pipe_figlio != NULL)
+  {
+    send_msg(pipe_figlio, msg);
+  }
 
   // Distruggo tutte le pipe.
   unlink(pipe_figlio); //pipe con il figlio
@@ -268,9 +309,7 @@ void gestisci_SPAWN(coda_stringhe* istruzioni)
     else if( pid > 0 ) //se sono il padre
     {
       // Se sono il padre aggiungo alla mia lista di pipes la pipe del figlio appena creato.
-      char pipe_figlio[100];
       sprintf(pipe_figlio, "%s/%s", (string) PERCORSO_BASE_DEFAULT, strtok(line, " "));
-      append(lista_pipes, pipe_figlio);
     }
 
   }
