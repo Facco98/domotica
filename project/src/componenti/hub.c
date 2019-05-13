@@ -263,7 +263,7 @@ void gestisci_STATUSGET(coda_stringhe* separata){
 
     // Creo il messaggio contenente la risposta.
     char* response = (char*) malloc(sizeof(char) * 200 * lista_pipes -> n);
-    sprintf(response, "%s HUB id: %d\n" ,GET_STATUS_RESPONSE, id);
+    sprintf(response, "%s HUB id: %d" ,GET_STATUS_RESPONSE, id);
 
     // Mando a tutti i miei figli che voglio lo stato.
     nodo_stringa* it = lista_pipes -> testa;
@@ -281,6 +281,7 @@ void gestisci_STATUSGET(coda_stringhe* separata){
 
       } else {
 
+        strcat(response, "\n");
         strcat(response, msg+strlen(GET_STATUS_RESPONSE)+1);
 
       }
@@ -292,8 +293,49 @@ void gestisci_STATUSGET(coda_stringhe* separata){
     send_msg(pipe_interna, response);
     free(response);
 
-} else
-  send_msg(pipe_interna, "DONE");
+  } else {
+
+    char msg[200];
+    sprintf(msg, "%s %s", ID, id_ric);
+    nodo_stringa* it = lista_pipes -> testa;
+    boolean trovato = FALSE;
+    while( it != NULL && trovato == FALSE ){
+
+      char res[10];
+      if( send_msg(it -> val, msg) == FALSE || read_msg(it -> val, res, 9) == FALSE ){
+
+        nodo_stringa* l = it;
+        rimuovi_nodo(lista_pipes,it);
+        it = it -> succ;
+        free(it);
+
+      } else if( strcmp(res, "TRUE") == 0 ){
+
+        trovato = TRUE;
+
+      } else {
+
+        it = it -> succ;
+
+      }
+
+    }
+
+    if( trovato == TRUE ){
+
+      char status[1024];
+      sprintf(msg, "%s %s", GET_STATUS, id_ric);
+      send_msg(it -> val, msg);
+      read_msg(it -> val, status, 1023);
+      send_msg(pipe_interna, status);
+
+    } else {
+
+      send_msg(pipe_interna, "DONE");
+
+    }
+
+  }
 
 }
 
@@ -344,9 +386,35 @@ void gestisci_ID(coda_stringhe* separata){
   int id_comp = atoi(id_ric);
   if( id_comp == id || id_comp == ID_UNIVERSALE )
     send_msg(pipe_interna, "TRUE");
-  else
-    send_msg(pipe_interna, "FALSE");
+  else{
 
+    char msg[20];
+    sprintf(msg, "%s %s", ID, id_ric);
+    nodo_stringa* it = lista_pipes -> testa;
+    boolean flag = FALSE;
+    while( it != NULL && flag == FALSE ){
+
+      char res[10];
+      if( send_msg(it -> val, msg) == FALSE || read_msg(it -> val, res, 9) == FALSE ){
+
+        nodo_stringa* tmp = it;
+        rimuovi_nodo(lista_pipes, it);
+        it = it -> succ;
+        free(tmp);
+
+      } else if( strcmp(res, "TRUE") == 0 ){
+        flag = TRUE;
+      } else{
+        it = it -> succ;
+      }
+
+    }
+    if( flag == TRUE )
+      send_msg(pipe_interna, "TRUE");
+    else
+      send_msg(pipe_interna, "FALSE");
+
+  }
 }
 
 void gestisci_REMOVE(coda_stringhe* separata){
@@ -357,6 +425,29 @@ void gestisci_REMOVE(coda_stringhe* separata){
   int id_comp = atoi(id_ric);
   if( id_comp == id || id_comp == ID_UNIVERSALE )
     termina(0);
+  else{
+
+    char msg[200];
+    sprintf(msg, "%s %s", REMOVE, id_ric);
+    nodo_stringa* it = lista_pipes -> testa;
+
+    while( it != NULL ){
+
+      if( send_msg(it -> val, msg) == FALSE ){
+
+        nodo_stringa* tmp = it;
+        rimuovi_nodo(lista_pipes, it);
+        it = it -> succ;
+        free(tmp);
+
+      } else{
+        it = it -> succ;
+      }
+
+    }
+    send_msg(pipe_interna, "DONE");
+
+  }
 
 }
 
