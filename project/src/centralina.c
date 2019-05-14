@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
 #include <unistd.h>
 #include "comunicazione/comunicazione.h"
 #include "strutture_dati/tipi_componente.h"
@@ -12,15 +11,12 @@
 /*
 * Funzione che gestisce i comandi da tastiera.
 */
-void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* lista_pipes, lista_stringhe* da_creare);
-void gestisci_list( coda_stringhe* separata, lista_stringhe* lista_pipes, lista_stringhe* da_creare);
+void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* lista_pipes);
+void gestisci_list( coda_stringhe* separata, lista_stringhe* lista_pipes);
 void gestisci_del( coda_stringhe* separata, lista_stringhe* lista_pipes);
 void gestisci_exit( coda_stringhe* separata, lista_stringhe* lista_pipes);
 void gestisci_info( coda_stringhe* separata, lista_stringhe* lista_pipes);
 void gestisci_switch( coda_stringhe* separata, lista_stringhe* lista_pipes);
-void gestisci_add( coda_stringhe* separata, lista_stringhe* lista_pipes, lista_stringhe* da_creare);
-void minuscolo(string str);
-boolean suffix(const char *str, const char *suffix);
 
 void stampa_componente(string msg){
 
@@ -33,28 +29,45 @@ void stampa_componente(string msg){
     primo(coda, id, TRUE);
     primo(coda, time, TRUE);
 
-    printf("bulb id: %s time: %s\n", id, time);
+    printf("BULB id: %s time: %s\n", id, time);
+
+  } else if( strcmp(tipo, "hub") == 0 ){
+
+    char id[20], tmp[1024], concat[1024];
+    strcpy(concat, "");
+    primo(coda, id, TRUE);
+
+    printf("HUB id: %s\n", id);
+
+    while(primo(coda, tmp, TRUE) == TRUE){
+
+      if( strcmp(tmp, "\n") == 0 ){
+
+        stampa_componente(concat);
+        strcpy(concat, "");
+
+      } else {
+
+        strcat(concat, tmp);
+
+      }
+
+    }
+
+
+
 
   }
 
 }
 
 const int id = 0;
-int id_successivo = id+1;
-lista_stringhe* dispositivi_ammessi;
 
 int main( int argn, char** argv ){
 
 
   lista_stringhe* lista_figli = crea_lista();
-
-  lista_stringhe* da_creare = crea_lista();
-  dispositivi_ammessi = crea_lista();
-  append(dispositivi_ammessi, "bulb");
-  append(dispositivi_ammessi, "hub");
-  append(dispositivi_ammessi, "window");
-  append(dispositivi_ammessi, "timer");
-  append(dispositivi_ammessi, "fridge");
+  append(lista_figli, "/tmp/9");
 
   registro num;
   strcpy(num.nome, "num");
@@ -75,14 +88,14 @@ int main( int argn, char** argv ){
     char comando[20];
     primo(coda, comando, TRUE);
 
-    gestisci_comando(coda, comando, lista_figli, da_creare);
+    gestisci_comando(coda, comando, lista_figli);
 
   }
 
 }
 
 
-void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* lista_pipes, lista_stringhe* da_creare){
+void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* lista_pipes){
 
   if( strcmp(comando, "help") == 0 ){
 
@@ -97,175 +110,7 @@ void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* 
 
   } else if( strcmp(comando, "list") == 0 ){
 
-    gestisci_list(separata, lista_pipes, da_creare);
-
-  } else if( strcmp(comando, "add") == 0 ){
-
-    gestisci_add(separata, lista_pipes, da_creare);
-
-
-  } else if( strcmp(comando, "link") == 0 ){
-
-    char id_dispositivo[100];
-    primo(separata, id_dispositivo, TRUE);
-    char id_nuovo_padre[100];
-    primo(separata, id_nuovo_padre, TRUE);
-    primo(separata, id_nuovo_padre, TRUE);
-
-    char tmp[200];
-    sprintf(tmp, "%s/%s", (string) PERCORSO_BASE_DEFAULT, id_nuovo_padre);
-    int fd = open(tmp, O_WRONLY | O_NONBLOCK);
-    if( fd < 0 && atoi(id_nuovo_padre) != id )
-      printf("Errore: non riesco a comunicare con il dispositivo con id %s\n", id_nuovo_padre);
-    else{
-
-      close(fd);
-      sprintf(tmp, "%s/%s", (string) PERCORSO_BASE_DEFAULT, id_dispositivo);
-      char status[100];
-      strcpy(status, "");
-      fd = open(tmp, O_WRONLY | O_NONBLOCK);
-      close(fd);
-      string pipe;
-      nodo_stringa* elemento_lista;
-      if( fd < 0 ){
-
-        elemento_lista = da_creare -> testa;
-        boolean flag = FALSE;
-        while( elemento_lista != NULL && flag == FALSE ) {
-
-          string elemento = elemento_lista -> val;
-          if( suffix(elemento, id_dispositivo) == TRUE ){
-            strcpy(status, elemento);
-            flag = TRUE;
-          }
-          else
-            elemento_lista = elemento_lista -> succ;
-
-        }
-
-      } else {
-
-        printf("REMOTO");
-        sprintf(tmp, "%s %s", ID, id_dispositivo);
-
-        nodo_stringa* it = lista_pipes -> testa;
-        boolean flag = FALSE;
-        while( it != NULL && flag == FALSE ){
-
-          pipe = it -> val;
-          char res[10];
-          if( send_msg(pipe, tmp) == FALSE || read_msg(pipe, res, 9) == FALSE ){
-
-            rimuovi_nodo(lista_pipes, it);
-            nodo_stringa* l = it;
-            it = it -> succ;
-            free(l);
-
-          } else if( strcmp(res, "TRUE") == 0 )
-            flag = TRUE;
-          else
-            it = it -> succ;
-
-        }
-
-        sprintf(tmp, "STATUSGETSIMPLE %s", id_dispositivo);
-        if( send_msg(pipe, tmp) == FALSE || read_msg(pipe, status, 99) == FALSE ){
-
-          rimuovi_nodo(lista_pipes, it);
-          free(it);
-
-        }
-
-        if( strcmp(status, "") == 0 ){
-          printf("%s di sconosciuto\n", id_dispositivo);
-          return;
-        }
-      }
-
-      if( fd >= 0 ){
-
-        sprintf(tmp, "%s %s", REMOVE, id_dispositivo);
-        send_msg(pipe, tmp);
-
-      } else {
-
-        rimuovi_nodo(da_creare, elemento_lista);
-        free(elemento_lista);
-
-      }
-      if( atoi(id_nuovo_padre) == id ){
-
-        if( fork() > 0 ){
-
-          char pipe_path[200];
-          sprintf(pipe_path, "%s/%s", (string) PERCORSO_BASE_DEFAULT, id_dispositivo);
-          append(lista_pipes, pipe_path);
-          nodo_stringa* iterator = lista_pipes -> testa;
-
-        } else {
-
-          char type[100];
-          char line[1024];
-          strcpy(line, "");
-          strcpy(tmp, status);
-          coda_stringhe* coda = crea_coda_da_stringa(tmp, " ");
-          primo(coda, type, TRUE);
-          while( primo(coda, tmp, TRUE) ==  TRUE ){
-
-            // Creo il resto dei parametri da passare su linea di comando.
-            strcat(line, tmp);
-            strcat(line, " ");
-
-          }
-          char path[200];
-          sprintf(path, "./%s.out", type );
-          execlp(path, path, line, NULL);
-
-
-        }
-
-      } else {
-
-        sprintf(tmp, "%s %s", ID, id_nuovo_padre);
-        nodo_stringa* it = lista_pipes -> testa;
-        boolean flag = FALSE;
-        while( it != NULL && flag == FALSE ){
-
-          string pipe = it -> val;
-          char res[10];
-          if( send_msg(pipe, tmp) == FALSE || read_msg(pipe, res, 9) == FALSE ){
-
-            rimuovi_nodo(lista_pipes, it);
-            nodo_stringa* l = it;
-            it = it -> succ;
-            free(l);
-
-
-          } else if( strcmp(res, "TRUE") == 0 ){
-
-            flag = TRUE;
-
-          } else
-            it = it -> succ;
-
-        }
-
-        if( flag == TRUE ){
-
-          char msg[1024];
-          sprintf(msg, "SPAWN %s", status);
-          send_msg(it -> val, msg);
-
-        } else {
-
-          printf("Errore: non riesco a comunicare con il dispositivo con id %s", id_nuovo_padre);
-
-        }
-
-
-      }
-
-    }
+    gestisci_list(separata, lista_pipes);
 
   } else if( strcmp( comando, "del") == 0 ){
 
@@ -299,18 +144,9 @@ boolean calcola_registro_stringa( const registro* r, string output){
   return TRUE;
 }
 
-void gestisci_list(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_stringhe* da_creare){
+void gestisci_list(coda_stringhe* separata, lista_stringhe* lista_pipes){
 
-  nodo_stringa* it = da_creare -> testa;
-  if( it != NULL )
-    printf("Dispositivi aggiunti ma non creati ( tipo id ): \n");
-  while( it != NULL ){
-
-    printf("- %s\n", it -> val );
-    it = it -> succ;
-  }
-
-  it = lista_pipes -> testa;
+  nodo_stringa* it = lista_pipes -> testa;
   while(it != NULL){
 
     string pipe_figlio = it -> val;
@@ -462,63 +298,4 @@ void gestisci_info(coda_stringhe* separata, lista_stringhe* lista_pipes){
 
   }
 
-}
-
-void gestisci_add(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_stringhe* da_creare){
-
-  char dispositivo[200];
-  primo(separata, dispositivo, TRUE);
-  minuscolo(dispositivo);
-  nodo_stringa* it = dispositivi_ammessi -> testa;
-  boolean contenuto = FALSE;
-  while( it != NULL && contenuto == FALSE ){
-
-    if( strcmp(it -> val, dispositivo ) == 0 )
-      contenuto = TRUE;
-
-    it = it -> succ;
-
-  }
-
-  if( contenuto == TRUE ){
-    char linea[200];
-    sprintf(linea, "%s %d", dispositivo, id_successivo++);
-    append(da_creare, linea);
-    printf("Aggiunto: %s\n", linea);
-
-  } else {
-
-    printf("Dispositivo non valido: %s\n", dispositivo);
-
-  }
-
-}
-
-void minuscolo(string str){
-
-  for( int i = 0; str[i] != '\0'; i++ ){
-
-    if( str[i] > 'A' && str[i] < 'Z' ){
-
-      str[i] = (str[i] - 'A') + 'a';
-
-    }
-
-  }
-
-}
-
-
-boolean suffix(const char *str, const char *suffix)
-{
-    if (!str || !suffix)
-        return FALSE;
-    size_t lenstr = strlen(str);
-    size_t lensuffix = strlen(suffix);
-    if (lensuffix >  lenstr)
-        return FALSE;
-    if( strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0)
-      return TRUE;
-    else
-      return FALSE;
 }
