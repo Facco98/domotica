@@ -364,7 +364,7 @@ void chiuditi_alarm(int x){
 //Se arriva un sigalarm se sono aperto mi chiudo
   //ti colleghi alla pipe interna e dici di chiudersi
   char messaggio_chiusura[200];
-  sprintf (messaggio_chiusura, id, " CLOSE ON");
+  sprintf (messaggio_chiusura, "%s %d CLOSE ON", UPDATE_LABEL, id);
   send_msg(pipe_interna, messaggio_chiusura);
     
 }
