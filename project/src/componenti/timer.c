@@ -33,7 +33,7 @@ void gestisci_REMOVE(coda_stringhe* istruzioni);
 
 void ascolta_e_interpreta();
 
-
+void gestisci_LABELUP(coda_stringhe* istruzioni);
 
 
 
@@ -193,9 +193,9 @@ void gestisci_STATUSGET(coda_stringhe* istruzioni)
 
     char msg[200];
     sprintf(msg, "%s %d", GET_STATUS, ID_UNIVERSALE );
-    if( pipe_figlio == NULL ||send_msg(pipe_figlio, msg) == FALSE || read_msg(pipe_figlio, msg, 199) == FALSE  )
+    if( strcmp(pipe_figlio, "") == 0 ||send_msg(pipe_figlio, msg) == FALSE || read_msg(pipe_figlio, msg, 199) == FALSE  )
     {
-      pipe_figlio = NULL;
+      strcpy(pipe_figlio, "");
     }
     else
     {
@@ -249,7 +249,7 @@ void termina (int x)
   //mando al figlio messaggio di morte
   char msg[50];
   sprintf(msg, "%s %d", REMOVE, ID_UNIVERSALE);
-  if(pipe_figlio != NULL)
+  if(strcmp(pipe_figlio, "") != 0)
   {
     send_msg(pipe_figlio, msg);
   }
@@ -289,8 +289,8 @@ void gestisci_SPAWN(coda_stringhe* istruzioni)
     char tmp[100];
 
     // Recupero il tipo di componente.
-    primo(separata, type, TRUE);
-    while( primo(separata, tmp, TRUE) ==  TRUE )
+    primo(istruzioni, type, TRUE);
+    while( primo(istruzioni, tmp, TRUE) ==  TRUE )
     {
       // Creo il resto dei parametri da passare su linea di comando.
       strcat(line, tmp);
@@ -316,4 +316,34 @@ void gestisci_SPAWN(coda_stringhe* istruzioni)
 
   send_msg(pipe_interna, "DONE");
 
+}
+
+/*
+*Funzione per gestire il comando per l'aggiornamento di un interruttore.
+*/
+void gestisci_LABELUP(coda_stringhe* istruzioni){
+	char id_ric[50];
+	primo(istruzioni, id_ric, TRUE);
+	int id_comp = atoi(id_ric);
+		if( id_comp == id || id_comp == ID_UNIVERSALE ){
+			// Prendo il nome dell'interruttore e la nuova posizione
+			char label[50];
+    		primo(istruzioni, label, TRUE);
+		    char pos[50];
+		    primo(istruzioni, pos, TRUE);
+
+		    //creo il messaggio 
+		    char msg[200];
+    		sprintf(msg, "%s %d %s %s", UPDATE_LABEL, ID_UNIVERSALE, label, pos);
+
+		    //Invio il messaggio al mio unico figlio se esiste la pipe
+		    if (strcmp(pipe_figlio, "")!= 0){
+		    	send_msg(pipe_figlio, msg);
+		    }
+			
+		}
+
+	send_msg(pipe_interna, "DONE");
+
+	
 }
