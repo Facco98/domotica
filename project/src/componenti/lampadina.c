@@ -50,6 +50,12 @@ void gestisci_ID(coda_stringhe* separata);
 void termina(int x);
 
 /*
+* Funzione che genera i processi per stare in ascolto sulla FIFO esterna ( per l'umano )
+* e per stare in ascolto sulla FIFO interna alla lampadina.
+*/
+void crea_processi_supporto(registro* registri[], int numero_registri, boolean* accesa);
+
+/*
 * Indica quando è stata accesa.
 */
 long accensione;
@@ -59,8 +65,10 @@ long accensione;
 */
 int id;
 
+char pipe_interna[50];
+char pipe_esterna[50];
 
-
+pid_t figli[2];
 
 int main( int argn, char** argv ){
 
@@ -95,7 +103,7 @@ int main( int argn, char** argv ){
   * E' possibile fornire anche gli altri valori al posto di quelli standard in questo
   * ordine: stato tempo_di_utilizzo.
   */
-  if( argn > 3 ){
+  if( argn >= 3 ){
     if( strcmp(argv[2], "ON") ){
       accensione = (long) time(NULL);
       tempo_utilizzo.da_calcolare = TRUE;
@@ -105,22 +113,20 @@ int main( int argn, char** argv ){
       accesa = FALSE;
   }
 
-  if( argn > 4 ){
+  if( argn >= 4 ){
     string tempo = argv[3];
     tempo_utilizzo.valore.integer = atoi(tempo);
   }
 
-  crea_pipe(id, (string) PERCORSO_BASE_DEFAULT);
-  signal(SIGINT, termina);
+  sprintf(pipe_interna, "%s/%d_int", (string) PERCORSO_BASE_DEFAULT, id);
+  sprintf(pipe_esterna, "%s/%d_ext", (string) PERCORSO_BASE_DEFAULT, id);
 
   /*
   * Sto perennemente in ascolto sulla mia pipe FIFO
   */
-  while(1){
 
-    ascolta_e_interpreta( registri, numero_registri, &accesa );
+  crea_processi_supporto(registri, numero_registri, &accesa);
 
-  }
 
 }
 
@@ -149,9 +155,8 @@ void ascolta_e_interpreta( registro* registri[], int numero_registri, boolean* a
   registro* tempo_utilizzo = registri[0];
   // Quando arriva un messaggio lo leggo e tolgo il \n finale, se presente.
   char messaggio[100];
-  while( !leggi_messaggio(id, "/tmp", messaggio, 99))
+  while( read_msg(pipe_interna, messaggio, 99) == FALSE)
     perror("Errore in lettura");
-  //fgets(messaggio, 99, stdin);
 
   strtok(messaggio, "\n");
 
@@ -235,6 +240,7 @@ void gestisci_LABELUP( coda_stringhe* separata, registro* registri[], boolean* a
     }
   } else
     distruggi_coda(separata);
+  send_msg(pipe_interna, "DONE");
 
 }
 
@@ -246,7 +252,7 @@ void gestisci_STATUSGET( coda_stringhe* separata, registro* registri[], int nume
     if( indice == ID_UNIVERSALE || indice == id ){
       int i = 0;
       char res[1024*2];
-      sprintf(res, "%s BULB, id: %d ", GET_STATUS_RESPONSE, id );
+      sprintf(res, "%s bulb id: %d ", GET_STATUS_RESPONSE, id );
       for( i = 0; i < numero_registri; i++ ){
 
         char str[1024];
@@ -255,7 +261,7 @@ void gestisci_STATUSGET( coda_stringhe* separata, registro* registri[], int nume
         strcat( res, str );
 
       }
-      manda_messaggio(id, (string) PERCORSO_BASE_DEFAULT, res);
+      send_msg(pipe_interna, res);
     }
 
 }
@@ -265,18 +271,80 @@ void gestisci_ID(coda_stringhe* separata){
   char tmp[10];
   primo(separata, tmp, TRUE);
   if( atoi(tmp) == id )
-    manda_messaggio(id, (string) PERCORSO_BASE_DEFAULT, "TRUE");
+    send_msg(pipe_interna, "TRUE");
   else
-    manda_messaggio(id, (string) PERCORSO_BASE_DEFAULT, "FALSE");
+    send_msg(pipe_interna, "FALSE");
 
 }
 
 void termina(int x){
 
+  // Uccido i miei figli.
+  kill(figli[0], SIGKILL);
+  kill(figli[1], SIGKILL);
+
+  // Chiudo il file descriptor.
   close(file);
+
+  // Distruggo tutte le FIFO create.
   char pipe[50];
   sprintf(pipe, "/tmp/%d", id);
   unlink(pipe);
+  unlink(pipe_esterna);
+  unlink(pipe_interna);
   exit(0);
+
+}
+
+void crea_processi_supporto(registro* registri[], int numero_registri, boolean* accesa){
+
+  pid_t pid = fork();
+  if( pid == 0 ){
+
+    // Se sono il figlio, sto in ascolto perennemente sulla pipe dell'umano
+    // e invio quello che ricevo sulla pipe interna.
+    mkfifo(pipe_esterna, 0666);
+    while(1){
+
+      char msg[200];
+      read_msg(pipe_esterna, msg, 200);
+      send_msg(pipe_interna, msg);
+
+    }
+
+  } else if( pid > 0 ){
+
+    // Il padre crea un nuovo figlio.
+    figli[0] = pid;
+    pid = fork();
+    if( pid == 0 ){
+
+      // Il padre sta in ascolto sulla PIPE del controllore del componente e invia
+      // tutto quello che riceve sulla FIFO interna al componente, aspettando un messaggio
+      // DONE o altro e in caso lo restituisce al padre.
+      while(1){
+        crea_pipe(id, (string) PERCORSO_BASE_DEFAULT);
+        char msg[200];
+        leggi_messaggio(id, (string) PERCORSO_BASE_DEFAULT, msg, 199);
+        send_msg(pipe_interna, msg);
+        read_msg(pipe_interna, msg, 199);
+        if( strcmp(msg, "DONE") != 0 )
+          manda_messaggio(id, (string) PERCORSO_BASE_DEFAULT, msg);
+
+      }
+
+    } else if( pid > 0 ) {
+
+      // Il figlio sta in ascolto sulla FIFO interna e interpreta i comandi che arrivano.
+      figli[1] = pid;
+      signal(SIGINT, termina);
+      mkfifo(pipe_interna, 0666);
+      while(1){
+        ascolta_e_interpreta(registri, numero_registri, accesa);
+      }
+
+    }
+
+  }
 
 }
