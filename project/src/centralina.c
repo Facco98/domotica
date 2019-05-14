@@ -22,6 +22,23 @@ void gestisci_add( coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
 void minuscolo(string str);
 boolean suffix(const char *str, const char *suffix);
 
+void stampa_componente(string msg){
+
+  coda_stringhe* coda = crea_coda_da_stringa(msg, " ");
+  char tipo[20];
+  primo(coda, tipo, TRUE);
+  if( strcmp(tipo, "bulb") == 0 ){
+
+    char id[20], time[20];
+    primo(coda, id, TRUE);
+    primo(coda, time, TRUE);
+
+    printf("bulb id: %s time: %s\n", id, time);
+
+  }
+
+}
+
 const int id = 0;
 int id_successivo = id+1;
 lista_stringhe* dispositivi_ammessi;
@@ -313,7 +330,7 @@ void gestisci_list(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
       } else {
         if( prefix(GET_STATUS_RESPONSE, msg) == TRUE ){
           flag = TRUE;
-          printf("%s\n", msg+12);
+          stampa_componente(msg+13);
 
         }
         it = it -> succ;
@@ -435,8 +452,9 @@ void gestisci_info(coda_stringhe* separata, lista_stringhe* lista_pipes){
     if( send_msg(pipe, msg) == FALSE || read_msg(pipe, msg, 199) == FALSE ){
       rimuovi_nodo(lista_pipes, it);
       free(it);
-    } else
-      printf("%s\n", msg+12);
+    } else{
+      stampa_componente(msg+13);
+    }
 
   } else{
 
