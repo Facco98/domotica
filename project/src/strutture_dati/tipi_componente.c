@@ -28,7 +28,7 @@ boolean stampa_registro(const registro* r, string output){
     strcpy(output, reg.valore.str);
     if( reg.da_calcolare == TRUE )
       calcola_registro_stringa(r, output);
-    sprintf(output, "%s: %s", reg.nome, output);
+    sprintf(output, "%s", output);
   }
   return TRUE;
 }
