@@ -140,9 +140,9 @@ void crea_processi_supporto(registro* registri[], int numero_registri, boolean* 
     pid = fork(); //genero un nuovo processo identico a me
     if( pid == 0 ) //se sono il figlio
     {
+      crea_pipe(id, (string) PERCORSO_BASE_DEFAULT); //creo pipe per comunicazione con il dispositivo padre
       while(1) //leggo e invio messaggi da pipe con padre (= dispositivo sopra) a pipe_interna
       {
-        crea_pipe(id, (string) PERCORSO_BASE_DEFAULT); //creo pipe per comunicazione con il dispositivo padre
         char msg[200];
         leggi_messaggio(id, (string) PERCORSO_BASE_DEFAULT, msg, 199);
         send_msg(pipe_interna, msg);
