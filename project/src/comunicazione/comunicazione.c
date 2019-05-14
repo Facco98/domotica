@@ -26,7 +26,9 @@ int file = -1;
 boolean send_msg( const string pipe, const string messaggio ){
 
   boolean res = FALSE;
-  file = open(pipe, O_WRONLY | O_NONBLOCK );
+  if( access(pipe, F_OK) == -1 )
+    return FALSE;
+  file = open(pipe, O_WRONLY);
   if( file >= 0 ){
     write(file, messaggio, strlen(messaggio)+1);
     close(file);
