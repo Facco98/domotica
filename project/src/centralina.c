@@ -37,7 +37,7 @@ void stampa_componente(string msg){
     strcpy(concat, "");
     primo(coda, id, TRUE);
 
-    printf("HUB id: %s\n", id);
+    printf("HUB id: %s[\n", id);
 
     while(primo(coda, tmp, TRUE) == TRUE){
 
@@ -48,14 +48,17 @@ void stampa_componente(string msg){
 
       } else {
 
+        strcat(concat, " ");
         strcat(concat, tmp);
 
       }
 
     }
 
+    if( strcmp(concat, "") != 0 )
+      stampa_componente(concat);
 
-
+    printf("]\n");
 
   }
 
