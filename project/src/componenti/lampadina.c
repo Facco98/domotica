@@ -252,7 +252,7 @@ void gestisci_STATUSGET( coda_stringhe* separata, registro* registri[], int nume
     if( indice == ID_UNIVERSALE || indice == id ){
       int i = 0;
       char res[1024*2];
-      sprintf(res, "%s BULB, id: %d ", GET_STATUS_RESPONSE, id );
+      sprintf(res, "%s bulb id: %d ", GET_STATUS_RESPONSE, id );
       for( i = 0; i < numero_registri; i++ ){
 
         char str[1024];
