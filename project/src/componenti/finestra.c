@@ -10,16 +10,16 @@
 #include "comunicazione/comunicazione.h"
 
 //funzione per calcolare il valore di un registro, in particolare quello relativo al tempo di utilizzo
-boolean calcola_registro_intero( registro* registro, int* res );
+boolean calcola_registro_intero( const registro* registro, int* res );
 
 //funzione che calcola il valore stringa di un registro, FALSE in caso di error, TRUE altrimenti
 boolean calcola_registro_stringa( const registro* registro, string res);
 
 //funzione per gestire l'aggiornamento degli interruttori
-void gestisci_LABELUP(coda_stringhe* istruzioni, rigestro* registri[], boolean* stato, boolean* apri, boolean* chiudi);
+void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* stato, boolean* apri, boolean* chiudi);
 
 //funzione per gestire la richiesta dello stato della finestra
-void gestisci_STATUSGET(coda_stringhe* istruzioni, registro* registri[], int numero_registri, int id);
+void gestisci_STATUSGET(coda_stringhe* istruzioni, registro* registri[], int numero_registri);
 
 //funzione per capire se l'id è quello del processo oppure no
 void gestisci_ID(coda_stringhe* istruzioni);
@@ -28,7 +28,7 @@ void gestisci_ID(coda_stringhe* istruzioni);
 void termina(int x);
 
 //gestisce la creazione dei processi che costiutiscono il componente (finestra)
-void crea_processi_supporto(registro* registri[], int numero_registri, boolean* stato, boolena* apri, boolean* chiudi);
+void crea_processi_supporto(registro* registri[], int numero_registri, boolean* stato, boolean* apri, boolean* chiudi);
 
 //funzion eper interpretare messaggi
 void ascolta_e_interpreta (registro* registri[], int numero_registri, boolean* stato, boolean* apri, boolean* chiudi);
@@ -103,7 +103,7 @@ int main (int argn, char** argv)
   sprintf(pipe_esterna, "%s/%d_ext", (string) PERCORSO_BASE_DEFAULT, id);
 
   //gestisce la generazione dei processi che costituiscono la finestra
-  crea_processi_supporto(registri, numero_registri, &stato, apri_finestra, chiudi_finestra); //aggiunti apri_finestra e chiudi_finestra perchè poi devono essere passati alla ascolta e interpreta
+  crea_processi_supporto(registri, numero_registri, &stato, &apri_finestra, &chiudi_finestra); //aggiunti apri_finestra e chiudi_finestra perchè poi devono essere passati alla ascolta e interpreta
 
   /*
   //la finestra non deve fare altro che restare in ascolto sulla sua pipe in attesa di comandi/messaggi
@@ -114,19 +114,19 @@ int main (int argn, char** argv)
 
 } //qui finisce il main
 
-boolean calcola_registro_intero( registro* registro, int* res )
+boolean calcola_registro_intero( const registro* registro, int* res )
 {
   //se non serve calcolare il registro o se non è un registro intero, restituisco FALSE
   if( registro -> da_calcolare == FALSE || registro -> is_intero == FALSE )
-    {
-      return FALSE;
-    }
+  {
+    return FALSE;
+  }
 
   //se il registro si chiama "time", calcolo il tempo di utilizzo
   if( strcmp(registro -> nome, "time") == 0 )
   {
     long ora = (long) time(NULL);
-    *res = (registro -> valore.integer + (ora) - accensione);
+    *res = (registro -> valore.integer + (ora) - apertura);
   }
 
   return TRUE;
@@ -148,7 +148,7 @@ void ascolta_e_interpreta (registro* registri[], int numero_registri, boolean* s
 
   strtok(messaggio, "\n"); //elimino "\n" finale
 
-  coda_stringhe* istruzioni = crea_coda_da_stringa(messsaggio, " "); //creo la coda di strignhe
+  coda_stringhe* istruzioni = crea_coda_da_stringa(messaggio, " "); //creo la coda di strignhe
 
   //inizio ad interpretare il messaggio arrivato
   char nome_comando[20];
@@ -160,19 +160,19 @@ void ascolta_e_interpreta (registro* registri[], int numero_registri, boolean* s
   //gestisco i vari comandi che possono arrivare
   if(strcmp(nome_comando, GET_STATUS) == 0) //se il comando serev per restituitìre lo stato
   {
-    gestisci_STATUSGET(istruzioni, registri, numero_registri, *id);
+    gestisci_STATUSGET(istruzioni, registri, numero_registri);
   }
 
   else if(strcmp(nome_comando, UPDATE_LABEL) == 0) //se il comando serve per AGGIORNARE UN INTERRUTTORE
   {
-    gestisci_LABELUP(istruzioni, registri, stato, apri_finestra, chiudi_finestra);
+    gestisci_LABELUP(istruzioni, registri, stato, apri, chiudi);
   }
 
   else if(strcmp(nome_comando, REMOVE) == 0) //se il comando serve per rimuovere la finestra
   {
     //copiata da lampadina
     char tmp[20];
-    primo(separata, tmp, TRUE);
+    primo(istruzioni, tmp, TRUE);
     int id_ric = atoi(tmp);
     if( id_ric == id || id_ric == ID_UNIVERSALE ){
 
@@ -193,12 +193,12 @@ void ascolta_e_interpreta (registro* registri[], int numero_registri, boolean* s
 
 }
 
-void gestisci_LABELUP(coda_stringhe* istruzioni, rigestro* registri[], boolean* stato, boolean* apri, boolean* chiudi)
+void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* stato, boolean* apri, boolean* chiudi)
 {
   registro* tempo_utilizzo = registri[0];
 
   char id_comp[20];
-  primo(separata, id_comp, TRUE); //recupero l'id indicato nel messaggio, se sono io faccio robe
+  primo(istruzioni, id_comp, TRUE); //recupero l'id indicato nel messaggio, se sono io faccio robe
   int id_ric = atoi(id_comp);
 
   if( id_ric == id || id_ric == ID_UNIVERSALE )
@@ -206,43 +206,47 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, rigestro* registri[], boolean* 
     char azione[20]; //azione da compiere sulla finetsra (= OPEN | CLOSE)
     primo(istruzioni, azione, TRUE); //estraggo dalla coda di stringhe l'azione da compiere
 
-    if(strcmp(azione, "OPEN") == 0)//se devo aprire la finestra
-    {
-      if(*stato == FALSE)//se la finestra è CHIUSA
+    char pos[20];
+    primo(istruzioni, pos, TRUE);
+
+      if(strcmp(azione, "OPEN") == 0 && strcmp(pos, "ON") == 0)//se devo aprire la finestra
       {
-        *apri = TRUE; //"schiaccio" interruttore di apertura
-        *stato = TRUE; //"Apro" la finestra
-        apertura = (long) time(NULL); //salvo l'ora in cui ho aperto la fienstra
-        tempo_utilizzo -> da_calcolare = TRUE; // ????
-        *apri = FALSE; //interruttore torna su off
+        if(*stato == FALSE)//se la finestra è CHIUSA
+        {
+          *apri = TRUE; //"schiaccio" interruttore di apertura
+          *stato = TRUE; //"Apro" la finestra
+          apertura = (long) time(NULL); //salvo l'ora in cui ho aperto la fienstra
+          tempo_utilizzo -> da_calcolare = TRUE; // ????
+          *apri = FALSE; //interruttore torna su off
+        }
       }
-    }
-    else
-    {
-      if(*stato == TRUE) //se la finestra è APERTA
+      else if(strcmp(azione, "CLOSE") == 0 && strcmp(pos, "ON") == 0)
       {
-        *chiudi = TRUE; //"schiaccio" l'interruttore per chiudere la finestra
-        *stato = FALSE; //"chiudo" la fienstra
-        //salvo il l'intervallo di tempo che è rimasta aperta
-        long ora = (long) time(NULL);
-        tempo_utilizzo -> valore.integer += (ora - apertura);
-        tempo_utilizzo -> da_calcolare = FALSE;
+        if(*stato == TRUE) //se la finestra è APERTA
+        {
+          *chiudi = TRUE; //"schiaccio" l'interruttore per chiudere la finestra
+          *stato = FALSE; //"chiudo" la fienstra
+          //salvo il l'intervallo di tempo che è rimasta aperta
+          long ora = (long) time(NULL);
+          tempo_utilizzo -> valore.integer += (ora - apertura);
+          tempo_utilizzo -> da_calcolare = FALSE;
+        }
       }
-    }
 
   }
   else
   {
-    distruggi_coda(separata); //elimino il messaggio arrivato
-    send_msg(pipe_interna, "DONE"); //rispondo sulla pipe interna di aver fatto (= niente perchè no sono io il processo interessato)
+    distruggi_coda(istruzioni); //elimino il messaggio arrivato
+
   }
+  send_msg(pipe_interna, "DONE"); //rispondo sulla pipe interna di aver fatto (= niente perchè no sono io il processo interessato)
 
 }
 
 void gestisci_STATUSGET(coda_stringhe* istruzioni, registro* registri[], int numero_registri)
 {
   char indice_ric[10];
-  primo(separata, indice_ric, TRUE); //recupero l'id l dispositivo interessato
+  primo(istruzioni, indice_ric, TRUE); //recupero l'id l dispositivo interessato
   int indice = atoi(indice_ric);
 
   if( indice == ID_UNIVERSALE || indice == id ) //se sono io il dispositivo prescelto
@@ -295,7 +299,7 @@ void termina(int x)
 
 }
 
-void crea_processi_supporto(registro* registri[], int numero_registri, boolean* stato, boolena* apri, boolean* chiudi)
+void crea_processi_supporto(registro* registri[], int numero_registri, boolean* stato, boolean* apri, boolean* chiudi)
 {
 
   pid_t pid = fork(); //genero un processo identico a me (finestra)
