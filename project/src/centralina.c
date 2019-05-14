@@ -105,7 +105,7 @@ void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* 
       close(fd);
       sprintf(tmp, "%s/%s", (string) PERCORSO_BASE_DEFAULT, id_dispositivo);
       char status[100];
-      strcmp(status, "");
+      strcpy(status, "");
       fd = open(tmp, O_WRONLY | O_NONBLOCK);
       close(fd);
       string pipe;
