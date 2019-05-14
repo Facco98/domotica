@@ -263,7 +263,7 @@ void gestisci_STATUSGET(coda_stringhe* separata){
 
     // Creo il messaggio contenente la risposta.
     char* response = (char*) malloc(sizeof(char) * 200 * lista_pipes -> n);
-    sprintf(response, "%s HUB id: %d" ,GET_STATUS_RESPONSE, id);
+    sprintf(response, "%s hub %d" ,GET_STATUS_RESPONSE, id);
 
     // Mando a tutti i miei figli che voglio lo stato.
     nodo_stringa* it = lista_pipes -> testa;
@@ -281,7 +281,7 @@ void gestisci_STATUSGET(coda_stringhe* separata){
 
       } else {
 
-        strcat(response, "\n");
+        strcat(response, " \n ");
         strcat(response, msg+strlen(GET_STATUS_RESPONSE)+1);
 
       }
