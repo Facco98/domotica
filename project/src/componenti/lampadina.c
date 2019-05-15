@@ -99,12 +99,13 @@ int main( int argn, char** argv ){
   */
   id = atoi(argv[1]);
 
+  printf("[ARGN]%d\n", argn);
   /*
   * E' possibile fornire anche gli altri valori al posto di quelli standard in questo
   * ordine: stato tempo_di_utilizzo.
   */
   if( argn >= 3 ){
-    if( strcmp(argv[2], "ON") ){
+    if( strcmp(argv[2], "ON") == 0 ){
       accensione = (long) time(NULL);
       tempo_utilizzo.da_calcolare = TRUE;
       accesa = TRUE;
