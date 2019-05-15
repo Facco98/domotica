@@ -279,7 +279,7 @@ void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* 
       while( it != NULL && flag == FALSE ){
 
         char res[10];
-        if( send_msg(it -> val, tmp) == FALSE || read_msg(it -> val, res, 199) == FALSE ){
+        if( send_msg(it -> val, tmp) == FALSE || read_msg(it -> val, res, 9) == FALSE ){
 
           nodo_stringa* l = it;
           rimuovi_nodo(lista_pipes, it);
@@ -287,7 +287,7 @@ void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* 
           free(l);
 
 
-        } else if( strcmp(res, "TRUE")){
+        } else if( strcmp(res, "TRUE") == 0){
 
           flag = TRUE;
 
@@ -307,7 +307,7 @@ void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* 
 
       }
 
-      sprintf(tmp, "SPAWN %s", status);
+      sprintf(tmp, "SPAWN %s %s", id_padre, status);
       send_msg(it -> val, tmp);
 
     }
