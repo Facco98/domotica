@@ -117,6 +117,8 @@ void rimuovi_nodo(lista_stringhe* lista, nodo_stringa* nodo){
   }
   else{
 
+    if( lista -> coda == nodo )
+      lista -> coda = nodo -> prec;
     nodo -> prec -> succ = nodo -> succ;
 
   }
