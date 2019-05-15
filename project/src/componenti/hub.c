@@ -149,7 +149,17 @@ void ascolta_e_interpreta(){
 
     gestisci_SPAWN(separata);
 
-  }  else {
+  }  else if( strcmp(comando, "CONFIRM") == 0 ){
+
+    char tmp[20];
+    primo(separata, tmp, TRUE);
+    int d = atoi(tmp);
+    if( d == id || d == ID_UNIVERSALE )
+      send_msg(pipe_interna, "TRUE");
+    else
+      send_msg(pipe_interna, "FALSE");
+
+  } else {
 
     printf("Comando non supportato\n");
 
@@ -454,41 +464,58 @@ void gestisci_REMOVE(coda_stringhe* separata){
 void gestisci_SPAWN(coda_stringhe* separata){
 
 
+  printf("entrato\n");
   char id_ric[20];
   primo(separata, id_ric, TRUE);
   int id_comp = atoi(id_ric);
   if( id_comp == id || id_comp == ID_UNIVERSALE ){
 
 
-    char line[1024];
-    strcpy(line, "");
-    char type[100];
-    char tmp[100];
 
-    // Recupero il tipo di componente.
-    primo(separata, type, TRUE);
-    while( primo(separata, tmp, TRUE) ==  TRUE ){
+    char tmp[40], percorso[50];
+    primo(separata, tmp, TRUE);
+    sprintf(percorso, "./%s.out", tmp);
 
-      // Creo il resto dei parametri da passare su linea di comando.
-      strcat(line, tmp);
-      strcat(line, " ");
 
-    }
-    char path[200];
-    sprintf(path, "./%s.out", type );
     pid_t pid = fork();
 
     if( pid == 0 ){
 
+      char* params[] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
       // Se sono il figlio cambio l'immagine.
-      execlp(path, path, line, NULL);
+
+      params[0] = (char*) malloc(sizeof(char)*40);
+      strcpy(params[0], percorso);
+
+      primo(separata, tmp, TRUE);
+
+      params[1] = (char*) malloc(sizeof(char)*40);
+      strcpy(params[1], tmp);
+
+      int i = 2;
+      while( primo(separata, tmp, TRUE) ==  TRUE ){
+
+        params[i] = (char*) malloc((strlen(tmp)+1) * sizeof(char));
+        strcpy(params[i], tmp);
+        i++;
+      }
+
+      execv(params[0], params);
+
+      int j = 0;
+      for( j = 0; j <= i; j++ )
+        free(params[j]);
 
     } else if( pid > 0 ) {
 
       // Se sono il padre aggiungo alla mia lista di pipes la pipe del figlio appena creato.
+      char id[30];
+      primo(separata, tmp, FALSE);
       char pipe_figlio[100];
-      sprintf(pipe_figlio, "%s/%s", (string) PERCORSO_BASE_DEFAULT, strtok(line, " "));
+      sprintf(pipe_figlio, "%s/%s", (string) PERCORSO_BASE_DEFAULT, tmp);
       append(lista_pipes, pipe_figlio);
+      printf("[APPESA]:%s\n", pipe_figlio);
+      distruggi(separata);
 
     }
 
