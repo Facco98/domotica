@@ -192,15 +192,16 @@ void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* 
 
     if( nodo_elemento == NULL ){
 
-      printf("UNO\n");
       boolean flag = FALSE;
       char tmp[100];
 
 
       nodo_stringa* it = lista_pipes -> testa;
+
       sprintf(tmp, "%s %s", "CONFIRM", id_componente);
       while( it != NULL && flag == FALSE ){
 
+        printf("[PIPE-LINK]%s\n", it->val);
         char res[10];
         if( send_msg( it -> val, tmp ) == FALSE || read_msg(it -> val, res, 9) == FALSE ){
 
@@ -217,22 +218,21 @@ void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* 
           free(l);
           flag = TRUE;
 
-        } else
+        } else{
+          printf("[RES-CONFIRM]%s\n", res);
           it = it -> succ;
-
+        }
       }
 
       sprintf(tmp, "%s %s", REMOVE, id_componente);
       send_msg(pipe_componente -> val, tmp);
-      printf("DUE\n");
 
 
     } else {
 
-      printf("TRE\n");
+
       rimuovi_nodo(da_creare, nodo_elemento);
       free(nodo_elemento);
-      printf("QUATTRO\n");
 
     }
 
@@ -241,30 +241,41 @@ void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* 
       pid_t pid = fork();
       if( pid == 0 ){
 
-        char type[50];
-        char line[1024];
-
         coda_stringhe* coda = crea_coda_da_stringa(status, " ");
-        primo(coda, type, TRUE);
-        char percorso[50];
-        sprintf(percorso, "./%s.out", type );
+        char tmp[40], percorso[50];
+        primo(coda, tmp, TRUE);
+        sprintf(percorso, "./%s.out", tmp);
 
-        primo(coda, line, TRUE);
 
-        while( primo(coda, type, TRUE) == TRUE ){
+        char* params[] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+        // Se sono il figlio cambio l'immagine.
 
-          strcat(line, " ");
-          strcat(line, type);
+        params[0] = (char*) malloc(sizeof(char)*40);
+        strcpy(params[0], percorso);
 
+        primo(coda, tmp, TRUE);
+
+        params[1] = (char*) malloc(sizeof(char)*40);
+        strcpy(params[1], tmp);
+
+        int i = 2;
+        while( primo(coda, tmp, TRUE) ==  TRUE ){
+
+          params[i] = (char*) malloc((strlen(tmp)+1) * sizeof(char));
+          strcpy(params[i], tmp);
+          i++;
         }
 
-        execlp(percorso, percorso, line, NULL);
+        execv(params[0], params);
+        perror("exec");
+
 
       } else if(pid > 0) {
 
         char pipe[100];
         sprintf(pipe, "%s/%s", (string) PERCORSO_BASE_DEFAULT, id_componente);
         append(lista_pipes, pipe);
+        printf("[CENTRALINA-APPEND]%s\n", pipe);
 
       }
 
@@ -357,6 +368,7 @@ void gestisci_list(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
     char msg[1024];
     while(flag == FALSE && it != NULL){
 
+      printf("[PIPE]%s\n", pipe_figlio);
       if( read_msg(pipe_figlio, msg, 1023) == FALSE ){
         nodo_stringa* tmp = it;
         rimuovi_nodo(lista_pipes, it);
