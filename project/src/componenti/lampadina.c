@@ -186,14 +186,25 @@ void ascolta_e_interpreta( registro* registri[], int numero_registri, boolean* a
       termina(0);
 
     }
+    send_msg(pipe_interna, "DONE");
 
   } else if( strcmp(nome_comando, ID) == 0 ){
 
     gestisci_ID(separata);
 
-  } else {
+  } else if( strcmp(nome_comando, "CONFIRM") == 0 ){
 
-    printf("Comando non supportato: %s\n", nome_comando);
+    char tmp[20];
+    primo(separata, tmp, TRUE);
+    if( id == atoi(tmp) || atoi(tmp) == ID_UNIVERSALE )
+      send_msg(pipe_interna, "TRUE");
+    else
+      send_msg(pipe_interna, "FALSE");
+
+
+  } else{
+
+      printf("Comando non supportato: %s\n", nome_comando);
 
   }
 
@@ -252,7 +263,7 @@ void gestisci_STATUSGET( coda_stringhe* separata, registro* registri[], int nume
     if( indice == ID_UNIVERSALE || indice == id ){
       int i = 0;
       char res[1024*2];
-      sprintf(res, "%s bulb %d ", GET_STATUS_RESPONSE, id );
+      sprintf(res, "%s bulb %d", GET_STATUS_RESPONSE, id );
       for( i = 0; i < numero_registri; i++ ){
 
         char str[1024];
@@ -262,7 +273,8 @@ void gestisci_STATUSGET( coda_stringhe* separata, registro* registri[], int nume
 
       }
       send_msg(pipe_interna, res);
-    }
+    } else
+      send_msg(pipe_interna, "DONE");
 
 }
 
