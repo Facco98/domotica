@@ -546,11 +546,12 @@ void stampa_componente(string msg){
   primo(coda, tipo, TRUE);
   if( strcmp(tipo, "bulb") == 0 ){
 
-    char id[20], time[20];
+    char id[20], time[20], stato[20];
     primo(coda, id, TRUE);
+    primo(coda, stato, TRUE);
     primo(coda, time, TRUE);
 
-    printf("BULB id: %s time: %s\n", id, time);
+    printf("BULB id: %s stato: %s time: %s\n", id, stato, time);
 
   } else if( strcmp(tipo, "hub") == 0 ){
 
