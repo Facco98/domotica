@@ -37,7 +37,7 @@ void gestisci_LABELUP( coda_stringhe* args, registro* registri[], boolean* stato
 /*
 * Funzione per gestire il messaggio STATUSGET, per avere lo status.
 */
-void gestisci_STATUSGET( coda_stringhe* args, registro* registri[], int numero_registri );
+void gestisci_STATUSGET( coda_stringhe* args, registro* registri[], int numero_registri, boolean* accesa );
 
 /*
 * Funzione per gestire il messaggio ID, per sapere se un dato ID è il mio.
@@ -170,7 +170,7 @@ void ascolta_e_interpreta( registro* registri[], int numero_registri, boolean* a
 
   if( strcmp(nome_comando, GET_STATUS) == 0 ){
 
-    gestisci_STATUSGET(separata, registri, numero_registri);
+    gestisci_STATUSGET(separata, registri, numero_registri, accesa);
 
   } else if( strcmp(nome_comando, UPDATE_LABEL) == 0 ){
 
@@ -255,7 +255,7 @@ void gestisci_LABELUP( coda_stringhe* separata, registro* registri[], boolean* a
 
 }
 
-void gestisci_STATUSGET( coda_stringhe* separata, registro* registri[], int numero_registri ){
+void gestisci_STATUSGET( coda_stringhe* separata, registro* registri[], int numero_registri, boolean* accesa ){
 
     char indice_ric[10];
     primo(separata, indice_ric, TRUE);
@@ -263,7 +263,7 @@ void gestisci_STATUSGET( coda_stringhe* separata, registro* registri[], int nume
     if( indice == ID_UNIVERSALE || indice == id ){
       int i = 0;
       char res[1024*2];
-      sprintf(res, "%s bulb %d", GET_STATUS_RESPONSE, id );
+      sprintf(res, "%s bulb %d %s", GET_STATUS_RESPONSE, id, *accesa == TRUE ? "ON" : "OFF" );
       for( i = 0; i < numero_registri; i++ ){
 
         char str[1024];
