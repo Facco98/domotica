@@ -254,6 +254,10 @@ void ascolta_e_interpreta(registro* registri[], int numero_registri, boolean* ap
   {
     gestisci_ID(istruzioni); //OK
   }
+  else if(strcmp(nome_comando, "CONFIRM") == 0)
+  {
+    gestisci_ID(istruzioni);
+  }
   else
   {
     printf("Comando non supportato: %s\n", nome_comando); //OK
@@ -263,6 +267,9 @@ void ascolta_e_interpreta(registro* registri[], int numero_registri, boolean* ap
 
 
 }
+
+// risponde alla domanda: posso  raggiungere il dispositivo con ID id passando da te?
+//per i dispositivi foglia è identica a prima: se sono io true, altrimenti false
 
 void gestisci_ID(coda_stringhe* istruzioni)
 {
