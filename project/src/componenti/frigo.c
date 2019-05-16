@@ -32,7 +32,7 @@ char pipe_interna[50];
 char pipe_esterna[50];
 
 pid_t figli[2];
- boolean aperto;
+boolean aperto;
 
 
 int main (int argn, char** argv)
@@ -84,12 +84,41 @@ int main (int argn, char** argv)
   if( argn < 2 )
   {
     exit(130);
-  }
+  } 
 
   //recupero l'id
   id = atoi(argv[1]);
 
-  //altri tipi di input ????
+  if( argn >= 3 ){
+    if( strcmp(argv[2], "ON") == 0 ){
+      apertura = (long) time(NULL);
+      tempo_utilizzo.da_calcolare = TRUE;
+      stato = TRUE;
+    }
+    else
+      stato = FALSE;
+  }
+
+  //recupero registri[0] ossia tempo_utilizzo
+  if (argn >=  4){
+  	registro[0] -> valore.integer = atoi(argv[3]);
+  }  
+	//recupero registri[1] ossia chiusura
+   if (argn >=  5){
+  	registro[1] -> valore.integer = atoi(argv[4]);
+  }
+	//recupero registri[2] ossia riempimento
+   if (argn >=  6){
+  	registro[2] -> valore.integer = atoi(argv[5]);
+  }
+	//recupero registri[3] ossia temperatura
+   if (argn >=  7){
+  	registro[3] -> valore.integer = atoi(argv[6]);
+  }
+
+  if (stato == TRUE){
+  	alert(registri[1]->valore.integer);		//controllare nella documentazione in che unità di misura è
+  }
 
   //salvo i percorsi delle pipe per la comunicazione interna ed esterna
   sprintf(pipe_interna, "%s/%d_int", (string) PERCORSO_BASE_DEFAULT, id);
