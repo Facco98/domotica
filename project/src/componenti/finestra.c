@@ -19,7 +19,7 @@ boolean calcola_registro_stringa( const registro* registro, string res);
 void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* stato, boolean* apri, boolean* chiudi);
 
 //funzione per gestire la richiesta dello stato della finestra
-void gestisci_STATUSGET(coda_stringhe* istruzioni, registro* registri[], int numero_registri);
+void gestisci_STATUSGET(coda_stringhe* istruzioni, registro* registri[], int numero_registri, boolean* stato);
 
 //funzione per capire se l'id è quello del processo oppure no
 void gestisci_ID(coda_stringhe* istruzioni);
@@ -154,7 +154,7 @@ void ascolta_e_interpreta (registro* registri[], int numero_registri, boolean* s
   //gestisco i vari comandi che possono arrivare
   if(strcmp(nome_comando, GET_STATUS) == 0) //se il comando serev per restituitìre lo stato
   {
-    gestisci_STATUSGET(istruzioni, registri, numero_registri);
+    gestisci_STATUSGET(istruzioni, registri, numero_registri, stato);
   }
 
   else if(strcmp(nome_comando, UPDATE_LABEL) == 0) //se il comando serve per AGGIORNARE UN INTERRUTTORE
@@ -243,7 +243,7 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
 
 }
 
-void gestisci_STATUSGET(coda_stringhe* istruzioni, registro* registri[], int numero_registri)
+void gestisci_STATUSGET(coda_stringhe* istruzioni, registro* registri[], int numero_registri, boolean* stato)
 {
   char indice_ric[10];
   primo(istruzioni, indice_ric, TRUE); //recupero l'id l dispositivo interessato
