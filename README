@@ -6,7 +6,17 @@ Componenti del gruppo:
  Federica        -           Ress                -           195172
 
 Breve descrizione del progetto:
-Emulazione di un sistema di domotica. 
+Emulazione di un sistema di domotica. I dispositivi creano 3 processi che comunicano tra di loro su tre pipe differenti. 
+[inserire qua gestione di blocking @Claudio ]
+[Inserire qua la gestione delle pipe]
+
+Questo sistema di gestione è comune per tutti le tipologie di dispositivi emulate da questo progetto.
+
+Differenze tra dispositivi di controllo e di interazione
+La differenza tra dispositivi di controllo e dispositivi di interazione è principalmente nella gestione di messaggi in entrata non propri. 
+Quando un dispositivo di controllo riceve un messaggio non proprio chiede ai propri figli se può mandare il messaggio per arrivare al dispositivo interessato. Quando un dispositivo di interazione riceve un messaggio non proprio ???
+
+
 
 Note sui componenti
 
@@ -28,6 +38,8 @@ Ha un registro che indica il tempo di utilizzo. Controlla l'input e sovrascrive 
 ...
 ...
 
+Okay, dato che viene troppo lungo proviamo una descrizione più corta
+---------------------------------------v1:-------------------------------
 
 
 Frigo:
@@ -41,6 +53,9 @@ L'umano esegue sempre la stessa funzione la quale:
 - interpreta i messaggi che arrivano 
 
 //??? è così? Manca qualcosa? Forse manca qualcosa nel codice, per gestire l'override?
+
+
+Note sul makefile:
 
 
 Varie ed eventuali:
