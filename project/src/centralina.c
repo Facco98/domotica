@@ -19,7 +19,8 @@ void gestisci_info( coda_stringhe* separata, lista_stringhe* lista_pipes);
 void gestisci_switch( coda_stringhe* separata, lista_stringhe* lista_pipes);
 void gestisci_add(coda_stringhe* separate, lista_stringhe* da_creare, lista_stringhe* dispositivi_ammessi);
 void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_stringhe* da_creare);
-void stampa_componente(string msg);
+void stampa_componente_list(string msg, int indent);
+void stampa_componente_info(string msg, int indent);
 boolean suffix(const char *str, const char *suffix);
 
 
@@ -132,7 +133,7 @@ void gestisci_list(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
 
     string pipe_figlio = it -> val;
     char messaggio[1024];
-    sprintf(messaggio, "%s %d", GET_STATUS, ID_UNIVERSALE);
+    sprintf(messaggio, "%s %d", "STATUSGETSIMPLE", ID_UNIVERSALE);
     send_msg(pipe_figlio, messaggio);
     boolean flag = FALSE;
     char msg[1024];
@@ -148,7 +149,7 @@ void gestisci_list(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
       } else {
         if( prefix(GET_STATUS_RESPONSE, msg) == TRUE ){
           flag = TRUE;
-          stampa_componente(msg+13);
+          stampa_componente_list(msg+13, 0);
 
         }
         it = it -> succ;
@@ -281,7 +282,7 @@ void gestisci_info(coda_stringhe* separata, lista_stringhe* lista_pipes){
       rimuovi_nodo(lista_pipes, it);
       free(it);
     } else{
-      stampa_componente(msg+13);
+      stampa_componente_info(msg+13, 0);
     }
 
   } else{
@@ -321,14 +322,68 @@ void gestisci_add(coda_stringhe* separata, lista_stringhe* da_creare, lista_stri
 
 }
 
-void stampa_componente(string msg){
+void stampa_componente_list(string msg, int indent){
 
   coda_stringhe* coda = crea_coda_da_stringa(msg, " ");
   char tipo[20];
   primo(coda, tipo, TRUE);
+  int i = 0;
+  for( i = 0; i < indent; i++ )
+    printf("  ");
+  printf("- ");
   if( strcmp(tipo, "bulb") == 0 ){
 
-    char id[20], time[20], stato[20];
+    char id[20], stato[20];
+    primo(coda, id, TRUE);
+    primo(coda, stato, TRUE);
+
+    printf("BULB id: %s stato: %s\n", id, stato);
+
+  } else if( strcmp(tipo, "hub") == 0 ){
+
+    char id[20], tmp[1024], concat[1024];
+    strcpy(concat, "");
+    primo(coda, id, TRUE);
+
+    printf("HUB id: %s[\n", id);
+
+    while(primo(coda, tmp, TRUE) == TRUE){
+
+      if( strcmp(tmp, "\n") == 0 ){
+
+        stampa_componente_list(concat, indent+1);
+        strcpy(concat, "");
+
+      } else {
+
+        strcat(concat, " ");
+        strcat(concat, tmp);
+
+      }
+
+    }
+
+    if( strcmp(concat, "") != 0 )
+      stampa_componente_list(concat, indent+1);
+
+    printf("]\n");
+
+  }
+
+}
+
+void stampa_componente_info(string msg, int indent){
+
+  coda_stringhe* coda = crea_coda_da_stringa(msg, " ");
+  char tipo[20];
+  primo(coda, tipo, TRUE);
+  int i = 0;
+  for( i = 0; i < indent; i++ )
+    printf("  ");
+  printf("- ");
+  if( strcmp(tipo, "bulb") == 0 ){
+
+    char id[20], stato[20], time[20];
     primo(coda, id, TRUE);
     primo(coda, stato, TRUE);
     primo(coda, time, TRUE);
@@ -347,7 +402,7 @@ void stampa_componente(string msg){
 
       if( strcmp(tmp, "\n") == 0 ){
 
-        stampa_componente(concat);
+        stampa_componente_info(concat, indent+1);
         strcpy(concat, "");
 
       } else {
@@ -360,13 +415,14 @@ void stampa_componente(string msg){
     }
 
     if( strcmp(concat, "") != 0 )
-      stampa_componente(concat);
+      stampa_componente_info(concat, indent+1);
 
     printf("]\n");
 
   }
 
 }
+
 
 boolean suffix(const char *str, const char *suffix){
     if (!str || !suffix)
