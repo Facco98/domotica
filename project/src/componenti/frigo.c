@@ -18,7 +18,7 @@ void gestisci_ID(coda_stringhe* istruzioni);
 //terminare processo/i del frigo
 void termina(int x);
 //modificare lo stato degli interruttori
-void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* stato, boolean* apri, boolean* chiudi, int temperatura);
+void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* stato, boolean* apri, boolean* chiudi);
 //funzione per gestire la richiesta dello stato del frigo
 void gestisci_STATUSGET(coda_stringhe* istruzioni, registro* registri[], int numero_registri);
 //funzione per chiudere il frigo (da utilizzare se è passato troppo tempo)
@@ -53,7 +53,7 @@ int main (int argn, char** argv)
   tempo_utilizzo.valore.integer = 0;
   tempo_utilizzo.is_intero = TRUE;
 
-  //tempo dopo cui si richiude automaticamente
+  //delay, registro chiusura: tempo dopo cui si richiude automaticamente
   registro chiusura;
   strcpy(chiusura.nome, "delay");
   chiusura.da_calcolare = FALSE; 
@@ -76,7 +76,7 @@ int main (int argn, char** argv)
   temperatura.valore.integer = 0; 
   temperatura.is_intero = TRUE; 
   
-
+//i quattro registri 
   int numero_registri = 4;
   registro* registri[] = {&tempo_utilizzo, &chiusura, &riempimento, &temperatura};
 
@@ -88,7 +88,9 @@ int main (int argn, char** argv)
 
   //recupero l'id
   id = atoi(argv[1]);
-
+// se gli argomenti sono più di 3 allora posso mettere i valori in input, sovrascritti a quelli di default
+  //in ordine:
+  //recupero lo stato
   if( argn >= 3 ){
     if( strcmp(argv[2], "ON") == 0 ){
       apertura = (long) time(NULL);
@@ -117,7 +119,7 @@ int main (int argn, char** argv)
   }
 
   if (stato == TRUE){
-  	alert(registri[1]->valore.integer);		//controllare nella documentazione in che unità di misura è
+  	alarm(registri[1]->valore.integer);		//in secondi
   }
 
   //salvo i percorsi delle pipe per la comunicazione interna ed esterna
@@ -254,7 +256,7 @@ void ascolta_e_interpreta(registro* registri[], int numero_registri, boolean* ap
   {
     gestisci_ID(istruzioni); //OK
   }
-  else if(strcmp(nome_comando, "CONFIRM") == 0)
+  else if(strcmp(nome_comando, "CONFIRM") == 0)	//verifica se è il mio id
   {
     gestisci_ID(istruzioni);
   }
@@ -303,8 +305,8 @@ void termina(int x)
 
 //funzione per gestire l'aggiornamento per gli interruttori
 void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* stato, boolean* apri, boolean* chiudi){
+  
   //recupero i registri 
-
   registro* tempo_utilizzo = registri[0];
   registro* chiusura = registri [1];
   registro* riempimento = registri[2];
@@ -323,12 +325,12 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
     /*a questo punto possono succedere diverse cose
       * posso aprire il frigo                                     //OK
       *posso chiudere il frigo                                    //OK
-                                              //in questi casi mi comporto come fossi una finestra, circa?
-      * posso dovermi chiudere automaticamente (?)                //da fare
+                                              //in questi casi mi comporto come fossi una finestra
+      * posso dovermi chiudere automaticamente 			          //fatto, bisogna capire quando si modifica questo valore (delay)
       *posso dover regolare il termostato                         //OK
       *
       */
-    //in seguito il codice per aprire o chiudere il frigo (tramite comando), la chiusura automatica non è ancora implementata né la gesione del termostato
+    //in seguito il codice per aprire o chiudere il frigo (tramite comando), la chiusura automatica non è ancora implementata né la gestione del termostato
      if(strcmp(azione, "OPEN") == 0 && strcmp(pos, "ON") == 0)//se devo aprire il frigo
       {
         if(*stato == FALSE)//se il frigo è CHIUSO
@@ -336,9 +338,9 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
           *apri = TRUE; //"schiaccio" interruttore di apertura
           *stato = TRUE; //"Apro" il frigo
           apertura = (long) time(NULL); //salvo l'ora in cui ho aperto il frigo
-          tempo_utilizzo -> da_calcolare = TRUE; // ????
+          tempo_utilizzo -> da_calcolare = TRUE; 
           *apri = FALSE; //interruttore torna su off
-          alert(chiusura -> valore.integer); //tra x valore del registro chiusura mi arriva un SIGALARM
+          alarm(chiusura -> valore.integer); //tra x valore del registro chiusura mi arriva un SIGALARM
         }
       }
       else if(strcmp(azione, "CLOSE") == 0 && strcmp(pos, "ON") == 0)
@@ -351,7 +353,7 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
           long ora = (long) time(NULL);
           tempo_utilizzo -> valore.integer += (ora - apertura);
           tempo_utilizzo -> da_calcolare = FALSE;
-          alert(0); //cancella l'alert di chiusura se inviato precedentemente
+          alarm(0); //cancella l'alarm di chiusura se inviato precedentemente
         }
       }
 
@@ -368,8 +370,6 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
   send_msg(pipe_interna, "DONE"); //rispondo sulla pipe interna di aver fatto (= niente perchè no sono io il processo interessato)
 
 }
-
-  
 
 
 }
@@ -407,7 +407,7 @@ void chiuditi_alarm(int x){
 	long ora = (long) time(NULL);
 	tempo_utilizzo -> valore.integer += (ora - apertura);
 	tempo_utilizzo -> da_calcolare = FALSE;
-	alert(0); //cancella l'alert di chiusura se inviato precedentemente   
+	alarm(0); //cancella l'alarm di chiusura se inviato precedentemente   
 
 }
 
@@ -422,16 +422,10 @@ Come gestire il registro di chiusura (delay)?  <- non ha un interruttore, come m
 ------------------------------------------------------Cose implementate ma da controllare:-------------------------------------
 
 Implementate le funzioni  gestisci_STATUSGET e gestisci_LABELUP (da testare).
-Implementata void chiuditi_alarm(int x): manda un messaggio di chiusura (da usare se arriva sigalarm).
-
-La chiamata di gestisci_LABELUP nella riga 200 probabilmente è da modificare, se gestisci_LABELUP è implementata in modo corretto
-
-L'implementazione di gestisci_STATUSGET è la stessa della finestra?
-//CORRETTO
+Implementata void chiuditi_alarm(int x): chiude (da usare se arriva sigalarm).
 
 
-
-
+---------------------------------------------DA FARE DOPO AVER CHIARITO CON IL PROFESSORE--------------------------------------
 ----------------------------------------------------Cose implementate, ma forse fanno schifo:------------------------------------- 
 Devo anche implementare il fatto che se è aperto da tropo tempo deve essere in qualche modo chiuso? Come? Dove, in while (1) nel main, probabilmente
 "troppo tempo" <- indicato dal registro delay, per noi chiusura : implementato in ascolta_e_interpreta, da controllare
