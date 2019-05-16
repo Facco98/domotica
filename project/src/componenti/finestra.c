@@ -33,9 +33,6 @@ void crea_processi_supporto(registro* registri[], int numero_registri, boolean* 
 //funzion eper interpretare messaggi
 void ascolta_e_interpreta (registro* registri[], int numero_registri, boolean* stato, boolean* apri, boolean* chiudi);
 
-//restituisce lo stato versione ridotta
-void gestisci_STATUSGETSIMPLE(coda_stringhe* istruzioni);
-
 
 long apertura; //indica quando la finestra è stata aperta (simile "accensione" della lampadina)
 int id; //id del processo
@@ -188,11 +185,6 @@ void ascolta_e_interpreta (registro* registri[], int numero_registri, boolean* s
     gestisci_ID(istruzioni);
   }
 
-  else if(strcmp(nome_comando, "STATUSGETSIMPLE") == 0)
-  {
-    gestisci_STATUSGETSIMPLE(istruzioni);
-  }
-
   else //un qualsiasi altro comando non previsto
   {
     printf("Comando non supportato: %s\n", nome_comando);
@@ -200,21 +192,6 @@ void ascolta_e_interpreta (registro* registri[], int numero_registri, boolean* s
 
 }
 
-void gestisci_STATUSGETSIMPLE(coda_stringhe* istruzioni)
-{
-  char tmp[20];
-  primo(istruzioni, tmp, TRUE);
-  if( id == atoi(tmp) || atoi(tmp) == ID_UNIVERSALE )
-  {
-    char msg[500];
-    sprintf(msg, "%s window %d %s", GET_STATUS_RESPONSE, id, *stato == TRUE ? "OPEN" : "CLOSE" );
-    send_msg(pipe_interna, msg);
-  }
-  else
-  {
-    send_msg(pipe_interna, "DONE");
-  }
-}
 
 void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* stato, boolean* apri, boolean* chiudi)
 {
