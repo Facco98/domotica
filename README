@@ -1,5 +1,38 @@
-193872 Belotti Federica
-193588 Facchinetti Claudio
-195172 Ress Federica
+Componenti del gruppo:
 
-// --- Inserire breve descrizione del progetto --- //
+    Nome         -           Cognome             -        Numero di matricola
+ Federica        -           Belotti             -           193872
+ Claudio         -           Facchinetti         -           193588
+ Federica        -           Ress                -           195172
+
+Breve descrizione del progetto:
+Emulazione di un sistema di domotica. 
+
+Descrizione dei componenti
+
+Dispositivi di controllo
+Centralina:
+comunica ai figli [...]
+
+Hub:
+[...]
+
+Timer:
+[...]
+
+Dispositivi di interazione
+Finestra:
+[...]
+
+Frigo:
+[...]
+
+Implementazione di umano:
+[...]
+
+Varie ed eventuali:
+[...]
+
+/*
+* nota:  [...] significa inserire commenti/note relative
+*/
