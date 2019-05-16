@@ -21,6 +21,7 @@ void gestisci_add(coda_stringhe* separate, lista_stringhe* da_creare, lista_stri
 void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_stringhe* da_creare);
 void stampa_componente_list(string msg, int indent);
 void stampa_componente_info(string msg, int indent);
+void genera_figlio( string status );
 boolean suffix(const char *str, const char *suffix);
 
 
@@ -331,15 +332,7 @@ void stampa_componente_list(string msg, int indent){
   for( i = 0; i < indent; i++ )
     printf("  ");
   printf("- ");
-  if( strcmp(tipo, "bulb") == 0 ){
-
-    char id[20], stato[20];
-    primo(coda, id, FALSE);
-    primo(coda, stato, FALSE);
-
-    printf("BULB id: %s stato: %s\n", id, stato);
-
-  } else if( strcmp(tipo, "hub") == 0 ){
+  if( strcmp(tipo, "hub") == 0 ){
 
     char id[20], tmp[1024], concat[1024];
     strcpy(concat, "");
@@ -362,7 +355,16 @@ void stampa_componente_list(string msg, int indent){
       printf("  ");
     printf("]\n");
 
+  } else {
+
+    char id[20], stato[20];
+    primo(coda, id, FALSE);
+    primo(coda, stato, FALSE);
+
+    printf("%s id: %s stato: %s\n", tipo, id, stato);
+
   }
+
   distruggi(coda);
 }
 
@@ -586,33 +588,7 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
     pid_t pid = fork();
     if( pid == 0 ){
 
-      coda_stringhe* coda = crea_coda_da_stringa(status, " ");
-      char tmp[40], percorso[50];
-      primo(coda, tmp, TRUE);
-      sprintf(percorso, "./%s.out", tmp);
-
-
-      char* params[] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
-      // Se sono il figlio cambio l'immagine.
-
-      params[0] = (char*) malloc(sizeof(char)*40);
-      strcpy(params[0], percorso);
-
-      primo(coda, tmp, TRUE);
-
-      params[1] = (char*) malloc(sizeof(char)*40);
-      strcpy(params[1], tmp);
-
-      int i = 2;
-      while( primo(coda, tmp, TRUE) ==  TRUE ){
-
-        params[i] = (char*) malloc((strlen(tmp)+1) * sizeof(char));
-        strcpy(params[i], tmp);
-        i++;
-      }
-
-      execv(params[0], params);
-      //perror("exec");
+      genera_figlio(status);
 
 
     } else if(pid > 0) {
@@ -669,5 +645,37 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
     send_msg(it -> val, tmp);
 
   }
+
+}
+
+void genera_figlio( string status ){
+
+  coda_stringhe* coda = crea_coda_da_stringa(status, " ");
+  char tmp[40], percorso[50];
+  primo(coda, tmp, TRUE);
+  sprintf(percorso, "./%s.out", tmp);
+
+
+  char* params[] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+  // Se sono il figlio cambio l'immagine.
+
+  params[0] = (char*) malloc(sizeof(char)*40);
+  strcpy(params[0], percorso);
+
+  primo(coda, tmp, TRUE);
+
+  params[1] = (char*) malloc(sizeof(char)*40);
+  strcpy(params[1], tmp);
+
+  int i = 2;
+  while( primo(coda, tmp, TRUE) ==  TRUE ){
+
+    params[i] = (char*) malloc((strlen(tmp)+1) * sizeof(char));
+    strcpy(params[i], tmp);
+    i++;
+  }
+
+  execv(params[0], params);
+  //perror("exec");
 
 }
