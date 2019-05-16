@@ -39,7 +39,15 @@ Ha un registro che indica il tempo di utilizzo. Controlla l'input e sovrascrive 
 ...
 
 Okay, dato che viene troppo lungo proviamo una descrizione più corta
+
 ---------------------------------------v1:-------------------------------
+La finestra gestisce i propri messaggi rispondendo con:
+- un messaggio "FALSE" sulla pipe_interna se l'id non corrisponde
+- //altri casi ??
+
+- un messaggio "TRUE" sulla pipe_interna se l'id corrisponde. In questo caso, in base al messaggio ricevuto reagisce compiendo le  l'azione indicata dal messaggio. 
+Le azioni eseguibili sono indicate nel makefile.
+
 
 
 Frigo:
