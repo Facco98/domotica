@@ -32,12 +32,13 @@ char pipe_interna[50];
 char pipe_esterna[50];
 
 pid_t figli[2];
+ boolean aperto;
 
 
 int main (int argn, char** argv)
 {
   //stato
-  boolean aperto = FALSE; //indica se il frigo è aperto o chiuso
+ stato = FALSE; //indica se il frigo è aperto o chiuso
   boolean apri = FALSE;
   boolean chiudi = FALSE;
   //interruttori ??
@@ -158,7 +159,7 @@ void crea_processi_supporto(registro* registri[], int numero_registri, boolean* 
     {
       figli[1] = pid; //memorizzo process-id del figlio sopra generato (seconda fork)
       signal(SIGINT, termina); //muoio se necessario
-      signal(SIGALARM, chiuditi_alarm);
+      signal(SIGALARM, chiuditi_alarm);		//se ricevo un SIGALARM, mi chiudo se necessario
       mkfifo(pipe_interna, 0666); //genero pipe_interna
       while(1) //resto in ascolto su pipe interna e interpreto 
       {
@@ -301,6 +302,7 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
           apertura = (long) time(NULL); //salvo l'ora in cui ho aperto il frigo
           tempo_utilizzo -> da_calcolare = TRUE; // ????
           *apri = FALSE; //interruttore torna su off
+          alert(chiusura -> valore.integer); //tra x valore del registro chiusura mi arriva un SIGALARM
         }
       }
       else if(strcmp(azione, "CLOSE") == 0 && strcmp(pos, "ON") == 0)
@@ -313,6 +315,7 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
           long ora = (long) time(NULL);
           tempo_utilizzo -> valore.integer += (ora - apertura);
           tempo_utilizzo -> da_calcolare = FALSE;
+          alert(0); //cancella l'alert di chiusura se inviato precedentemente
         }
       }
 
@@ -345,8 +348,8 @@ void gestisci_STATUSGET(coda_stringhe* istruzioni, registro* registri[], int num
   {
     int i = 0;
     char res[1024*2];
-    sprintf(res, "%s FRIDGE, id: %d ", GET_STATUS_RESPONSE, id );
-    for( i = 0; i < numero_registri; i++ )
+    sprintf(res, "%s fridge %d %s", GET_STATUS_RESPONSE, id, *stato == TRUE ? "OPEN" : "CLOSE" ); //risponde il proprio stato (aperto o chiuso)
+    for( i = 0; i < numero_registri; i++ ) // stampa i registri
     {
       char str[1024];
       stampa_registro(registri[i], str);
@@ -360,20 +363,23 @@ void gestisci_STATUSGET(coda_stringhe* istruzioni, registro* registri[], int num
 
 
 void chiuditi_alarm(int x){
-//int x è il tipo di segnale
-//Se arriva un sigalarm se sono aperto mi chiudo
-  //ti colleghi alla pipe interna e dici di chiudersi
-  char messaggio_chiusura[200];
-  sprintf (messaggio_chiusura, "%s %d CLOSE ON", UPDATE_LABEL, id);
-  send_msg(pipe_interna, messaggio_chiusura);
-    
+
+	registro* tempo_utilizzo = registri[0]; //registro tempo_utilizzo
+	
+	*stato = FALSE; //"chiudo" il frigo
+	//salvo il l'intervallo di tempo che è rimasto aperto
+	long ora = (long) time(NULL);
+	tempo_utilizzo -> valore.integer += (ora - apertura);
+	tempo_utilizzo -> da_calcolare = FALSE;
+	alert(0); //cancella l'alert di chiusura se inviato precedentemente   
+
 }
 
 
 /*Commenti, dubbi, perplessità, note
 ------------------------------------------------------COSE DA IMPLEMENTARE -----------------------------------------------------
-Come gestire il registro riempimento? 
-Come gestire il registro di chiusura (delay)?
+Come gestire il registro riempimento?  <- da chiedere
+Come gestire il registro di chiusura (delay)?  <- non ha un interruttore, come modificarlo <- DA CHIEDERE al prof
 
 
 
