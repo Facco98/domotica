@@ -33,6 +33,9 @@ void crea_processi_supporto(registro* registri[], int numero_registri, boolean* 
 //funzion eper interpretare messaggi
 void ascolta_e_interpreta (registro* registri[], int numero_registri, boolean* stato, boolean* apri, boolean* chiudi);
 
+//restituisce lo stato versione ridotta
+void gestisci_STATUSGETSIMPLE(coda_stringhe* istruzioni);
+
 
 long apertura; //indica quando la finestra è stata aperta (simile "accensione" della lampadina)
 int id; //id del processo
@@ -105,12 +108,6 @@ int main (int argn, char** argv)
   //gestisce la generazione dei processi che costituiscono la finestra
   crea_processi_supporto(registri, numero_registri, &stato, &apri_finestra, &chiudi_finestra); //aggiunti apri_finestra e chiudi_finestra perchè poi devono essere passati alla ascolta e interpreta
 
-  /*
-  //la finestra non deve fare altro che restare in ascolto sulla sua pipe in attesa di comandi/messaggi
-  while(1)
-  {
-    ascolta_e_interpreta(id, registri, numero_registri, stato, apri_finestra, chiudi_finestra); //da implementare
-  }*/
 
 } //qui finisce il main
 
@@ -186,11 +183,37 @@ void ascolta_e_interpreta (registro* registri[], int numero_registri, boolean* s
     gestisci_ID(istruzioni);
   }
 
+  else if(strcmp(nome_comando, "CONFIRM") == 0)
+  {
+    gestisci_ID(istruzioni);
+  }
+
+  else if(strcmp(nome_comando, "STATUSGETSIMPLE") == 0)
+  {
+    gestisci_STATUSGETSIMPLE(istruzioni);
+  }
+
   else //un qualsiasi altro comando non previsto
   {
     printf("Comando non supportato: %s\n", nome_comando);
   }
 
+}
+
+void gestisci_STATUSGETSIMPLE(coda_stringhe* istruzioni)
+{
+  char tmp[20];
+  primo(istruzioni, tmp, TRUE);
+  if( id == atoi(tmp) || atoi(tmp) == ID_UNIVERSALE )
+  {
+    char msg[500];
+    sprintf(msg, "%s window %d %s", GET_STATUS_RESPONSE, id, *stato == TRUE ? "OPEN" : "CLOSE" );
+    send_msg(pipe_interna, msg);
+  }
+  else
+  {
+    send_msg(pipe_interna, "DONE");
+  }
 }
 
 void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* stato, boolean* apri, boolean* chiudi)
@@ -254,7 +277,7 @@ void gestisci_STATUSGET(coda_stringhe* istruzioni, registro* registri[], int num
     int i = 0;
     char res[1024*2];
     sprintf(res, "%s window %d %s", GET_STATUS_RESPONSE, id, *stato == TRUE ? "OPEN" : "CLOSE" );
-    for( i = 0; i < numero_registri; i++ )
+    for( i = 0; i < numero_registri; i++ ) //stampa il valore del registro
     {
       char str[1024];
       stampa_registro(registri[i], str);
