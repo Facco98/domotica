@@ -362,6 +362,9 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
   { //controllo se devo impostare la temperatura
     temperatura->valore.integer = atoi(pos);  //imposto la temperatura del frigo alla temperatura voluta
   }
+  else if (strcmp(azione, "SET_DELAY") == 0){ //controllo se devo impostare il delay
+    chiusura->valore.integer = atoi(pos);     //imposto il delay del frigo al delay voluto
+  } 
   else
   {
     distruggi_coda(istruzioni); //elimino il messaggio arrivato
