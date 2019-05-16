@@ -133,7 +133,7 @@ void gestisci_list(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
 
     string pipe_figlio = it -> val;
     char messaggio[1024];
-    sprintf(messaggio, "%s %d", "STATUSGETSIMPLE", ID_UNIVERSALE);
+    sprintf(messaggio, "%s %d", GET_STATUS, ID_UNIVERSALE);
     send_msg(pipe_figlio, messaggio);
     boolean flag = FALSE;
     char msg[1024];
@@ -326,7 +326,7 @@ void stampa_componente_list(string msg, int indent){
 
   coda_stringhe* coda = crea_coda_da_stringa(msg, " ");
   char tipo[20];
-  primo(coda, tipo, TRUE);
+  primo(coda, tipo, FALSE);
   int i = 0;
   for( i = 0; i < indent; i++ )
     printf("  ");
@@ -334,8 +334,8 @@ void stampa_componente_list(string msg, int indent){
   if( strcmp(tipo, "bulb") == 0 ){
 
     char id[20], stato[20];
-    primo(coda, id, TRUE);
-    primo(coda, stato, TRUE);
+    primo(coda, id, FALSE);
+    primo(coda, stato, FALSE);
 
     printf("BULB id: %s stato: %s\n", id, stato);
 
@@ -343,33 +343,27 @@ void stampa_componente_list(string msg, int indent){
 
     char id[20], tmp[1024], concat[1024];
     strcpy(concat, "");
-    primo(coda, id, TRUE);
+    primo(coda, id, FALSE);
 
     printf("HUB id: %s[\n", id);
 
-    while(primo(coda, tmp, TRUE) == TRUE){
+    while(primo(coda, tmp, FALSE) == TRUE){
 
-      if( strcmp(tmp, "\n") == 0 ){
-
-        stampa_componente_list(concat, indent+1);
-        strcpy(concat, "");
-
-      } else {
-
-        strcat(concat, " ");
-        strcat(concat, tmp);
-
-      }
+      int i = 0;
+      for( i = 0; tmp[i] != '\0'; i++ )
+        if( tmp[i] == '_' )
+          tmp[i] = ' ';
+      stampa_componente_list(tmp, indent+1);
 
     }
 
-    if( strcmp(concat, "") != 0 )
-      stampa_componente_list(concat, indent+1);
-
+    int i = 0;
+    for( i = 0; i < indent+1; i++ )
+      printf("  ");
     printf("]\n");
 
   }
-
+  distruggi(coda);
 }
 
 void stampa_componente_info(string msg, int indent){
@@ -400,23 +394,17 @@ void stampa_componente_info(string msg, int indent){
 
     while(primo(coda, tmp, TRUE) == TRUE){
 
-      if( strcmp(tmp, "\n") == 0 ){
+      int i = 0;
+      for( i = 0; tmp[i] != '\0'; i++ )
+        if( tmp[i] == '_' )
+          tmp[i] = ' ';
 
-        stampa_componente_info(concat, indent+1);
-        strcpy(concat, "");
-
-      } else {
-
-        strcat(concat, " ");
-        strcat(concat, tmp);
-
-      }
+      stampa_componente_info(tmp, indent+1);
 
     }
-
-    if( strcmp(concat, "") != 0 )
-      stampa_componente_info(concat, indent+1);
-
+    int i = 0;
+    for( i = 0; i < indent+1; i++ )
+      printf("  ");
     printf("]\n");
 
   }
