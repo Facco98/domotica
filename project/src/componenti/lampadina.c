@@ -203,6 +203,19 @@ void ascolta_e_interpreta( registro* registri[], int numero_registri, boolean* a
       send_msg(pipe_interna, "FALSE");
 
 
+  } else if( strcmp(nome_comando, "STATUSGETSIMPLE") == 0 ){
+
+    char tmp[20];
+    primo(separata, tmp, TRUE);
+    if( id == atoi(tmp) || atoi(tmp) == ID_UNIVERSALE ){
+      char msg[500];
+      sprintf(msg, "%s bulb %d %s", GET_STATUS_RESPONSE, id, *accesa == TRUE ? "ON" : "OFF" );
+      send_msg(pipe_interna, msg);
+    }
+    else
+      send_msg(pipe_interna, "DONE");
+
+
   } else{
 
       printf("Comando non supportato: %s\n", nome_comando);
