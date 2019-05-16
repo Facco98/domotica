@@ -291,7 +291,11 @@ void gestisci_STATUSGET(coda_stringhe* separata){
 
       } else {
 
-        strcat(response, " \n ");
+        strcat(response, " ");
+        int i = 0;
+        for( i = 0; msg[i] != '\0'; i++ )
+          if( msg[i] == ' ')
+            msg[i] = '_';
         strcat(response, msg+strlen(GET_STATUS_RESPONSE)+1);
 
       }
