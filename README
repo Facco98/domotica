@@ -8,7 +8,7 @@ Componenti del gruppo:
 Breve descrizione del progetto:
 Emulazione di un sistema di domotica. 
 
-Descrizione dei componenti
+Note sui componenti
 
 Dispositivi di controllo
 Centralina:
@@ -29,6 +29,8 @@ Frigo:
 
 Implementazione di umano:
 [...]
+
+
 
 Varie ed eventuali:
 [...]
