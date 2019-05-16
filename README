@@ -29,11 +29,18 @@ Frigo:
 
 Implementazione di umano:
 [...]
+L'umano esegue sempre la stessa funzione la quale:
+- chiede in input l'id dispositivo e il tipo di messaggio da mandare
+- invia un hmessaggio all'id interessato
+- interpreta i messaggi che arrivano 
 
+//??? è così? Manca qualcosa? Forse manca qualcosa nel codice, per gestire l'override?
 
 
 Varie ed eventuali:
 [...]
+Override: l'override è implementato [...]
+
 
 /*
 * nota:  [...] significa inserire commenti/note relative
