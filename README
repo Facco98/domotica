@@ -23,6 +23,12 @@ Timer:
 Dispositivi di interazione
 Finestra:
 [...]
+---------------------------------------v0:---------------------------
+Ha un registro che indica il tempo di utilizzo. Controlla l'input e sovrascrive i valori in input, se disponibili. Chiama una funzione a supporto che contiene la logica del programma. Questa funzione crea i processi a supporto e resta perennemente in ascolto sulla propria pipe. ...
+...
+...
+
+
 
 Frigo:
 [...]
@@ -44,4 +50,5 @@ Override: l'override è implementato [...]
 
 /*
 * nota:  [...] significa inserire commenti/note relative
+*
 */
