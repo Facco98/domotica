@@ -253,7 +253,7 @@ void gestisci_STATUSGET(coda_stringhe* istruzioni, registro* registri[], int num
   {
     int i = 0;
     char res[1024*2];
-    sprintf(res, "%s WINDOW, id: %d ", GET_STATUS_RESPONSE, id );
+    sprintf(res, "%s window %d %s", GET_STATUS_RESPONSE, id, *stato == TRUE ? "OPEN" : "CLOSE" );
     for( i = 0; i < numero_registri; i++ )
     {
       char str[1024];
