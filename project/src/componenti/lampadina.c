@@ -195,12 +195,7 @@ void ascolta_e_interpreta( registro* registri[], int numero_registri, boolean* a
 
   } else if( strcmp(nome_comando, "CONFIRM") == 0 ){
 
-    char tmp[20];
-    primo(separata, tmp, TRUE);
-    if( id == atoi(tmp) || atoi(tmp) == ID_UNIVERSALE )
-      send_msg(pipe_interna, "TRUE");
-    else
-      send_msg(pipe_interna, "FALSE");
+    gestisci_ID(separata);
 
 
   } else if( strcmp(nome_comando, "STATUSGETSIMPLE") == 0 ){
