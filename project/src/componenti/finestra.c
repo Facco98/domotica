@@ -77,7 +77,7 @@ int main (int argn, char** argv)
   // ID OPEN 3
   if(argn >= 3) //file id stato
   {
-    if(strcmp(argv[2], "OPEN"))
+    if(strcmp(argv[2], "OPEN") == 0)
     {
       apertura = (long) time(NULL); //salvo tempo di apertura
       tempo_utilizzo.da_calcolare = TRUE;
