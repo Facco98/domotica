@@ -338,13 +338,11 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
       *posso dover regolare il termostato                         //OK
       *
       */
-/* come faccio a togliere la H da un Hmessaggio? Per override manuale
-point;
+//Se è un Hmessaggio tolgo la H dall'inizio e procedo normalmente
     if (pos[0] == "H"){
-    	point = *pos[1];
-    	free pos[0];
+    	pos = pos + 1;
     }
-*/
+
     //in seguito il codice per aprire o chiudere il frigo (tramite comando), la chiusura automatica non è ancora implementata né la gestione del termostato
      if(strcmp(azione, "OPEN") == 0 && strcmp(pos, "ON") == 0)//se devo aprire il frigo
       {
