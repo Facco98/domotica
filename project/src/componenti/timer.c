@@ -15,7 +15,7 @@
 void crea_processi_supporto();
 
 //risponde TRUE se l'id è il suo
-void gestisci_ID(coda_stringhe* istruzioni);
+void gestisci_CONFIRM(coda_stringhe* istruzioni);
 
 boolean calcola_registro_stringa( const registro* r, string output);
 
@@ -34,6 +34,10 @@ void gestisci_REMOVE(coda_stringhe* istruzioni);
 void ascolta_e_interpreta();
 
 void gestisci_LABELUP(coda_stringhe* istruzioni);
+
+void genera_figlio(coda_stringhe* status);
+
+void gestisci_ID(coda_stringhe* istruzioni);
 
 
 
@@ -77,6 +81,21 @@ int main (int argn, char** argv)  //argomenti servono ??
   }
 
   id = atoi(argv[1]); //recupero l'id del componente
+
+  //se ricevo più argomenti da riga di Comando
+  // input: id datidelfiglio
+  //datidelfiglio ==> stringa separata da underscore
+  if(argn >= 3)
+  {
+    //controllo se non ho già un figlio ?? è inutile ??
+    char dati_figlio[200]; //strigna per contenere i dati di creazione del figlio con _
+    strcpy(dati_figlio, argv[2]); //recupero i dati del figlio con _
+
+    coda_stringhe* status = crea_coda_da_stringa(dati_figlio, "_"); //separo i dati del figlio dagli _ e creo una coda
+
+    genera_figlio(status); //genero il figlio
+
+  }
 
   sprintf(pipe_interna, "%s/%d_int", (string) PERCORSO_BASE_DEFAULT, id);
   sprintf(pipe_esterna, "%s/%d_ext", (string) PERCORSO_BASE_DEFAULT, id);
@@ -157,11 +176,11 @@ void ascolta_e_interpreta()
   }
   else if( strcmp(comando, UPDATE_LABEL) == 0 ) //aggiornamento interruttori
   {
-    gestisci_LABELUP(istruzioni);
+    gestisci_LABELUP(istruzioni); //OK
   }
   else if( strcmp( comando, ID ) == 0 ) //risponde TRUE se l'id è il proprio, FALSE altrimenti
   {
-    gestisci_ID(istruzioni); //OK
+    gestisci_ID(istruzioni); ///cambiataaaaaaaaaaaa
   }
   else if( strcmp(comando, REMOVE) == 0 ) //rimuovi timer o dispositivo collegato
   {
@@ -170,6 +189,10 @@ void ascolta_e_interpreta()
   else if( strcmp(comando, "SPAWN") == 0 ) //genera figlio
   {
     gestisci_SPAWN(istruzioni); //OK
+  }
+  else if( strcmp(comando, "CONFIRM") == 0)
+  {
+    gestisci_CONFIRM(istruzioni); //OK
   }
   else //altri comandi non supportati
   {
@@ -189,16 +212,27 @@ void gestisci_STATUSGET(coda_stringhe* istruzioni)
   {
     // Creo il messaggio contenente la risposta.
     char response[200];
-    sprintf(response, "%s TIMER id: %d\n" ,GET_STATUS_RESPONSE, id);
+    sprintf(response, "%s timer %d" ,GET_STATUS_RESPONSE, id);
 
     char msg[200];
     sprintf(msg, "%s %d", GET_STATUS, ID_UNIVERSALE );
-    if( strcmp(pipe_figlio, "") == 0 ||send_msg(pipe_figlio, msg) == FALSE || read_msg(pipe_figlio, msg, 199) == FALSE  )
+    if( strcmp(pipe_figlio, "") == 0 || send_msg(pipe_figlio, msg) == FALSE || read_msg(pipe_figlio, msg, 199) == FALSE  )
     {
       strcpy(pipe_figlio, "");
     }
     else
     {
+
+      strcat(response, " ");
+      int i = 0;
+      for( i = 0; msg[i] != '\0'; i++ )
+      {
+        if( msg[i] == ' ')
+        {
+          msg[i] = '_';
+        }
+      }
+
       strcat(response, msg+strlen(GET_STATUS_RESPONSE)+1);
     }
     // Rispondo sulla pipe_interna.
@@ -214,7 +248,7 @@ void gestisci_STATUSGET(coda_stringhe* istruzioni)
 
 }
 
-void gestisci_ID(coda_stringhe* istruzioni)
+void gestisci_CONFIRM(coda_stringhe* istruzioni)
 {
   // Recupero l'ID e rispondo se è il mio o no.
   char id_ric[20];
@@ -274,43 +308,64 @@ void gestisci_REMOVE(coda_stringhe* istruzioni)
   }
 }
 
+//controllo se sono io a dover generare un figlio se si genero
 void gestisci_SPAWN(coda_stringhe* istruzioni)
 {
   char id_ric[20];
-  primo(istruzioni, id_ric, TRUE); //recupero l'id
+  primo(istruzioni, id_ric, TRUE);
   int id_comp = atoi(id_ric);
-
-  if( id_comp == id || id_comp == ID_UNIVERSALE ) //se sono io
+  if( id_comp == id || id_comp == ID_UNIVERSALE )
   {
+    genera_figlio(istruzioni);
+  }
 
-    char line[1024];
-    strcpy(line, "");
-    char type[100];
-    char tmp[100];
+}
 
-    // Recupero il tipo di componente.
-    primo(istruzioni, type, TRUE);
-    while( primo(istruzioni, tmp, TRUE) ==  TRUE )
+//prendo in input una coda di strighe con i dati del filgio
+void genera_figlio(coda_stringhe* status)
+{
+  char tmp[40], percorso[50];
+  primo(status, tmp, TRUE);
+  sprintf(percorso, "./%s.out", tmp);
+
+  pid_t pid = fork();
+
+  if( pid == 0 )
+  {
+    char* params[] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+    // Se sono il figlio cambio l'immagine.
+
+    params[0] = (char*) malloc(sizeof(char)*40);
+    strcpy(params[0], percorso);
+
+    primo(status, tmp, TRUE);
+
+    params[1] = (char*) malloc(sizeof(char)*40);
+    strcpy(params[1], tmp);
+
+    int i = 2;
+    while( primo(status, tmp, TRUE) ==  TRUE )
     {
-      // Creo il resto dei parametri da passare su linea di comando.
-      strcat(line, tmp);
-      strcat(line, " ");
+      params[i] = (char*) malloc((strlen(tmp)+1) * sizeof(char));
+      strcpy(params[i], tmp);
+      i++;
     }
 
-    char path[200];
-    sprintf(path, "./%s.out", type );
-    pid_t pid = fork(); //genero un processo identico a me
+    execv(params[0], params);
 
-    if( pid == 0 ) //se sono il figlio -> eseguo il componente da generare nel nuovo processo
-    {
-      // Se sono il figlio cambio l'immagine.
-      execlp(path, path, line, NULL);
-    }
-    else if( pid > 0 ) //se sono il padre
-    {
-      // Se sono il padre aggiungo alla mia lista di pipes la pipe del figlio appena creato.
-      sprintf(pipe_figlio, "%s/%s", (string) PERCORSO_BASE_DEFAULT, strtok(line, " "));
-    }
+    int j = 0;
+    for( j = 0; j <= i; j++ )
+      free(params[j]);
+
+  }
+  else if( pid > 0 )
+  {
+    // Se sono il padre aggiungo alla mia lista di pipes la pipe del figlio appena creato.
+    char id[30];
+    primo(status, tmp, FALSE);
+    char pipe_figlio[100];
+    sprintf(pipe_figlio, "%s/%s", (string) PERCORSO_BASE_DEFAULT, tmp);
+    distruggi(status);
 
   }
 
@@ -321,29 +376,65 @@ void gestisci_SPAWN(coda_stringhe* istruzioni)
 /*
 *Funzione per gestire il comando per l'aggiornamento di un interruttore.
 */
-void gestisci_LABELUP(coda_stringhe* istruzioni){
+void gestisci_LABELUP(coda_stringhe* istruzioni)
+{
 	char id_ric[50];
 	primo(istruzioni, id_ric, TRUE);
 	int id_comp = atoi(id_ric);
-		if( id_comp == id || id_comp == ID_UNIVERSALE ){
-			// Prendo il nome dell'interruttore e la nuova posizione
-			char label[50];
-    		primo(istruzioni, label, TRUE);
-		    char pos[50];
-		    primo(istruzioni, pos, TRUE);
+		if( id_comp == id || id_comp == ID_UNIVERSALE )
+    {
+		// Prendo il nome dell'interruttore e la nuova posizione
+		  char label[50];
+  		primo(istruzioni, label, TRUE);
+	    char pos[50];
+	    primo(istruzioni, pos, TRUE);
 
-		    //creo il messaggio 
-		    char msg[200];
-    		sprintf(msg, "%s %d %s %s", UPDATE_LABEL, ID_UNIVERSALE, label, pos);
+	    //creo il messaggio
+	    char msg[200];
+  		sprintf(msg, "%s %d %s %s", UPDATE_LABEL, ID_UNIVERSALE, label, pos);
 
-		    //Invio il messaggio al mio unico figlio se esiste la pipe
-		    if (strcmp(pipe_figlio, "")!= 0){
-		    	send_msg(pipe_figlio, msg);
-		    }
-			
+	    //Invio il messaggio al mio unico figlio se esiste la pipe
+	    if (strcmp(pipe_figlio, "")!= 0)
+      {
+	    	send_msg(pipe_figlio, msg);
+	    }
+
 		}
 
 	send_msg(pipe_interna, "DONE");
 
-	
+
+}
+
+
+//restituisce True se l'id è il proprio altrimenti interroga il figlio se è il suo id
+void gestisci_ID(coda_stringhe* istruzioni)
+{
+  // Recupero l'ID e rispondo se è il mio o no.
+  char id_ric[20];
+  primo(istruzioni, id_ric, TRUE);
+  int id_comp = atoi(id_ric);
+
+  //se l'id è il mio -> rispondo TRUE (= sono io)
+  if( id_comp == id || id_comp == ID_UNIVERSALE )
+  {
+    send_msg(pipe_interna, "TRUE");
+  }
+  else //se non sono io devo chiedere a mio figlio se lid è il suo
+  {
+    if(strcmp(pipe_figlio, " ") != 0) //se filgio esiste
+    {
+      char msg[20];
+      char res[20];
+      sprintf(msg, "%s %s", ID, id_ric);
+
+      send_msg(pipe_figlio, msg); //invio messaggio al figlio
+      read_msg(pipe_figlio, res); //aspetto risposta del filgio
+
+      send_msg(pipe_interna, res); //invio la risposta ricevuta nella pipe interna
+
+    }
+
+  }
+
 }
