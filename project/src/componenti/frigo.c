@@ -338,6 +338,13 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
       *posso dover regolare il termostato                         //OK
       *
       */
+/* come faccio a togliere la H da un Hmessaggio? Per override manuale
+
+    if (pos[0] == "H"){
+    	pos[0] = "";
+    	strcpy(pos, )
+    }
+*/
     //in seguito il codice per aprire o chiudere il frigo (tramite comando), la chiusura automatica non è ancora implementata né la gestione del termostato
      if(strcmp(azione, "OPEN") == 0 && strcmp(pos, "ON") == 0)//se devo aprire il frigo
       {
@@ -364,11 +371,22 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
           alarm(0); //cancella l'alarm di chiusura se inviato precedentemente
         }
       }
-
-
   else if (strcmp(azione, "SET_TEMPERATURE") ==  0)
   { //controllo se devo impostare la temperatura
     temperatura->valore.integer = atoi(pos);  //imposto la temperatura del frigo alla temperatura voluta
+  }
+// 			???????????????????????????????????????????????
+    else if (strcmp(azione, "HSET_FILL") ==  0) 
+    /*qua ho messo l'H all'inizio perché questo è solo override manuale, 
+    il comando per cambiare il riempimento da mandare come umano è HHSET_FILL
+    in questo modo gli altri dispositivi non possono mandare questo messaggio, neanche volendo e il prof non può rompere il codice?
+    Alternativa (penso sia quella corretta): 
+    gli altri dispositivi in ogni caso NON possono mandare questo messaggio (non è nei tipi supportati) quindi posso 
+    togliere la H dall'inizio?	
+
+    	*/
+  { //controllo se devo impostare il riempimento
+    riempimento->valore.integer = atoi(pos);  //imposto il riempimento del frigo al riempimento voluto
   }
   else
   {
