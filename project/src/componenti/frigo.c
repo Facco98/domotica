@@ -194,7 +194,7 @@ void crea_processi_supporto(registro* registri[], int numero_registri, boolean* 
       }
 
     }
-    else if( pid > 0 ) //se sono il padre
+    else if( pid > 0 ) //se sono il padre
     {
       figli[1] = pid; //memorizzo process-id del figlio sopra generato (seconda fork)
       signal(SIGINT, termina); //muoio se necessario
@@ -340,7 +340,7 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
       */
 //Se è un Hmessaggio tolgo la H dall'inizio e procedo normalmente
     if (pos[0] == "H"){
-    	pos = pos + 1;
+    	*pos += 1;
     }
 
     //in seguito il codice per aprire o chiudere il frigo (tramite comando), la chiusura automatica non è ancora implementata né la gestione del termostato
