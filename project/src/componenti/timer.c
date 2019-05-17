@@ -313,23 +313,24 @@ void gestisci_REMOVE(coda_stringhe* istruzioni)
       //chiedo a mio figlio se è lui che deve morire
       char msg[20];
       char res[20];
-      sprintf(msg, "%s %s", ID, id_ric);
+      sprintf(msg, "%s %s", "CONFIRM", id_ric);
 
       send_msg(pipe_figlio, msg); //invio richiesta di id al dati_figlio
       read_msg(pipe_figlio, res); //leggo risposta dal dati_figlio
 
       if(strcmp(res, "TRUE") == 0) //se mio figlio deve morire
       {
-        char die_msg[100];
-        sprintf(die_msg, "%s %s", REMOVE, id_ric); //preparo il messaggio di morte per il figlio
-        send_msg(pipe_figlio, die_msg); //invio messaggio di morte
-
         //elimino mio figlio
-        unlink(pipe_figlio); //elimino la pipe del figlio
         strcpy(pipe_figlio, "");
       }
 
+      //non decidi tu se morire muori e basta
+      char die_msg[100];
+      sprintf(die_msg, "%s %s", REMOVE, id_ric); //preparo il messaggio di morte per il figlio
+      send_msg(pipe_figlio, die_msg);
+
     }
+    send_msg(pipe_interna, "DONE");//informo i processini che ho concluso la missione
   }
 }
 
@@ -424,13 +425,14 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], int numer
 
     if(strcmp(interruttore, "BEGIN") == 0) //se devo agire sul registro begin
     {
-      begin -> valore.integer = nuovo_valore;
-      //farà qualcosa al figlio
-      //alarm
+      begin -> valore.integer = atoi(nuovo_valore);
+      signal(SIGALRM, gestisci_begin); //da fare --> l agestisci begin gestirà la end
+      alarm(begin -> valore.integer); //in secondi
+      //alarm => fra tot tempo fai qualcosa
     }
     else if(strcmp(interruttore, "END") == 0) //se devo agire sul registro end
     {
-      end -> valore.integer = nuovo_valore;
+      end -> valore.integer = atoi(nuovo_valore);
       //farà qualcosa al figlio
     }
 
