@@ -258,7 +258,7 @@ void ascolta_e_interpreta(registro* registri[], int numero_registri, boolean* ap
   }
   else if(strcmp(nome_comando, "CONFIRM") == 0)	//verifica se è il mio id
   {
-    gestisci_ID(istruzioni);
+    gestisci_ID(istruzioni); //OK
   }
   else
   {
@@ -326,9 +326,10 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
       * posso aprire il frigo                                     //OK
       *posso chiudere il frigo                                    //OK
                                               //in questi casi mi comporto come fossi una finestra
-      * posso dovermi chiudere automaticamente 			          //fatto, bisogna capire quando si modifica questo valore (delay)
+      * posso dovermi chiudere automaticamente 			          //OK
       *posso dover regolare il termostato                         //OK
       *
+      * //override manuale della percentuale di riempimento //TODO
       */
     //in seguito il codice per aprire o chiudere il frigo (tramite comando), la chiusura automatica non è ancora implementata né la gestione del termostato
      if(strcmp(azione, "OPEN") == 0 && strcmp(pos, "ON") == 0)//se devo aprire il frigo
@@ -365,6 +366,10 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
   else if (strcmp(azione, "SET_DELAY") == 0){ //controllo se devo impostare il delay
     chiusura->valore.integer = atoi(pos);     //imposto il delay del frigo al delay voluto
   } 
+  /*else if (strcmp(azione, "SET_FILL") == 0){  //il registro di riempimento, ma è solo override manuale
+    riempimento->valore.integer = atoi (pos);
+  }
+  */
   else
   {
     distruggi_coda(istruzioni); //elimino il messaggio arrivato
@@ -416,36 +421,13 @@ void chiuditi_alarm(int x){
 
 
 /*Commenti, dubbi, perplessità, note
-------------------------------------------------------COSE DA IMPLEMENTARE -----------------------------------------------------
-Come gestire il registro riempimento?  <- da chiedere
-Come gestire il registro di chiusura (delay)?  <- non ha un interruttore, come modificarlo <- DA CHIEDERE al prof
-
-
+------------------------------------------------------TODO-----------------------------------------------------
+Override manuale per il registro di riempimento
 
 ------------------------------------------------------Cose implementate ma da controllare:-------------------------------------
-
-Implementate le funzioni  gestisci_STATUSGET e gestisci_LABELUP (da testare).
+Implementata la funzione  gestisci_STATUSGET (da testare).
+Implementata la funzione  gestisci_LABELUP (da testare).
 Implementata void chiuditi_alarm(int x): chiude (da usare se arriva sigalarm).
-
-
----------------------------------------------DA FARE DOPO AVER CHIARITO CON IL PROFESSORE--------------------------------------
-----------------------------------------------------Cose implementate, ma forse fanno schifo:------------------------------------- 
-Devo anche implementare il fatto che se è aperto da tropo tempo deve essere in qualche modo chiuso? Come? Dove, in while (1) nel main, probabilmente
-"troppo tempo" <- indicato dal registro delay, per noi chiusura : implementato in ascolta_e_interpreta, da controllare
-
-In ascolta e interpreta ho messo tutti i registri per due motivi:
-- controllare se tempo_utilizzo > chiusura e chiudere il frigo <--- IMPLEMENTATO, CONTROLLARNE LA CORRETTEZZA (line 230 o giù di lì)
-l'ho messo in ascolta_e_interpreta perché deve farlo sempre e questa funzione è eseguita sempre nel main (while(1))
-- controllare lo stato di riempimento e restituire lo stato di riempimento <- in status get in realtà, ma la restituisce comunque già
-devo poter impostare il registro di chiusura (è modificabile), dove?
-//SBAGLIATO, IMPLEMENTARE UNA FUNZIONE A PARTE
-
-
-
-
-------------------------------------------------------Dubbi, cose da dover fare ma non so dove, nè come:----------------------------
-Il registro riempimento può venir modificato solo manualmente, come si fa in codice questa roba? C'entra l'umano?
-per controllare lo stato del registro c'è già in statusget (forse), per modificarlo manca, deve esserci da qualche parte ma boh
-//DA CHIEDERE AL PROFESSORE GIOVEDI'
-
+Come gestire il registro temperatura.
+Come gestire il registro di chiusura (delay).
 */
