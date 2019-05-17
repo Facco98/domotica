@@ -12,7 +12,7 @@
 #include "comunicazione/comunicazione.h"
 
 //gestisce i processi che costituiscono il componente (timer)
-void crea_processi_supporto();
+void crea_processi_supporto(registro* registri[], int numero_registri);
 
 //risponde TRUE se l'id è il suo
 void gestisci_CONFIRM(coda_stringhe* istruzioni);
@@ -31,7 +31,7 @@ void gestisci_STATUSGET(coda_stringhe* istruzioni);
 //gestisce la rimozione dei componenti
 void gestisci_REMOVE(coda_stringhe* istruzioni);
 
-void ascolta_e_interpreta();
+void ascolta_e_interpreta(registro* registri[], int numero_registri);
 
 void gestisci_LABELUP(coda_stringhe* istruzioni);
 
@@ -100,12 +100,12 @@ int main (int argn, char** argv)  //argomenti servono ??
   sprintf(pipe_interna, "%s/%d_int", (string) PERCORSO_BASE_DEFAULT, id);
   sprintf(pipe_esterna, "%s/%d_ext", (string) PERCORSO_BASE_DEFAULT, id);
 
-  crea_processi_supporto();
+  crea_processi_supporto(registri, numero_registri);
 
 }
 
 //ascolta e interpreta da mettere argomneti
-void crea_processi_supporto()
+void crea_processi_supporto(registro* registri[], int numero_registri)
 {
 
   pid_t pid = fork(); //genera un processo identico a se stesso (timer)
@@ -149,7 +149,7 @@ void crea_processi_supporto()
       mkfifo(pipe_interna, 0666); //crea la pipe interna
       while(1) //resta in perenne attesa sulla sua pipe interna
       {
-        ascolta_e_interpreta(); //--> da implementare
+        ascolta_e_interpreta(registri, numero_registri); //--> da implementare
       }
 
     }
@@ -158,7 +158,7 @@ void crea_processi_supporto()
 
 }
 
-void ascolta_e_interpreta()
+void ascolta_e_interpreta(registro* registri[], int numero_registri)
 {
   char messaggio[200];
   read_msg(pipe_interna, messaggio, 199); //leggo messaggio da pipe_interna
@@ -176,11 +176,11 @@ void ascolta_e_interpreta()
   }
   else if( strcmp(comando, UPDATE_LABEL) == 0 ) //aggiornamento interruttori
   {
-    gestisci_LABELUP(istruzioni); //OK
+    gestisci_LABELUP(istruzioni, registri, numero_registri); // !!!!!
   }
   else if( strcmp( comando, ID ) == 0 ) //risponde TRUE se l'id è il proprio, FALSE altrimenti
   {
-    gestisci_ID(istruzioni); ///cambiataaaaaaaaaaaa
+    gestisci_ID(istruzioni); //OK
   }
   else if( strcmp(comando, REMOVE) == 0 ) //rimuovi timer o dispositivo collegato
   {
@@ -306,6 +306,31 @@ void gestisci_REMOVE(coda_stringhe* istruzioni)
   {
     termina(0);
   }
+  else      //chiedere id al figlio, se è il figlio a dover morire
+  {
+    if(strcmp(pipe_figlio, "") != 0) //se il figlio esiste
+    {
+      //chiedo a mio figlio se è lui che deve morire
+      char msg[20];
+      char res[20];
+      sprintf(msg, "%s %s", ID, id_ric);
+
+      send_msg(pipe_figlio, msg); //invio richiesta di id al dati_figlio
+      read_msg(pipe_figlio, res); //leggo risposta dal dati_figlio
+
+      if(strcmp(res, "TRUE") == 0) //se mio figlio deve morire
+      {
+        char die_msg[100];
+        sprintf(die_msg, "%s %s", REMOVE, id_ric); //preparo il messaggio di morte per il figlio
+        send_msg(pipe_figlio, die_msg); //invio messaggio di morte
+
+        //elimino mio figlio
+        unlink(pipe_figlio); //elimino la pipe del figlio
+        strcpy(pipe_figlio, "");
+      }
+
+    }
+  }
 }
 
 //controllo se sono io a dover generare un figlio se si genero
@@ -373,17 +398,49 @@ void genera_figlio(coda_stringhe* status)
 
 }
 
+//aggiornare i miei registri e di conseguenza quelli del figlio
+//mi arriva un messaggio per settare i miei registri e poi io ne invio uno al figlio per settare i suoi
 /*
-*Funzione per gestire il comando per l'aggiornamento di un interruttore.
+LABELUP id interruttore(begin/end) nuovo_stato(=valore int)
+
 */
-void gestisci_LABELUP(coda_stringhe* istruzioni)
+void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], int numero_registri)
 {
-	char id_ric[50];
+  registro* begin = registri[0];
+  registro* end = registri[1];
+
+  //recupero l'id
+  char id_ric[50];
 	primo(istruzioni, id_ric, TRUE);
 	int id_comp = atoi(id_ric);
-		if( id_comp == id || id_comp == ID_UNIVERSALE )
+
+  if( id_comp == id || id_comp == ID_UNIVERSALE ) //se è l'azione è per me
+  {
+    char interruttore[50];
+    char nuovo_valore[20];
+
+    primo(istruzioni, interruttore, TRUE); //recupero l'interruttore da gestire
+    primo(istruzioni, nuovo_valore, TRUE); //recupero il valore
+
+    if(strcmp(interruttore, "BEGIN") == 0) //se devo agire sul registro begin
     {
-		// Prendo il nome dell'interruttore e la nuova posizione
+      begin -> valore.integer = nuovo_valore;
+      //farà qualcosa al figlio
+      //alarm
+    }
+    else if(strcmp(interruttore, "END") == 0) //se devo agire sul registro end
+    {
+      end -> valore.integer = nuovo_valore;
+      //farà qualcosa al figlio
+    }
+
+  }
+
+
+
+
+
+	/*	// Prendo il nome dell'interruttore e la nuova posizione
 		  char label[50];
   		primo(istruzioni, label, TRUE);
 	    char pos[50];
@@ -402,7 +459,7 @@ void gestisci_LABELUP(coda_stringhe* istruzioni)
 		}
 
 	send_msg(pipe_interna, "DONE");
-
+  */
 
 }
 
@@ -422,7 +479,7 @@ void gestisci_ID(coda_stringhe* istruzioni)
   }
   else //se non sono io devo chiedere a mio figlio se lid è il suo
   {
-    if(strcmp(pipe_figlio, " ") != 0) //se filgio esiste
+    if(strcmp(pipe_figlio, "") != 0) //se filgio esiste
     {
       char msg[20];
       char res[20];
