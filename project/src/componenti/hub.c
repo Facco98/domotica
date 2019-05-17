@@ -79,6 +79,8 @@ void gestisci_REMOVE(coda_stringhe* separata);
 */
 void gestisci_LABELUP(coda_stringhe* separata);
 
+void genera_figlio(coda_stringhe* separata);
+
 /*
 * Funzione per terminare il processo quando arriva un SIGINT.
 */
@@ -441,20 +443,35 @@ void gestisci_REMOVE(coda_stringhe* separata){
     termina(0);
   else{
 
-    char msg[200];
-    sprintf(msg, "%s %s", REMOVE, id_ric);
+
+    char remove_msg[200], confirm_msg[50];
+    sprintf(remove_msg, "%s %s", REMOVE, id_ric);
+    sprintf(confirm_msg, "%s %s", "CONFIRM", id_ric);
     nodo_stringa* it = lista_pipes -> testa;
 
     while( it != NULL ){
 
-      if( send_msg(it -> val, msg) == FALSE ){
+      printf("[HUB PIPE]%s\n", it -> val);
 
-        nodo_stringa* tmp = it;
+      char res[10];
+      if( send_msg( it -> val, confirm_msg ) == FALSE || read_msg(it -> val, res, 9) == FALSE ){
+
+        nodo_stringa* l = it;
         rimuovi_nodo(lista_pipes, it);
         it = it -> succ;
-        free(tmp);
+        free(l);
+
+      } else if( strcmp(res, "TRUE") == 0 ){
+
+        send_msg(it -> val, remove_msg);
+        nodo_stringa* l = it;
+        rimuovi_nodo(lista_pipes, it);
+        it = it -> succ;
+        free(l);
 
       } else{
+        printf("[RES-CONFIRM]%s\n", res);
+        send_msg(it -> val, remove_msg);
         it = it -> succ;
       }
 
@@ -474,58 +491,58 @@ void gestisci_SPAWN(coda_stringhe* separata){
   int id_comp = atoi(id_ric);
   if( id_comp == id || id_comp == ID_UNIVERSALE ){
 
-
-
-    char tmp[40], percorso[50];
-    primo(separata, tmp, TRUE);
-    sprintf(percorso, "./%s.out", tmp);
-
-
-    pid_t pid = fork();
-
-    if( pid == 0 ){
-
-      char* params[] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
-      // Se sono il figlio cambio l'immagine.
-
-      params[0] = (char*) malloc(sizeof(char)*40);
-      strcpy(params[0], percorso);
-
-      primo(separata, tmp, TRUE);
-
-      params[1] = (char*) malloc(sizeof(char)*40);
-      strcpy(params[1], tmp);
-
-      int i = 2;
-      while( primo(separata, tmp, TRUE) ==  TRUE ){
-
-        params[i] = (char*) malloc((strlen(tmp)+1) * sizeof(char));
-        strcpy(params[i], tmp);
-        i++;
-      }
-
-      execv(params[0], params);
-
-      int j = 0;
-      for( j = 0; j <= i; j++ )
-        free(params[j]);
-
-    } else if( pid > 0 ) {
-
-      // Se sono il padre aggiungo alla mia lista di pipes la pipe del figlio appena creato.
-      char id[30];
-      primo(separata, tmp, FALSE);
-      char pipe_figlio[100];
-      sprintf(pipe_figlio, "%s/%s", (string) PERCORSO_BASE_DEFAULT, tmp);
-      append(lista_pipes, pipe_figlio);
-      printf("[APPESA]:%s\n", pipe_figlio);
-      distruggi(separata);
-
-    }
+    genera_figlio(separata);
 
 
   }
 
   send_msg(pipe_interna, "DONE");
+
+}
+
+void genera_figlio(coda_stringhe* separata){
+
+  char tmp[40], percorso[50];
+  primo(separata, tmp, TRUE);
+  sprintf(percorso, "./%s.out", tmp);
+
+
+  pid_t pid = fork();
+
+  if( pid == 0 ){
+
+    char* params[] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+    // Se sono il figlio cambio l'immagine.
+
+    params[0] = (char*) malloc(sizeof(char)*40);
+    strcpy(params[0], percorso);
+
+    primo(separata, tmp, TRUE);
+
+    params[1] = (char*) malloc(sizeof(char)*40);
+    strcpy(params[1], tmp);
+
+    int i = 2;
+    while( primo(separata, tmp, TRUE) ==  TRUE ){
+
+      params[i] = (char*) malloc((strlen(tmp)+1) * sizeof(char));
+      strcpy(params[i], tmp);
+      i++;
+    }
+
+    execv(params[0], params);
+
+  } else if( pid > 0 ) {
+
+    // Se sono il padre aggiungo alla mia lista di pipes la pipe del figlio appena creato.
+    char id[30];
+    primo(separata, tmp, FALSE);
+    char pipe_figlio[100];
+    sprintf(pipe_figlio, "%s/%s", (string) PERCORSO_BASE_DEFAULT, tmp);
+    append(lista_pipes, pipe_figlio);
+    printf("[APPESA]:%s\n", pipe_figlio);
+    distruggi(separata);
+
+  }
 
 }
