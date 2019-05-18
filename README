@@ -6,56 +6,107 @@ Componenti del gruppo:
  Federica        -           Ress                -           195172
 
 Breve descrizione del progetto:
-Emulazione di un sistema di domotica. I dispositivi creano 3 processi che comunicano tra di loro su tre pipe differenti. 
+Emulazione di un sistema di domotica. Il progetto è stato implementato con la variante dei processi. 
+
+I dispositivi creano 3 processi che comunicano tra di loro su tre pipe differenti. 
 
 [inserire qua gestione di blocking @Claudio ]
 [Inserire qua la gestione delle pipe @Claudio]
 
 Questo sistema di gestione è comune per tutti le tipologie di dispositivi emulate da questo progetto.
 
+[altre cose in comune?]
+
 Differenze tra dispositivi di controllo e di interazione
-La differenza tra dispositivi di controllo e dispositivi di interazione è principalmente nella gestione di messaggi in entrata non propri. 
-Quando un dispositivo di controllo riceve un messaggio non proprio chiede ai propri figli se può mandare il messaggio per arrivare al dispositivo interessato. 
-Quando un dispositivo di interazione riceve un messaggio non proprio risponde //???
+
+La differenza tra dispositivi di controllo e dispositivi di interazione è principalmente nella gestione di messaggi. 
+
+La gestione dei messaggi in entrata propri (con id_destinatario == id_dispositivo) è simile per tutti i dispositivi.
+Dopo un controllo sull'id c'è un controllo sul tipo di messaggio, su che interruttore questo agisce e come.
+Ogni dispositivo può gestire messaggi di tipo diverso, i quali sono descritti in seguito in questo file per ogni dispositivo.
+
+La gestione dei messaggi in entrata non propri (con id_destinatario != id_dispositivo) è descritta in seguito.
+Quando un dispositivo di controllo riceve un messaggio non proprio chiede ai/al propri/o figli/o se può mandare il messaggio per arrivare al dispositivo interessato. 
+Se un dispositivo di interazione riceve un messaggio non proprio, ignora il messaggio stesso.
+
+[altre differenze?]
+
+//???
 
 // ? altro?
-
+ 
 Note sui componenti
+In seguito delle note sui vari tipi di dispositivi. In particolare sono descritti i tipi di messaggi che ogni dispositivo gestisce.
 
 Dispositivi di controllo
 Centralina:
 Comunica ai figli attraverso messaggi nel seguente formato:
-[...]
+(1)
+(2)
+(3)
+(4)
+(5)
+	(5.1)
+	(5.2)
+(6)
 
+[...]
+Riceve solo messaggi di risposta a messaggi del tipo (x.x), i quali vengono poi interpretati per generare una stampa a video delle informazioni richieste.
 
 Hub:
+Può interpretare i seguenti tipi di messaggi:
+(1)
+(2)
+[...]
+Può inviare alla centralina il seguente tipo di messaggio:
+()
 [...]
 
 Timer:
+Può interpretare i seguenti tipi di messaggi:
+(1)
+(2)
+[...]
+Può inviare alla centralina il seguente tipo di messaggio:
+()
 [...]
 
 Dispositivi di interazione
 Finestra:
+Può interpretare i seguenti tipi di messaggi:
+(1)
+(2)
 [...]
----------------------------------------v0:---------------------------
+Può inviare alla centralina il seguente tipo di messaggio:
+()
+[...]
+
+/*
+---------------------------------------v0:---------------------------Questo secondo me è inutile (è ciò che fa detto il prof nel suo file, lo sa già)
 Ha un registro che indica il tempo di utilizzo. Controlla l'input e sovrascrive i valori in input, se disponibili. Chiama una funzione a supporto che contiene la logica del programma. Questa funzione crea i processi a supporto e resta perennemente in ascolto sulla propria pipe. ...
 ...
 ...
 //(manca ancora altre cose, quindi viene decisamente troppo lungo, secondo me)
-
+*/
 //Okay, dato che viene troppo lungo proviamo una descrizione più corta
 
----------------------------------------v1:-------------------------------
+/*---------------------------------------v1:------------------------------- Questo è stato descritto sopra, da togliere
 La finestra gestisce i propri messaggi rispondendo con:
 - un messaggio "FALSE" sulla pipe_interna se l'id non corrisponde
 - //altri casi ??
 
 - un messaggio "TRUE" sulla pipe_interna se l'id corrisponde. In questo caso, in base al messaggio ricevuto reagisce compiendo le  l'azione indicata dal messaggio. 
 Le azioni eseguibili sono indicate nel makefile.
-
-
+*/
 
 Frigo:
+Può interpretare i seguenti tipi di messaggi:
+(1)
+(2)
+[...]
+Può inviare alla centralina il seguente tipo di messaggio:
+()
+[...]
 [...]
 
 Implementazione di umano:
@@ -65,6 +116,13 @@ L'umano esegue sempre la stessa funzione la quale:
 - chiede in input l'id dispositivo e il tipo di messaggio da mandare
 - invia un hmessaggio all'id interessato
 - interpreta i messaggi che arrivano 
+Può interpretare i seguenti tipi di messaggi:
+(1)
+(2)
+[...]
+Può inviare alla centralina i seguenti tipi di messaggio:
+()
+[...]
 
 //??? è così? Manca qualcosa? Forse manca qualcosa nel codice, per gestire l'override?
 
@@ -74,9 +132,28 @@ Note sul makefile:
 
 Varie ed eventuali:
 [...]
-Override: l'override è implementato [...]
-Per mandare un messaggio di override l'umano manda un hmessaggio, cioè un messaggio del formato identico ai messaggi che mandano gli altri dispositivi ma con il carattere 0 uguale a "H". In questo modo ogni dispositivo effettua un controllo: se il messaggio inizia con quel carattere, esso va rimosso e poi il messaggio interpretato.
+
+Errori ed exit:
+Il sistema risponde con un errore e una exit nei seguenti casi:
+
+- exit (0):
+- exit (130):
+- exit ():
 [...]
+[TODO]
+
+Override: 
+Per mandare un messaggio di override l'umano manda un hmessaggio, cioè un messaggio del formato identico ai messaggi che mandano gli altri dispositivi ma con il carattere 0 uguale a "H". In questo modo ogni dispositivo effettua un controllo: se il messaggio inizia con quel carattere, esso va rimosso e poi il messaggio interpretato.
+
+[...]
+
+Shell:
+Il sistema utilizza una sola shell per l'interazione con l'utente. I processi non generano altre shell e l'interazione può avvenire da terminale testuale.
+
+Il progetto funziona sui seguenti ambienti testati: 
+- Ubuntu 18.x (come richiesto)
+- 
+[inserire ambienti testati oltre Ubuntu 18.x, se non ce ne sono cancellare questa parte xD LoOOo0o0oL]
 
 /*
 * nota:  [...] significa inserire commenti/note relative
@@ -84,16 +161,18 @@ Per mandare un messaggio di override l'umano manda un hmessaggio, cioè un messa
 */
 
 DA AGGIUNGERE:
-- tipi di messaggi
-- overrride
-- gestione delle pipe
-- altre cose in comune tra i dispositivi
-- differenze tra dispositivi
-- messaggi in secondi per alarm
-- shell: gestione (una sola shell e perché)
+- tipi di messaggi 									--> in lavorazione
+- overrride											--> OK?
+- gestione delle pipe 								--> Claudio
+- altre cose in comune tra i Dispositivi  			--> altro?
+- differenze tra Dispositivi 						--> altro?
+- messaggi in secondi per alarm   					--> da mettere nel messaggio delay
+- shell: gestione (una sola shell e perché) 		--> altro?
+-errori/exit 										--> in lavorazione
+
 
 Piccolo commento:
-Secondo me è inutile scrivere in questo file tutti i registri/interruttori presenti, dal momento che è quello che il professore già sa.
+Secondo me è inutile scrivere in questo file tutti i registri/interruttori presenti, dal momento che è quello che il professore già sa, dato che richiesto da lui.
 Secondo me vuole capire come abbiamo implementato le varie cose, tipo cosa è per noi un registro (nelle librerie) oppure le funzioni varie. 
-E' utile aggiungere cosa fanno i vari messaggi perché il professore non ha specificato il formato dei messaggi, come ha scritto sulla mail per lui basta ci siano nomi significativi.
-E' importante spiegare come sia implementato l'override.
+E' utile aggiungere cosa fanno i vari messaggi perché il professore non ha specificato il formato dei messaggi, come ha scritto sulla mail per lui basta ci siano nomi significativi. 
+E' importante spiegare come sia implementato l'override. (OK?)
