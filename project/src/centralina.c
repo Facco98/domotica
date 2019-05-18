@@ -591,7 +591,7 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
       genera_figlio(status);
 
 
-    } else if(pid > 0) {
+    } else if(pid > 0) {
 
       // Aggiungo la pipe del nuovo figlio.
       char pipe[100];
