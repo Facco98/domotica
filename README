@@ -8,7 +8,15 @@ Componenti del gruppo:
 Breve descrizione del progetto:
 Emulazione di un sistema di domotica. Il progetto è stato implementato con la variante dei processi. 
 
-I dispositivi creano 3 processi che comunicano tra di loro su tre pipe differenti. 
+I dispositivi creano tre diversi processi che comunicano tra di loro su tre pipe differenti.
+I processi sono:
+- il processo del dispositivo (?)
+- il processo ?
+- il processo ?
+Le pipe sono chiamate:
+- pipe_interna: comunica tra i processi ? e ?
+- pipe_esterna: comunica tra i processi ? e ?
+- pipe ???? 
 
 [inserire qua gestione di blocking @Claudio ]
 [Inserire qua la gestione delle pipe @Claudio]
