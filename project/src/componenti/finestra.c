@@ -333,7 +333,7 @@ void crea_processi_supporto(registro* registri[], int numero_registri, boolean* 
 
     }
 
-    else if( pid > 0 ) //se sono il padre (= processo generante)
+    else if( pid > 0 ) //se sono il padre (= processo generante)
     {
       figli[1] = pid; //mi salvo il process-id del figlio appena generato dalla fork sopra
       signal(SIGINT, termina); //se ricevo segnale di morte --> chiamo funzione termina
