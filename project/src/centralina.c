@@ -140,7 +140,6 @@ void gestisci_list(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
     char msg[1024];
     while(flag == FALSE && it != NULL){
 
-      printf("[PIPE]%s\n", pipe_figlio);
       if( read_msg(pipe_figlio, msg, 1023) == FALSE ){
         nodo_stringa* tmp = it;
         rimuovi_nodo(lista_pipes, it);
@@ -470,7 +469,6 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
     }
     if( trovato == TRUE )
       nodo_elemento = it;
-    printf("[LOCALE]%s\n", status);
 
   } else {
 
@@ -495,7 +493,6 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
 
       } else{
 
-        printf("[RES]%s\n", res);
         it = it -> succ;
 
       }
@@ -510,7 +507,8 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
     }
 
     sprintf(tmp, "%s %s", GET_STATUS, id_componente);
-    if( send_msg(it -> val, tmp) == FALSE || read_msg(it -> val, status, 199) == FALSE ){
+    char status_tmp[200];
+    if( send_msg(it -> val, tmp) == FALSE || read_msg(it -> val, status_tmp, 199) == FALSE ){
 
       nodo_stringa* l = it;
       rimuovi_nodo(lista_pipes, it);
@@ -520,7 +518,7 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
 
     } else {
 
-      strcpy(status, status+strlen(GET_STATUS_RESPONSE)+1);
+      strcpy(status, status_tmp+strlen(GET_STATUS_RESPONSE)+1);
       pipe_componente = it;
 
     }
@@ -547,7 +545,6 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
     // Controllo se il dispositivo è un mio figlio, in caso lo elimino.
     while( it != NULL && flag == FALSE ){
 
-      printf("[PIPE-LINK]%s\n", it->val);
       char res[10];
       if( send_msg( it -> val, tmp ) == FALSE || read_msg(it -> val, res, 9) == FALSE ){
 
@@ -565,7 +562,6 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
         flag = TRUE;
 
       } else{
-        printf("[RES-CONFIRM]%s\n", res);
         it = it -> succ;
       }
     }
@@ -597,7 +593,6 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
       char pipe[100];
       sprintf(pipe, "%s/%s", (string) PERCORSO_BASE_DEFAULT, id_componente);
       append(lista_pipes, pipe);
-      printf("[CENTRALINA-APPEND]%s\n", pipe);
 
     }
 
