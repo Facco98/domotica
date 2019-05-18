@@ -329,7 +329,7 @@ void gestisci_STATUSGET(coda_stringhe* separata){
 
         trovato = TRUE;
 
-      } else {
+      } else {
 
         it = it -> succ;
 
