@@ -9,13 +9,14 @@ Breve descrizione del progetto:
 Emulazione di un sistema di domotica. I dispositivi creano 3 processi che comunicano tra di loro su tre pipe differenti. 
 
 [inserire qua gestione di blocking @Claudio ]
-[Inserire qua la gestione delle pipe]
+[Inserire qua la gestione delle pipe @Claudio]
 
 Questo sistema di gestione è comune per tutti le tipologie di dispositivi emulate da questo progetto.
 
 Differenze tra dispositivi di controllo e di interazione
 La differenza tra dispositivi di controllo e dispositivi di interazione è principalmente nella gestione di messaggi in entrata non propri. 
-Quando un dispositivo di controllo riceve un messaggio non proprio chiede ai propri figli se può mandare il messaggio per arrivare al dispositivo interessato. Quando un dispositivo di interazione riceve un messaggio non proprio //???
+Quando un dispositivo di controllo riceve un messaggio non proprio chiede ai propri figli se può mandare il messaggio per arrivare al dispositivo interessato. 
+Quando un dispositivo di interazione riceve un messaggio non proprio risponde //???
 
 // ? altro?
 
@@ -23,7 +24,9 @@ Note sui componenti
 
 Dispositivi di controllo
 Centralina:
-comunica ai figli [...]
+Comunica ai figli attraverso messaggi nel seguente formato:
+[...]
+
 
 Hub:
 [...]
@@ -72,7 +75,8 @@ Note sul makefile:
 Varie ed eventuali:
 [...]
 Override: l'override è implementato [...]
-
+Per mandare un messaggio di override l'umano manda un hmessaggio, cioè un messaggio del formato identico ai messaggi che mandano gli altri dispositivi ma con il carattere 0 uguale a "H". In questo modo ogni dispositivo effettua un controllo: se il messaggio inizia con quel carattere, esso va rimosso e poi il messaggio interpretato.
+[...]
 
 /*
 * nota:  [...] significa inserire commenti/note relative
@@ -86,4 +90,10 @@ DA AGGIUNGERE:
 - altre cose in comune tra i dispositivi
 - differenze tra dispositivi
 - messaggi in secondi per alarm
-- shell: gestione
+- shell: gestione (una sola shell e perché)
+
+Piccolo commento:
+Secondo me è inutile scrivere in questo file tutti i registri/interruttori presenti, dal momento che è quello che il professore già sa.
+Secondo me vuole capire come abbiamo implementato le varie cose, tipo cosa è per noi un registro (nelle librerie) oppure le funzioni varie. 
+E' utile aggiungere cosa fanno i vari messaggi perché il professore non ha specificato il formato dei messaggi, come ha scritto sulla mail per lui basta ci siano nomi significativi.
+E' importante spiegare come sia implementato l'override.
