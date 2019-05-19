@@ -333,11 +333,11 @@ void stampa_componente_list(string msg, int indent){
   printf("- ");
   if( strcmp(tipo, "hub") == 0 ){
 
-    char id[20], tmp[1024], concat[1024];
-    strcpy(concat, "");
+    char id[20], tmp[1024], stato[20];
     primo(coda, id, FALSE);
+    primo(coda, stato, FALSE);
 
-    printf("HUB id: %s[\n", id);
+    printf("HUB id: %s override: %s[\n", id, stato);
 
     while(primo(coda, tmp, FALSE) == TRUE){
 
@@ -387,11 +387,11 @@ void stampa_componente_info(string msg, int indent){
 
   } else if( strcmp(tipo, "hub") == 0 ){
 
-    char id[20], tmp[1024], concat[1024];
-    strcpy(concat, "");
+    char id[20], tmp[1024], stato[20];
     primo(coda, id, TRUE);
+    primo(coda, stato, TRUE);
 
-    printf("HUB id: %s[\n", id);
+    printf("HUB id: %s[ override: %s\n", id, stato);
 
     while(primo(coda, tmp, TRUE) == TRUE){
 
