@@ -13,15 +13,16 @@
 */
 void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* lista_pipes, lista_stringhe* da_creare, lista_stringhe* dispositivi_ammessi);
 void gestisci_list( coda_stringhe* separata, lista_stringhe* lista_pipes, lista_stringhe* da_creare);
-void gestisci_del( coda_stringhe* separata, lista_stringhe* lista_pipes);
-void gestisci_exit( coda_stringhe* separata, lista_stringhe* lista_pipes);
+void gestisci_del( coda_stringhe* separata, lista_stringhe* lista_pipes, lista_stringhe* da_creare);
+void gestisci_exit(coda_stringhe* separata,lista_stringhe* lista_pipes, lista_stringhe* da_creare);
 void gestisci_info( coda_stringhe* separata, lista_stringhe* lista_pipes);
 void gestisci_switch( coda_stringhe* separata, lista_stringhe* lista_pipes);
-void gestisci_add(coda_stringhe* separate, lista_stringhe* da_creare, lista_stringhe* dispositivi_ammessi);
+void gestisci_add(coda_stringhe* separate, lista_stringhe* lista_figli, lista_stringhe* da_creare, lista_stringhe* dispositivi_ammessi);
 void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_stringhe* da_creare);
 void stampa_componente_list(string msg, int indent);
 void stampa_componente_info(string msg, int indent);
 void genera_figlio( string status );
+void crea_dispositivo_non_connesso(string tipo, lista_stringhe* lista_pipes, lista_stringhe* da_creare);
 boolean suffix(const char *str, const char *suffix);
 
 
@@ -33,9 +34,9 @@ int main( int argn, char** argv ){
 
 
   lista_stringhe* lista_figli = crea_lista();
-  append(lista_figli, "/tmp/9");
 
   lista_stringhe* da_creare = crea_lista();
+
   lista_stringhe* dispositivi_ammessi = crea_lista();
   append(dispositivi_ammessi, "bulb");
   append(dispositivi_ammessi, "hub");
@@ -89,7 +90,7 @@ void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* 
 
   } else if( strcmp(comando, "add") == 0 ){
 
-    gestisci_add(separata, da_creare, dispositivi_ammessi);
+    gestisci_add(separata, lista_pipes, da_creare, dispositivi_ammessi);
 
   } else if( strcmp(comando, "link") == 0 ){
 
@@ -97,7 +98,7 @@ void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* 
 
   } else if( strcmp( comando, "del") == 0 ){
 
-    gestisci_del(separata, lista_pipes);
+    gestisci_del(separata, lista_pipes, da_creare);
 
   } else if( strcmp(comando, "switch") == 0 ){
 
@@ -105,7 +106,7 @@ void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* 
 
   } else if( strcmp(comando, "exit") == 0 ){
 
-    gestisci_exit(separata, lista_pipes);
+    gestisci_exit(separata, lista_pipes, da_creare);
 
   } else if( strcmp(comando, "info") == 0 ){
 
@@ -160,33 +161,94 @@ void gestisci_list(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
   it = da_creare -> testa;
   if( it != NULL )
     printf("Lista dei dispositivi aggiunti ma non collegati: \n");
-  while( it != NULL ){
 
-    printf("- %s\n", it -> val);
-    it = it -> succ;
+    while(it != NULL){
 
-  }
+      string pipe_figlio = it -> val;
+      char messaggio[1024];
+      sprintf(messaggio, "%s %d", GET_STATUS, ID_UNIVERSALE);
+      send_msg(pipe_figlio, messaggio);
+      boolean flag = FALSE;
+      char msg[1024];
+      while(flag == FALSE && it != NULL){
+
+        if( read_msg(pipe_figlio, msg, 1023) == FALSE ){
+          nodo_stringa* tmp = it;
+          rimuovi_nodo(lista_pipes, it);
+          flag = TRUE;
+          it = it -> succ;
+          free(tmp);
+        } else {
+          if( prefix(GET_STATUS_RESPONSE, msg) == TRUE ){
+            flag = TRUE;
+            stampa_componente_list(msg+13, 0);
+
+          }
+          it = it -> succ;
+        }
+      }
+    }
 }
 
-void gestisci_del( coda_stringhe* separata, lista_stringhe* lista_pipes){
+void gestisci_del( coda_stringhe* separata, lista_stringhe* lista_pipes, lista_stringhe* da_creare){
 
-  char tmp[100];
-  primo(separata, tmp, TRUE);
-  int id_comp = atoi(tmp);
-  sprintf(tmp, "%s %d", REMOVE, id_comp);
+  char id_ric[20];
+  primo(separata, id_ric, TRUE);
+  char remove_msg[200], confirm_msg[50];
+  sprintf(remove_msg, "%s %s", REMOVE, id_ric);
+  sprintf(confirm_msg, "%s %s", "CONFIRM", id_ric);
   nodo_stringa* it = lista_pipes -> testa;
 
   while( it != NULL ){
 
-    string pipe = it -> val;
-    if( send_msg(pipe, tmp) == FALSE ){
+    printf("[HUB PIPE]%s\n", it -> val);
+
+    char res[10];
+    if( send_msg( it -> val, confirm_msg ) == FALSE || read_msg(it -> val, res, 9) == FALSE ){
 
       nodo_stringa* l = it;
       rimuovi_nodo(lista_pipes, it);
       it = it -> succ;
       free(l);
 
+    } else if( strcmp(res, "TRUE") == 0 ){
+
+      send_msg(it -> val, remove_msg);
+      nodo_stringa* l = it;
+      rimuovi_nodo(lista_pipes, it);
+      it = it -> succ;
+      free(l);
+
     } else{
+      printf("[RES-CONFIRM]%s\n", res);
+      send_msg(it -> val, remove_msg);
+      it = it -> succ;
+    }
+
+  }
+
+  it = da_creare -> testa;
+
+  while( it != NULL ){
+
+    char res[10];
+    if( send_msg( it -> val, confirm_msg ) == FALSE || read_msg(it -> val, res, 9) == FALSE ){
+
+      nodo_stringa* l = it;
+      rimuovi_nodo(da_creare, it);
+      it = it -> succ;
+      free(l);
+
+    } else if( strcmp(res, "TRUE") == 0 ){
+
+      send_msg(it -> val, remove_msg);
+      nodo_stringa* l = it;
+      rimuovi_nodo(da_creare, it);
+      it = it -> succ;
+      free(l);
+
+    } else{
+      send_msg(it -> val, remove_msg);
       it = it -> succ;
     }
 
@@ -225,13 +287,21 @@ void gestisci_switch(coda_stringhe* separata, lista_stringhe* lista_pipes){
 
 }
 
-void gestisci_exit(coda_stringhe* separata, lista_stringhe* lista_pipes){
+void gestisci_exit(coda_stringhe* separata,lista_stringhe* lista_pipes, lista_stringhe* da_creare){
 
   nodo_stringa* it = lista_pipes -> testa;
+  char msg[200];
+  sprintf(msg, "%s %d", REMOVE, ID_UNIVERSALE);
   while(it != NULL){
 
-    char msg[200];
-    sprintf(msg, "%s %d", REMOVE, ID_UNIVERSALE);
+    send_msg(it -> val, msg);
+    it = it -> succ;
+
+  }
+
+  it = da_creare -> testa;
+  while(it != NULL){
+
     send_msg(it -> val, msg);
     it = it -> succ;
 
@@ -293,7 +363,8 @@ void gestisci_info(coda_stringhe* separata, lista_stringhe* lista_pipes){
 
 }
 
-void gestisci_add(coda_stringhe* separata, lista_stringhe* da_creare, lista_stringhe* dispositivi_ammessi){
+void gestisci_add(coda_stringhe* separata, lista_stringhe* lista_figli,
+  lista_stringhe* da_creare, lista_stringhe* dispositivi_ammessi){
 
   char tipo[20];
   primo(separata, tipo, TRUE);
@@ -309,10 +380,7 @@ void gestisci_add(coda_stringhe* separata, lista_stringhe* da_creare, lista_stri
 
   if( ammesso == TRUE ){
 
-    char tmp[100];
-    sprintf(tmp, "%s %d", tipo, id_successivo++);
-    append(da_creare, tmp);
-    printf("Aggiuto %s con id %d\n", tipo, id_successivo-1 );
+    crea_dispositivo_non_connesso(tipo, lista_figli, da_creare);
 
   } else {
 
@@ -412,7 +480,6 @@ void stampa_componente_info(string msg, int indent){
 
 }
 
-
 boolean suffix(const char *str, const char *suffix){
     if (!str || !suffix)
         return FALSE;
@@ -434,212 +501,169 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
   primo(separata, id_padre, TRUE);
   primo(separata, id_padre, TRUE);
 
-  char path[100];
-  nodo_stringa* nodo_elemento = NULL;
-  nodo_stringa* pipe_componente = NULL;
-  sprintf(path, "%s/%s", (string) PERCORSO_BASE_DEFAULT, id_padre);
-
-  // Se il dispositivo padre non ha una fifo mi fermo.
-  if( access(path, F_OK) == -1 ){
-
-    printf("Errore: il dispositivo con id %s non è collegato al sistema\n", id_padre);
-    return;
-
-  }
-
-  sprintf(path, "%s/%s", (string) PERCORSO_BASE_DEFAULT, id_componente);
+  nodo_stringa* pipe_padre = lista_pipes -> testa;
+  char msg[200];
   char status[200];
-  strcpy(status, "");
-  // Controllo se il dispositivo è gia creato.
-  if( access(path, F_OK) == -1 ){
+  sprintf(msg, "%s %s", ID, id_padre);
+  boolean trovato = atoi(id_padre) == id ? TRUE : FALSE;
+  while( pipe_padre != NULL && trovato == FALSE ){
 
-    // Lo cerco nella lista;
-    nodo_stringa* it = da_creare -> testa;
-    boolean trovato = FALSE;
-    while( it != NULL && trovato == FALSE ){
+    string pipe = pipe_padre -> val;
+    char res[10];
+    if( send_msg(pipe, msg) == FALSE || read_msg(pipe, res, 9) == FALSE ){
 
-      if( suffix(it->val, id_componente) == TRUE ){
-
-        strcpy(status, it->val);
-        trovato = TRUE;
-
-      } else
-        it = it -> succ;
-
-    }
-    if( trovato == TRUE )
-      nodo_elemento = it;
-
-  } else {
-
-    // Lo cerco nel sistema
-    nodo_stringa* it = lista_pipes -> testa;
-    boolean trovato = FALSE;
-    char tmp[200];
-    sprintf(tmp, "%s %s", ID, id_componente);
-    while( it != NULL && trovato == FALSE ){
-
-      char res[10];
-      if( send_msg(it -> val, tmp) == FALSE || read_msg(it -> val, res, 9) == FALSE){
-
-        nodo_stringa* l = it;
-        rimuovi_nodo(lista_pipes, it);
-        it = it -> succ;
-        free(l);
-
-      } else if( strcmp(res, "TRUE") == 0 ){
-
-        trovato = TRUE;
-
-      } else{
-
-        it = it -> succ;
-
-      }
-
-    }
-
-    if( trovato == FALSE ){
-
-      printf("Il dispositivo con id %s non esiste\n", id_componente);
-      return;
-
-    }
-
-    sprintf(tmp, "%s %s", GET_STATUS, id_componente);
-    char status_tmp[200];
-    if( send_msg(it -> val, tmp) == FALSE || read_msg(it -> val, status_tmp, 199) == FALSE ){
-
-      nodo_stringa* l = it;
-      rimuovi_nodo(lista_pipes, it);
-      it = it -> succ;
+      nodo_stringa* l = pipe_padre;
+      rimuovi_nodo(lista_pipes, pipe_padre);
+      pipe_padre = pipe_padre -> succ;
       free(l);
 
+    } else if( strcmp(res, "TRUE") == 0 ){
 
-    } else {
+      char stato_padre[200];
+      char tmp[200];
+      sprintf(tmp, "%s %s", GET_STATUS, id_padre);
+      send_msg(pipe, tmp);
+      read_msg(pipe, tmp, 199);
+      strtok(tmp, " ");
+      string s = strtok(NULL, " ");
+      trovato = TRUE;
+      if( strcmp(s, "hub") != 0 && strcmp(s, "timer") != 0 ){
+        trovato = FALSE;
+        pipe_padre = pipe_padre -> succ;
+      }
+    } else{
 
-      strcpy(status, status_tmp+strlen(GET_STATUS_RESPONSE)+1);
-      pipe_componente = it;
+      pipe_padre = pipe_padre -> succ;
 
     }
 
-
   }
 
-  // Se non sono riuscito a trovare lo stato del dispositivo mi fermo.
-  if( strcmp(status, "") == 0 ){
-    printf("Il dispositivo con id %s non esiste\n", id_componente);
+  if( trovato == FALSE ){
+
+    printf("ID %s non valido per l'operazione di link\n", id_padre);
     return;
+
   }
 
-  if( nodo_elemento == NULL ){ // Se l'elemento non era nella lista.
+  nodo_stringa* pipe_figlio = da_creare -> testa;
+  trovato = FALSE;
+  boolean nuovo = FALSE;
+  sprintf(msg, "%s %s", ID, id_componente);
+  while( pipe_figlio != NULL && trovato == FALSE ){
 
-    boolean flag = FALSE;
-    char tmp[100];
+    string pipe = pipe_figlio -> val;
+    char res[10];
+    if( send_msg(pipe, msg) == FALSE || read_msg(pipe, res, 9) == FALSE ){
+
+      nodo_stringa* l = pipe_padre;
+      rimuovi_nodo(da_creare, pipe_padre);
+      pipe_figlio = pipe_figlio -> succ;
+      free(l);
+
+    } else if( strcmp(res, "TRUE") == 0 ){
+
+      rimuovi_nodo(da_creare, pipe_figlio);
+      trovato = TRUE;
+      nuovo = TRUE;
+      char tmp[200];
+      sprintf(tmp, "%s %s", GET_STATUS, id_componente);
+      send_msg(pipe, tmp);
+      read_msg(pipe, tmp, 199);
+      strcpy(status, tmp + strlen(GET_STATUS_RESPONSE)+1);
 
 
-    nodo_stringa* it = lista_pipes -> testa;
+    } else{
 
-    sprintf(tmp, "%s %s", "CONFIRM", id_componente);
+      pipe_figlio = pipe_figlio -> succ;
 
-    // Controllo se il dispositivo è un mio figlio, in caso lo elimino.
-    while( it != NULL && flag == FALSE ){
+    }
 
+  }
+
+  if( trovato == FALSE ){
+
+    pipe_figlio = lista_pipes -> testa;
+    trovato = FALSE;
+    sprintf(msg, "%s %s", ID, id_componente);
+    while( pipe_figlio != NULL && trovato == FALSE ){
+
+      string pipe = pipe_figlio -> val;
       char res[10];
-      if( send_msg( it -> val, tmp ) == FALSE || read_msg(it -> val, res, 9) == FALSE ){
+      if( send_msg(pipe, msg) == FALSE || read_msg(pipe, res, 9) == FALSE ){
 
-        nodo_stringa* l = it;
-        rimuovi_nodo(lista_pipes, it);
-        it = it -> succ;
+        nodo_stringa* l = pipe_figlio;
+        rimuovi_nodo(lista_pipes, pipe_figlio);
+        pipe_figlio = pipe_figlio -> succ;
         free(l);
 
       } else if( strcmp(res, "TRUE") == 0 ){
 
-        nodo_stringa* l = it;
-        rimuovi_nodo(lista_pipes, it);
-        it = it -> succ;
-        free(l);
-        flag = TRUE;
+        trovato = TRUE;
+        char tmp[200];
+        sprintf(tmp, "%s %s", GET_STATUS, id_componente);
+        send_msg(pipe, tmp);
+        read_msg(pipe, tmp, 199);
+        strcpy(status, tmp + strlen(GET_STATUS_RESPONSE)+1);
 
       } else{
-        it = it -> succ;
+
+        pipe_figlio = pipe_figlio -> succ;
+
       }
+
     }
-
-    sprintf(tmp, "%s %s", REMOVE, id_componente);
-    send_msg(pipe_componente -> val, tmp);
-
-
-  } else {
-
-
-    rimuovi_nodo(da_creare, nodo_elemento);
-    free(nodo_elemento);
 
   }
 
-  if( atoi(id_padre) == id ){
+  if( trovato == FALSE ){
 
-    // Se sono io il nuovo padre lo creo.
+    printf("ID %s non valido per l'operazione di link\n", id_componente);
+    return;
+
+  }
+
+  boolean da_rimuovere = FALSE;
+  if( nuovo == FALSE ){
+
+    sprintf(msg, "%s %s", "CONFIRM", id_componente);
+    send_msg(pipe_figlio -> val, msg);
+    read_msg(pipe_figlio -> val, msg, 199);
+    if( strcmp(msg, "TRUE") == 0 ){
+
+      rimuovi_nodo(lista_pipes, pipe_figlio);
+      da_rimuovere = TRUE;
+    }
+
+  }
+  sprintf(msg, "%s %s", REMOVE, id_componente);
+  send_msg(pipe_figlio -> val, msg);
+
+  if( atoi(id_padre) == 0 ){
+
     pid_t pid = fork();
     if( pid == 0 ){
 
       genera_figlio(status);
 
+    } else if( pid > 0 ){
 
-    } else if(pid > 0) {
-
-      // Aggiungo la pipe del nuovo figlio.
-      char pipe[100];
-      sprintf(pipe, "%s/%s", (string) PERCORSO_BASE_DEFAULT, id_componente);
-      append(lista_pipes, pipe);
+      char tmp[50];
+      sprintf(tmp, "%s/%s", (string) PERCORSO_BASE_DEFAULT, id_componente);
+      append(lista_pipes, tmp);
 
     }
-
 
   } else {
 
-    // Altrimenti mando al suo nuovo padre
-    char tmp[100];
-    sprintf(tmp, "%s %s", ID, id_padre);
-    nodo_stringa* it = lista_pipes -> testa;
-    boolean flag = FALSE;
-
-    while( it != NULL && flag == FALSE ){
-
-      char res[10];
-      if( send_msg(it -> val, tmp) == FALSE || read_msg(it -> val, res, 9) == FALSE ){
-
-        nodo_stringa* l = it;
-        rimuovi_nodo(lista_pipes, it);
-        it = it -> succ;
-        free(l);
-
-
-      } else if( strcmp(res, "TRUE") == 0){
-
-        flag = TRUE;
-
-      } else {
-
-        it = it -> succ;
-
-      }
-
-    }
-
-    if( flag == FALSE ){
-
-      printf("Impossibile comunicare col padre\n");
-      append(da_creare, status);
-      return;
-
-    }
-
-    sprintf(tmp, "SPAWN %s %s", id_padre, status);
-    send_msg(it -> val, tmp);
+    sprintf(msg, "%s %s %s", "SPAWN", id_padre, status);
+    send_msg(pipe_padre -> val, msg);
+    if( da_rimuovere == TRUE )
+      free(pipe_figlio);
 
   }
+
+
 
 }
 
@@ -670,7 +694,42 @@ void genera_figlio( string status ){
     i++;
   }
 
+  printf("[STATUS]%s", status);
   execv(params[0], params);
-  //perror("exec");
+  perror("exec");
+
+}
+
+void crea_dispositivo_non_connesso(string tipo, lista_stringhe* lista_pipes, lista_stringhe* da_creare){
+
+  int id_dispositivo = id_successivo++;
+  pid_t pid = fork();
+  if( pid == 0 ){
+
+    // Se sono il figlio ne genero un altro e termino
+    pid = fork();
+    if( pid == 0 ){
+
+
+      char stato_figlio[50];
+      sprintf(stato_figlio, "%s %d", tipo, id_dispositivo);
+      printf("[STATO]%s\n", stato_figlio);
+      genera_figlio(stato_figlio);
+
+    } else if ( pid > 0 ){
+
+      printf("[STO MORENDO]\n");
+      exit(0);
+
+    }
+
+  } else if( pid > 0 ){
+
+    char percorso[50];
+    sprintf(percorso, "%s/%d", (string) PERCORSO_BASE_DEFAULT, id_dispositivo);
+    append(da_creare, percorso);
+
+  }
+
 
 }
