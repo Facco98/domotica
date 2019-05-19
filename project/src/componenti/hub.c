@@ -388,6 +388,7 @@ void gestisci_LABELUP(coda_stringhe* separata){
   char id_ric[50];
   primo(separata, id_ric, TRUE);
   int id_comp = atoi(id_ric);
+  char msg[200];
   if( id_comp == id || id_comp == ID_UNIVERSALE ){
 
     // Prendo il nome dell'interruttore e la nuova posizione.
@@ -397,25 +398,35 @@ void gestisci_LABELUP(coda_stringhe* separata){
     primo(separata, pos, TRUE);
 
     // Invio il messaggio a tutti i miei figli.
-    char msg[200];
     sprintf(msg, "%s %d %s %s", UPDATE_LABEL, ID_UNIVERSALE, label, pos);
 
-    nodo_stringa* it = lista_pipes -> testa;
-    while( it != NULL ){
 
-      string pipe = it -> val;
-      if( send_msg(pipe, msg) == FALSE ){
 
-        nodo_stringa* tmp = it;
-        rimuovi_nodo(lista_pipes, it);
-        it = it -> succ;
-        free(tmp);
+  } else {
 
-      }
+    sprintf(msg, "%s %s", UPDATE_LABEL, id_ric);
+    char tmp[20];
+    while( primo(separata, tmp, TRUE) == TRUE ){
+      strcat(msg, " ");
+      strcat(msg, tmp);
+    }
 
+  }
+  
+  nodo_stringa* it = lista_pipes -> testa;
+  while( it != NULL ){
+
+    string pipe = it -> val;
+    if( send_msg(pipe, msg) == FALSE ){
+
+      nodo_stringa* tmp = it;
+      rimuovi_nodo(lista_pipes, it);
       it = it -> succ;
+      free(tmp);
 
     }
+
+    it = it -> succ;
 
   }
   send_msg(pipe_interna, "DONE");
