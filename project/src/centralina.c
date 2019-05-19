@@ -392,6 +392,7 @@ void gestisci_add(coda_stringhe* separata, lista_stringhe* lista_figli,
 
 void stampa_componente_list(string msg, int indent){
 
+  printf("[MSG]%s\n", msg);
   coda_stringhe* coda = crea_coda_da_stringa(msg, " ");
   char tipo[20];
   primo(coda, tipo, FALSE);
@@ -406,13 +407,31 @@ void stampa_componente_list(string msg, int indent){
     primo(coda, stato, FALSE);
 
     printf("HUB id: %s override: %s[\n", id, stato);
-
+    primo(coda, tmp, FALSE);
     while(primo(coda, tmp, FALSE) == TRUE){
 
-      int i = 0;
-      for( i = 0; tmp[i] != '\0'; i++ )
-        if( tmp[i] == '_' )
-          tmp[i] = ' ';
+      if( strcmp(tmp, "]") == 0 )
+        break;
+      int count = 0;
+      int j;
+      for( j = 0; tmp[j] != '\0'; j++ ){
+        if( tmp[j] == '[' || tmp[j] == ']'){
+
+          if( count == 0 ){
+
+            if( tmp[j-1] == '_')
+              tmp[j-1] = ' ';
+
+            if( tmp[j+1] == '_')
+              tmp[j+1] = ' ';
+
+          }
+          count += tmp[j] == '[' ? 1 : -1;
+
+        }
+        if( count == 0 && tmp[j] == '_')
+          tmp[j] = ' ';
+      }
       stampa_componente_list(tmp, indent+1);
 
     }
@@ -436,6 +455,7 @@ void stampa_componente_list(string msg, int indent){
 }
 
 void stampa_componente_info(string msg, int indent){
+
 
   coda_stringhe* coda = crea_coda_da_stringa(msg, " ");
   char tipo[20];
@@ -463,11 +483,16 @@ void stampa_componente_info(string msg, int indent){
 
     while(primo(coda, tmp, TRUE) == TRUE){
 
-      int i = 0;
-      for( i = 0; tmp[i] != '\0'; i++ )
-        if( tmp[i] == '_' )
-          tmp[i] = ' ';
-
+      int count = 0;
+      int j;
+      for( j = 0; tmp[j] != '\0'; j++ ){
+        if( tmp[j] == '[' )
+          count ++;
+        else if ( tmp[j] == ']')
+          count --;
+        if( count == 0 && tmp[j] == '_' )
+          tmp[j] = ' ';
+      }
       stampa_componente_info(tmp, indent+1);
 
     }
