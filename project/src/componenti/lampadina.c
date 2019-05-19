@@ -329,7 +329,8 @@ void crea_processi_supporto(registro* registri[], int numero_registri, boolean* 
 
       char msg[200];
       read_msg(pipe_esterna, msg, 200);
-      send_msg(pipe_interna, msg);
+      if( msg[0] == 'H' )
+        send_msg(pipe_interna, msg+1);
 
     }
 
