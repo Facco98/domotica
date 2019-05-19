@@ -81,6 +81,8 @@ void gestisci_LABELUP(coda_stringhe* separata);
 
 void genera_figlio(coda_stringhe* separata);
 
+boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe* confronti);
+
 /*
 * Funzione per terminare il processo quando arriva un SIGINT.
 */
@@ -100,11 +102,24 @@ int main( int argn, char** argv ){
     exit(130);
   id = atoi(argv[1]);
 
+  lista_pipes = crea_lista();
+  append(lista_pipes, "/tmp/10");
+
+  /*
+  * Leggo gli stati degli eventuali figli che devo creare.
+  */
+  int i;
+  for( i = 3; i < argn; i++ ){
+
+    coda_stringhe* parametri_figlio = crea_coda_da_stringa(argv[i], "_");
+    genera_figlio(parametri_figlio);
+
+  }
+
   /*
   * Inizializzo la lista delle PIPE dei miei figli.
   */
-  lista_pipes = crea_lista();
-  append(lista_pipes, "/tmp/10");
+
 
   /*
   * Creo le variabili che contengono i percorsi delle PIPE.
@@ -116,7 +131,6 @@ int main( int argn, char** argv ){
 
 
 }
-
 
 void ascolta_e_interpreta(){
 
@@ -164,6 +178,7 @@ void ascolta_e_interpreta(){
   } else {
 
     printf("Comando non supportato\n");
+    send_msg(pipe_interna, "DONE");
 
   }
 
@@ -174,7 +189,6 @@ boolean calcola_registro_intero( const registro* r, int* res ){
   return TRUE;
 
 }
-
 
 boolean calcola_registro_stringa( const registro* r, string output){
 
@@ -225,7 +239,8 @@ void crea_processi_supporto(){
 
       char msg[200];
       read_msg(pipe_esterna, msg, 200);
-      send_msg(pipe_interna, msg);
+      if( msg[0] == 'H' )
+        send_msg(pipe_interna, msg+1);
 
     }
 
@@ -264,7 +279,6 @@ void crea_processi_supporto(){
 
 }
 
-
 void gestisci_STATUSGET(coda_stringhe* separata){
 
   char id_ric[50];
@@ -275,10 +289,16 @@ void gestisci_STATUSGET(coda_stringhe* separata){
 
     // Creo il messaggio contenente la risposta.
     char* response = (char*) malloc(sizeof(char) * 200 * lista_pipes -> n);
-    sprintf(response, "%s hub %d" ,GET_STATUS_RESPONSE, id);
+    string my_status = (char*) malloc(sizeof(char) * 200 * lista_pipes -> n);
+    sprintf(my_status, "%s hub %d" ,GET_STATUS_RESPONSE, id);
+
+    lista_stringhe* tipi_figli = crea_lista();
+    lista_stringhe* confronti = crea_lista();
 
     // Mando a tutti i miei figli che voglio lo stato.
     nodo_stringa* it = lista_pipes -> testa;
+
+    boolean override = FALSE;
     while( it != NULL ){
 
       string pipe = it -> val;
@@ -299,6 +319,8 @@ void gestisci_STATUSGET(coda_stringhe* separata){
           if( msg[i] == ' ')
             msg[i] = '_';
         strcat(response, msg+strlen(GET_STATUS_RESPONSE)+1);
+        if( override == FALSE )
+          override = calcola_override(msg+strlen(GET_STATUS_RESPONSE)+1, tipi_figli, confronti );
 
       }
       it = it -> succ;
@@ -306,8 +328,14 @@ void gestisci_STATUSGET(coda_stringhe* separata){
 
     }
     // Rispondo sulla pipe_interna.
-    send_msg(pipe_interna, response);
+    char tmp[20];
+    sprintf(tmp, " %s", override == TRUE ? "TRUE":"FALSE" );
+    strcat(my_status, tmp);
+    strcat(my_status, response);
+    send_msg(pipe_interna, my_status);
     free(response);
+    free(tipi_figli);
+    free(confronti);
 
   } else {
 
@@ -540,9 +568,54 @@ void genera_figlio(coda_stringhe* separata){
     char pipe_figlio[100];
     sprintf(pipe_figlio, "%s/%s", (string) PERCORSO_BASE_DEFAULT, tmp);
     append(lista_pipes, pipe_figlio);
-    printf("[APPESA]:%s\n", pipe_figlio);
     distruggi(separata);
 
   }
+
+}
+
+boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe* confronti){
+
+  boolean res = TRUE;
+  coda_stringhe* coda = crea_coda_da_stringa(str, "_");
+
+  char tipo[20];
+  primo(coda, tipo, FALSE);
+  nodo_stringa* it = tipi_figli -> testa;
+
+  char confronto[20];
+  primo(coda, confronto, FALSE);
+  primo(coda, confronto, FALSE);
+
+  int i = 0;
+  boolean trovato = FALSE;
+  while( it != NULL && trovato == FALSE ){
+
+    if( strcmp(tipo, it -> val) == 0 )
+      trovato = TRUE;
+    else{
+
+      it = it -> succ;
+      i++;
+
+    }
+
+  }
+
+  if( trovato == FALSE ){
+
+    append(tipi_figli, tipo);
+    append(confronti, confronto);
+    res = FALSE;
+
+  } else {
+
+    char precedente[20];
+    get(confronti, i, precedente);
+    res = strcmp(precedente, confronto) == 0 ? FALSE : TRUE;
+
+  }
+  distruggi(coda);
+  return res;
 
 }
