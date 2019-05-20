@@ -45,77 +45,34 @@ Se un dispositivo di interazione riceve un messaggio non proprio, ignora il mess
 
 // ? altro?
  
-Note sui componenti
-In seguito delle note sui vari tipi di dispositivi. In particolare sono descritti i tipi di messaggi che ogni dispositivo gestisce.
+Note sulla comunicazione
+In seguito sono descritti i tipi di messaggi che i dispositivo gestiscono.
 
-Dispositivi di controllo
-Centralina:
-Comunica ai figli attraverso messaggi nel seguente formato:
 (1) "STATUSGET" per richiedere lo stato di un dispositivo
 (2)"ID": chiede se può arrivare al dispositivo con id <ID> tramite un dispositivo
-(3)"LABELUP": per modificare gli interruttori di un dispositivo
+(3)"LABELUP": per modificare gli interruttori di un dispositivo. Nota: nella centralina esiste un messaggio "SWITCH" che viene poi modificato in "LABELUP"
 (4)"REMOVE": per rimuovere un dispositivo
 (6)"STATUSGETRES": messaggio di risposta a messaggi di risposta a messaggi del tipo (1) dai dispositivi, i quali vengono poi interpretati per generare una stampa a video delle informazioni richieste ai dispositivi.
+(7) "CONFIRM": per confermare che l'id richiesto corrisponda al proprio id
+(8)
 
 
-
-Hub:
-Può interpretare i seguenti tipi di messaggi:
-(1)
-(2)
+Peculiarità
+Dispositivi di controllo:
+Centralina:
 [...]
-Può inviare alla centralina il seguente tipo di messaggio:
-()
+Hub:
 [...]
 
 Timer:
-Può interpretare i seguenti tipi di messaggi:
-(1)
-(2)
-[...]
-Può inviare alla centralina il seguente tipo di messaggio:
-()
 [...]
 
 Dispositivi di interazione
 Finestra:
-Può interpretare i seguenti tipi di messaggi:
-(1)
-(2)
 [...]
-Può inviare alla centralina il seguente tipo di messaggio:
-()
-[...]
-
-// INIZIO PARTE DA TOGLIERE
-/*
----------------------------------------v0:---------------------------Questo secondo me è inutile (è ciò che fa detto il prof nel suo file, lo sa già)
-Ha un registro che indica il tempo di utilizzo. Controlla l'input e sovrascrive i valori in input, se disponibili. Chiama una funzione a supporto che contiene la logica del programma. Questa funzione crea i processi a supporto e resta perennemente in ascolto sulla propria pipe. ...
-...
-...
-//(manca ancora altre cose, quindi viene decisamente troppo lungo, secondo me)
-*/
-//Okay, dato che viene troppo lungo proviamo una descrizione più corta
-
-/*---------------------------------------v1:------------------------------- Questo è da descrivere sopra (parte in comune), da togliere
-La finestra gestisce i propri messaggi rispondendo con:
-- un messaggio "FALSE" sulla pipe_interna se l'id non corrisponde
-- //altri casi ??
-
-- un messaggio "TRUE" sulla pipe_interna se l'id corrisponde. In questo caso, in base al messaggio ricevuto reagisce compiendo le  l'azione indicata dal messaggio. 
-Le azioni eseguibili sono indicate nel makefile.
-*/ 
-// FINE PARTE DA TOGLIERE
 
 
 Frigo:
-Può interpretare i seguenti tipi di messaggi:
-(1)
-(2)
-[...]
-Può inviare alla centralina il seguente tipo di messaggio:
-()
-[...]
 [...]
 
 Implementazione di umano:
@@ -198,7 +155,7 @@ E' importante spiegare come sia implementato l'override. (OK?)
 ----------------------------------------------------- [TODO]-----------------------------------------------------------------------
 
 DA AGGIUNGERE:
-- tipi di messaggi 																	--> TODO (in lavorazione)
+- sezione messaggi 																	--> OK (?)
 - override																			--> OK (sistemato)
 - gestione delle pipe (blocking)													--> TODO (Claudio) (a quanto pare da non scrivere)
 - cose in comune tra i Dispositivi  												--> altro?
@@ -213,7 +170,7 @@ DA AGGIUNGERE:
 - rileggere tutto quanto un paio di volte per sincerarsi della correttezza di ciò che ho scritto qua dentro
 - la storia dei tre processini e delle tre pipe(ine)								--> OK 
 - add: processo creato																--> OK
--
+- sezione peculiarità
 -
 
 
