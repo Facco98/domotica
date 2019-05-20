@@ -479,29 +479,119 @@ void stampa_componente_info(string msg, int indent){
     primo(coda, id, TRUE);
     primo(coda, stato, TRUE);
 
-    printf("HUB id: %s[ override: %s\n", id, stato);
+    printf("HUB id: %s override: %s [\n", id, stato);
 
-    while(primo(coda, tmp, TRUE) == TRUE){
+    while(primo(coda, tmp, FALSE) == TRUE){
 
+      if( strcmp(tmp, "]") == 0 )
+        break;
       int count = 0;
       int j;
       for( j = 0; tmp[j] != '\0'; j++ ){
-        if( tmp[j] == '[' )
-          count ++;
-        else if ( tmp[j] == ']')
-          count --;
-        if( count == 0 && tmp[j] == '_' )
+        if( tmp[j] == '[' || tmp[j] == ']'){
+
+          if( count == 0 ){
+
+            if( tmp[j-1] == '_')
+              tmp[j-1] = ' ';
+
+            if( tmp[j+1] == '_')
+              tmp[j+1] = ' ';
+
+          }
+          count += tmp[j] == '[' ? 1 : -1;
+
+        }
+        if( count == 0 && tmp[j] == '_')
           tmp[j] = ' ';
       }
       stampa_componente_info(tmp, indent+1);
 
     }
+
     int i = 0;
     for( i = 0; i < indent+1; i++ )
       printf("  ");
     printf("]\n");
 
   }
+  else if( strcmp(tipo, "window") == 0 ) //finestra
+  {
+    char id[20], stato[20], time[20];
+    primo(coda, id, TRUE);
+    primo(coda, stato, TRUE);
+    primo(coda, time, TRUE);
+
+    printf("WINDOW id: %s stato: %s time: %s\n", id, stato, time);
+
+  }
+  else if(strcmp(tipo, "fridge") == 0)
+  {
+    char id[20], stato[20], time[20], delay[20], perc[20], temp[20];
+    primo(coda, id, TRUE);
+    primo(coda, stato, TRUE);
+    primo(coda, time, TRUE);
+    primo(coda, delay, TRUE);
+    primo(coda, perc, TRUE);
+    primo(coda, temp, TRUE);
+
+    printf("FRIDGE id: %s stato: %s time: %s delay: %s perc: %s temp: %s\n", id, stato, time, delay, perc, temp);
+
+  }
+  else if( strcmp(tipo, "timer") == 0)
+  {
+    char id[20], stato[20], begin[20], end[20], tmp[1024];
+    primo(coda, id, TRUE);
+    primo(coda, stato, TRUE); //stato = override
+    primo(coda, begin, TRUE);
+    primo(coda, end, TRUE);
+
+    printf("TIMER id: %s override: %s begin: %s end: %s[\n", id, stato, begin, end);
+
+    primo(coda, tmp, TRUE);
+
+    if( strcmp(tmp, "]") == 0 )
+    {
+      break;
+    }
+    int count = 0;
+    int j;
+    for( j = 0; tmp[j] != '\0'; j++ )
+    {
+      if( tmp[j] == '[' || tmp[j] == ']')
+      {
+        if( count == 0 )
+        {
+          if( tmp[j-1] == '_')
+          {
+            tmp[j-1] = ' ';
+          }
+          if( tmp[j+1] == '_')
+          {
+            tmp[j+1] = ' ';
+          }
+        }
+        count += tmp[j] == '[' ? 1 : -1;
+
+      }
+      if( count == 0 && tmp[j] == '_')
+      {
+        tmp[j] = ' ';
+      }
+    }
+    stampa_componente_info(tmp, indent+1);
+
+
+    int i = 0;
+    for( i = 0; i < indent+1; i++ )
+    {
+      printf("  ");
+    }
+    printf("]\n");
+
+
+  }
+
 
 }
 
