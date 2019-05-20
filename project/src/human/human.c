@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "strutture_dati/tipi_base.h"
+#include "strutture_dati/tipi_componente.h"
 #include "strutture_dati/coda_stringhe.h"
 #include "comunicazione/comunicazione.h"
 
@@ -28,12 +28,12 @@ int main(int argn, char** argv){
 
 
 //la funzione manda_messaggi_e_interpreta() manda un messaggio e aspetta la risposta del dispositivo
-leggi_e_manda_messaggi(){
+void leggi_e_manda_messaggi(){
 	printf("%s\n", "Inserire l'id dispositivo e il tipo di messaggio:");
 	//stampare i tipi di messaggi disponibili. Attendere in input gli id e il tipo di messaggio
 	//sprintf() è la funzione contraria a atoi() (quindi tipo itoa())
-	// crea una stringa in cui inserire l'input inserito dall'utente 
-	//input_string = id_dispositivo + messaggio 
+	// crea una stringa in cui inserire l'input inserito dall'utente
+	//input_string = id_dispositivo + messaggio
 	char input_string[200];
 	fgets(input_string, 199, stdin);
 
@@ -67,7 +67,7 @@ leggi_e_manda_messaggi(){
 	return ret;
 }*/
 
-//la funzione interpreta_messaggio() riceve la risposta dai dispositivi 
+//la funzione interpreta_messaggio() riceve la risposta dai dispositivi
 // la funzione trova_id prende in input la stringa e restituisce la prima stringa tra i due spazi convertita in intero
 // in questo caso il numero trovato sarà l'id perché i comandi dati dagli umani sono del tipo:
 // "SWITCH 10 ACCENSIONE ON"
@@ -81,7 +81,7 @@ int trova_id (string input_string){
 
 /*trova id
 	//avevo iniziato a fare una funzione, poi mi sono accorta esiste la funzione strtok che lo fa al posto mio, in tempo lineare
-	int id_int = -1; 
+	int id_int = -1;
 	int contatore_spazi = 0;
 	int i;
 	char  id_d[50];
@@ -95,7 +95,7 @@ int trova_id (string input_string){
 		} else {
 
 		}
-		
+
 	}
 	return id_int;
 
@@ -106,3 +106,10 @@ int trova_id (string input_string){
 	}
 	prendo il messaggio, lo trasformo in coda, trovo di chi è l'id, aggiungo un h a inizio e invio la copia a quell'id.
 */
+
+boolean calcola_registro_intero( const registro* r, int* res ){
+	return TRUE;
+}
+boolean calcola_registro_stringa( const registro* r, string output){
+	return TRUE;
+}
