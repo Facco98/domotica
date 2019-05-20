@@ -345,6 +345,22 @@ void gestisci_SPAWN(coda_stringhe* istruzioni)
   {
     genera_figlio(istruzioni);
   }
+  else
+  {
+    //ricostruire il messaggio e rinviarlo sotto
+    //vedi da hub per ricostruire la stringa
+    char msg[1024];
+    sprintf(msg, "%s %s", "SPAWN", id_ric);
+    char tmp[200];
+    while( primo(istruzioni, tmp, TRUE) == TRUE )
+    {
+      strcat(msg, " ");
+      strcat(msg, tmp);
+    }
+
+    send_msg(pipe_figlio, msg);
+
+  }
 
 }
 
@@ -438,6 +454,11 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], int numer
     }
 
   }
+
+}
+
+void gestisci_begin()
+{
 
 }
 
