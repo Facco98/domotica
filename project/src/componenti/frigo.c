@@ -271,6 +271,7 @@ void ascolta_e_interpreta(registro* registri[], int numero_registri, boolean* ap
   else
   {
     printf("Comando non supportato: %s\n", nome_comando); //OK
+    send_msg(pipe_interna, "DONE");
   }
 
 
@@ -374,13 +375,13 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
     temperatura->valore.integer = atoi(pos);  //imposto la temperatura del frigo alla temperatura voluta
   }
 // 			???????????????????????????????????????????????
-    else if (strcmp(azione, "HSET_FILL") ==  0) 
-    /*qua ho messo l'H all'inizio perché questo è solo override manuale, 
+    else if (strcmp(azione, "HSET_FILL") ==  0)
+    /*qua ho messo l'H all'inizio perché questo è solo override manuale,
     il comando per cambiare il riempimento da mandare come umano è HHSET_FILL
     in questo modo gli altri dispositivi non possono mandare questo messaggio, neanche volendo e il prof non può rompere il codice?
-    Alternativa (penso sia quella corretta): 
-    gli altri dispositivi in ogni caso NON possono mandare questo messaggio (non è nei tipi supportati) quindi posso 
-    togliere la H dall'inizio?	
+    Alternativa (penso sia quella corretta):
+    gli altri dispositivi in ogni caso NON possono mandare questo messaggio (non è nei tipi supportati) quindi posso
+    togliere la H dall'inizio?
 
     	*/
   { //controllo se devo impostare il riempimento
