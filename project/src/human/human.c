@@ -48,9 +48,9 @@ void leggi_e_manda_messaggi(){
 	idD = trova_id(input_string);
 	//devo aggiungere un h all'inizio del messaggio
 	char hmessaggio[200];
-	sprintf(hmessaggio, "H%s", input_string_copia);
+	//sprintf(hmessaggio, "H%s", input_string_copia);
 	//invio la copia a quell'id
-	manda_messaggio( idD, (string) PERCORSO_BASE_DEFAULT, hmessaggio );
+	manda_messaggio( idD, (string) PERCORSO_BASE_DEFAULT, input_string_copia );
 }
 
 //TODO
