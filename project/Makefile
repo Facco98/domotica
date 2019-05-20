@@ -34,6 +34,9 @@ clean:
 	rm -rf $(COMPILED_LIBRARIES_FOLDER)
 	rm -rf $(OUT_FOLDER)/*
 	rm -rf $(OUT_FOLDER)
+	#da controllare
+	rm -rf $(COMPILED_COMPONENTS_FOLDER)
+	rm -rf $(COMPILED_UMANO_FOLDER)
 
 run:
 	@echo "Run still to be implemented"
@@ -83,6 +86,13 @@ componenti:
 
 	#nota: da qua in poi non so se sia giusto, se è corretto bene, altrimenti sentitevi liberi di cancellare tutto e rifare
 
+	$(COMPILED_COMPONENTS_FOLDER) $(LIBS)
+
+	$(COMPILED_COMPONENTS_FOLDER): $(OUT_FOLDER)
+	@echo "Sto creando la cartella $(COMPILED_COMPONENTS_FOLDER)"
+	@mkdir $(COMPILED_COMPONENTS_FOLDER)
+
+
 	$(COMPILED_COMPONENTS_FOLDER)/centralina.o: $(SRC_FOLDER)/centralina.c 
 	@echo "Sto compilando la componente 'centralina'"
 	gcc -std=gnu90 -c  $(SRC_FOLDER)/centralina.c -o $(COMPILED_COMPONENTS_FOLDER)/centralina.o -I $(SRC_FOLDER)
@@ -114,6 +124,12 @@ umano:
 	@echo "Umano still to be implemented"
 
 #questa parte è da controllare
+	$(COMPILED_UMANO_FOLDER) $(LIBS)
+
+	$(COMPILED_UMANO_FOLDER): $(OUT_FOLDER)
+	@echo "Sto creando la cartella $(COMPILED_UMANO_FOLDER)"
+	@mkdir $(COMPILED_UMANO_FOLDER)
+
 	$(COMPILED_UMANO_FOLDER)/umano.o: $(SRC_FOLDER)/umano.c 
 	@echo "Sto compilando il file 'umano'"
 	gcc -std=gnu90 -c  $(SRC_FOLDER)/umano.c -o $(COMPILED_UMANO_FOLDER)/umano.o -I $(SRC_FOLDER)
