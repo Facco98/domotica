@@ -198,22 +198,10 @@ void ascolta_e_interpreta( registro* registri[], int numero_registri, boolean* a
     gestisci_ID(separata);
 
 
-  } else if( strcmp(nome_comando, "STATUSGETSIMPLE") == 0 ){
-
-    char tmp[20];
-    primo(separata, tmp, TRUE);
-    if( id == atoi(tmp) || atoi(tmp) == ID_UNIVERSALE ){
-      char msg[500];
-      sprintf(msg, "%s bulb %d %s", GET_STATUS_RESPONSE, id, *accesa == TRUE ? "ON" : "OFF" );
-      send_msg(pipe_interna, msg);
-    }
-    else
-      send_msg(pipe_interna, "DONE");
-
-
   } else{
 
       printf("Comando non supportato: %s\n", nome_comando);
+      send_msg(pipe_interna, "DONE");
 
   }
 
@@ -329,8 +317,7 @@ void crea_processi_supporto(registro* registri[], int numero_registri, boolean* 
 
       char msg[200];
       read_msg(pipe_esterna, msg, 200);
-      if( msg[0] == 'H' )
-        send_msg(pipe_interna, msg+1);
+      send_msg(pipe_interna, msg);
 
     }
 
