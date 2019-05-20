@@ -188,6 +188,7 @@ void ascolta_e_interpreta (registro* registri[], int numero_registri, boolean* s
   else //un qualsiasi altro comando non previsto
   {
     printf("Comando non supportato: %s\n", nome_comando);
+    send_msg(pipe_interna, "DONE");
   }
 
 }
