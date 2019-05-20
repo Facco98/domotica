@@ -196,7 +196,8 @@ void ascolta_e_interpreta(registro* registri[], int numero_registri)
   }
   else //altri comandi non supportati
   {
-    printf("Comando non supportato\n");
+    printf("Comando non supportato: %s\n", nome_comando);
+    send_msg(pipe_interna, "DONE");
   }
 
 
@@ -437,31 +438,6 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], int numer
     }
 
   }
-
-
-
-
-
-	/*	// Prendo il nome dell'interruttore e la nuova posizione
-		  char label[50];
-  		primo(istruzioni, label, TRUE);
-	    char pos[50];
-	    primo(istruzioni, pos, TRUE);
-
-	    //creo il messaggio
-	    char msg[200];
-  		sprintf(msg, "%s %d %s %s", UPDATE_LABEL, ID_UNIVERSALE, label, pos);
-
-	    //Invio il messaggio al mio unico figlio se esiste la pipe
-	    if (strcmp(pipe_figlio, "")!= 0)
-      {
-	    	send_msg(pipe_figlio, msg);
-	    }
-
-		}
-
-	send_msg(pipe_interna, "DONE");
-  */
 
 }
 
