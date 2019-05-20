@@ -49,18 +49,22 @@ Note sulla comunicazione
 In seguito sono descritti i tipi di messaggi che i dispositivo gestiscono.
 
 (1) "STATUSGET" per richiedere lo stato di un dispositivo
-(2)"ID": chiede se può arrivare al dispositivo con id <ID> tramite un dispositivo
-(3)"LABELUP": per modificare gli interruttori di un dispositivo. Nota: nella centralina esiste un messaggio "SWITCH" che viene poi modificato in "LABELUP"
-(4)"REMOVE": per rimuovere un dispositivo
-(6)"STATUSGETRES": messaggio di risposta a messaggi di risposta a messaggi del tipo (1) dai dispositivi, i quali vengono poi interpretati per generare una stampa a video delle informazioni richieste ai dispositivi.
+(2) "ID": chiede se può arrivare al dispositivo con id <ID> tramite un dispositivo
+(3) "LABELUP": per modificare gli interruttori di un dispositivo. Nota: nella centralina esiste un messaggio "SWITCH" che viene poi modificato in "LABELUP"
+(4) "REMOVE": per rimuovere un dispositivo
+(6) "STATUSGETRES": messaggio di risposta a messaggi di risposta a messaggi del tipo (1) dai dispositivi, i quali vengono poi interpretati per generare una stampa a video delle informazioni richieste ai dispositivi.
 (7) "CONFIRM": per confermare che l'id richiesto corrisponda al proprio id
-(8)
+(8) 
 
 
 Peculiarità
-Dispositivi di controllo:
-Centralina:
+Dispositivi di controllo
+
+Centralina
+Comando "add" nella centralina:
+Quando si esegue un comando "add" per un nuovo dispositivo (qualsiasi tipo), vi è la generazione di un processo figlio, il quale genera un altro processo figlio per poi terminare. In questo modo il processo del componente viene adottato da init() e quindi non risulta figlio della centralina.
 [...]
+
 Hub:
 [...]
 
@@ -68,28 +72,22 @@ Timer:
 [...]
 
 Dispositivi di interazione
+
 Finestra:
 [...]
-
 
 Frigo:
 [...]
 
-Implementazione di umano:
-[...]
+
+Implementazione di "umano"
 
 L'umano esegue sempre la stessa funzione la quale:
 - chiede in input l'id dispositivo e il tipo di messaggio da mandare
 - invia un hmessaggio all'id interessato
 - interpreta i messaggi che arrivano 
-Può interpretare i seguenti tipi di messaggi:
-(1)
-(2)
+Può inviare ai singoli dispositivi tutti i tipi di messaggi descritti sopra.
 
-[...]
-
-Può inviare alla centralina i seguenti tipi di messaggio:
-()
 
 [...]
 
@@ -103,9 +101,6 @@ Il makefile contiene le tre ricette indicate nella consegna ("help", "build" e "
 -
 
 
-Varie ed eventuali:
-[...]
-
 Errori ed exit:
 Il sistema risponde con un errore e una exit nei seguenti casi:
 
@@ -114,16 +109,16 @@ Il sistema risponde con un errore e una exit nei seguenti casi:
 - exit ():
 [...]
 
-
+//da aggiungere le varie tipologie di exit, da togliere se sarà sempre exit(0)
 
 Override: 
 E' uno stato che ha solo l'hub e il timer. Entrambi controllano se il/i figlio/i sia/siano in uno stato consistente oppure no.
 
+//in teoria concluso
 [...]
 
-// Forse manca qualcosa nel codice, per gestire l'override?
 
-Shell:
+Shell
 Il sistema utilizza una sola shell per l'interazione con l'utente. I processi non generano altre shell e l'interazione può avvenire da terminale testuale.
 
 Il progetto funziona sui seguenti ambienti testati: 
@@ -135,9 +130,10 @@ Il progetto funziona sui seguenti ambienti testati:
 [inserire ambienti testati oltre Ubuntu 18.x, se non ce ne sono cancellare questa parte xD, LoOOo0o0oL]
 
 
-Comando "add" nella centralina:
-Quando si esegue un comando "add" per un nuovo dispositivo (qualsiasi tipo), vi è la generazione di un processo figlio, il quale genera un altro processo figlio per poi terminare. In questo modo il processo del componente viene adottato da init() e quindi non risulta figlio della centralina.
 
+
+Varie ed eventuali:
+[...]
 
 /*
 * nota:  [...] significa inserire commenti/note relative
@@ -160,7 +156,6 @@ DA AGGIUNGERE:
 - gestione delle pipe (blocking)													--> TODO (Claudio) (a quanto pare da non scrivere)
 - cose in comune tra i Dispositivi  												--> altro?
 - differenze tra Dispositivi 														--> altro?
-- messaggi in secondi per alarm   													--> TODO (da mettere nel messaggio delay del frigo!)
 - shell: gestione (una sola shell e perché) 										--> altro?
 - tipi di errori/exit 																--> in lavorazione //TODO MAKEFILE
 - ricette "in più" nel makefile (oltre a help, clean e build)						--> TODO
@@ -169,10 +164,14 @@ DA AGGIUNGERE:
 - controllare la sintassi e la grammatica di questo file
 - rileggere tutto quanto un paio di volte per sincerarsi della correttezza di ciò che ho scritto qua dentro
 - la storia dei tre processini e delle tre pipe(ine)								--> OK 
-- add: processo creato																--> OK
-- sezione peculiarità
--
+- umano																				--> OK (?)
 
 
+- sezione peculiarità dei dispositivi:
+CENTRALINA:
+					- add: processo creato	(per centralina)											--> OK
+
+FRIGO:
+					- messaggi in secondi per alarm   													--> TODO (da mettere nel messaggio delay del frigo!)
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
