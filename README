@@ -8,18 +8,17 @@ Componenti del gruppo:
 Breve descrizione del progetto:
 Emulazione di un sistema di domotica. Il progetto è stato implementato con la variante dei processi. 
 
-//-----------------------------------TO DO: i tre processini e le tre pipe(ine)--------------------------------------------
-I dispositivi creano tre diversi processi che comunicano tra di loro su tre pipe differenti.
+I dispositivi creano tre diversi processi che comunicano tra di loro sulla stessa pipe.
 I processi sono:
-- il processo del componente (?)
-- il processo dell'umano
-- il processo 
+- 1. il processo del dispositivo
+- 2. il processo che si occupa di comunicare con le interazioni esterne.
+- 3. il processo che si occupa di comunicare con il controllore.
 Le pipe sono chiamate:
-- pipe_interna: comunica tra i processi ? e ?, ossia pipe destinata alle comunicazioni all'interno del dispositivo
-- pipe_esterna: comunica tra i processi ? e ?, ossia pipe destinata alle comunicazioni con l'umano
-- pipe ???? : comunica tra i processi ? e ?, ossia pipe destinata alle comunicazioni con il processo padre
+- pipe_interna: comunica tra i processi 1 e 2 e 2 e 3, ossia pipe destinata alle comunicazioni all'interno del dispositivo
+- pipe_esterna: comunica tra i processi 2 e il processo rappresentante l'interazione esterna, ossia pipe destinata alle comunicazioni con l'umano
+- pipe <id>: comunica tra i processi 3 e il controllore del dispositivo, ossia pipe destinata alle comunicazioni con il processo padre
 
-(quali sono i nomi delle pipe e dei processini??? Chi comunica con cosa? E' così???)
+
 
 [inserire qua gestione di blocking @Claudio ]
 [Inserire qua la gestione delle pipe @Claudio]
@@ -52,17 +51,13 @@ In seguito delle note sui vari tipi di dispositivi. In particolare sono descritt
 Dispositivi di controllo
 Centralina:
 Comunica ai figli attraverso messaggi nel seguente formato:
-(1)
-(2)
-(3)
-(4)
-(5)
-	(5.1)
-	(5.2)
-(6)
+(1) "STATUSGET" per richiedere lo stato di un dispositivo
+(2)"ID": chiede se può arrivare al dispositivo con id <ID> tramite un dispositivo
+(3)"LABELUP": per modificare gli interruttori di un dispositivo
+(4)"REMOVE": per rimuovere un dispositivo
+(6)"STATUSGETRES": messaggio di risposta a messaggi di risposta a messaggi del tipo (1) dai dispositivi, i quali vengono poi interpretati per generare una stampa a video delle informazioni richieste ai dispositivi.
 
-[...]
-Riceve solo messaggi di risposta a messaggi del tipo (x.x) dai dispositivi, i quali vengono poi interpretati per generare una stampa a video delle informazioni richieste ai dispositivi.
+
 
 Hub:
 Può interpretare i seguenti tipi di messaggi:
@@ -157,7 +152,7 @@ Varie ed eventuali:
 Errori ed exit:
 Il sistema risponde con un errore e una exit nei seguenti casi:
 
-- exit (0): quando gli argomenti in linea di input sono minori di quelli accettati dal programma (meno di 2, ossia ???)
+- exit (0): quando gli argomenti in linea di input sono minori di quelli accettati dal programma (meno di 2)
 - exit (130): quando 
 - exit ():
 [...]
@@ -165,7 +160,7 @@ Il sistema risponde con un errore e una exit nei seguenti casi:
 
 
 Override: 
-Per mandare un messaggio di override l'umano manda un hmessaggio, cioè un messaggio del formato identico ai messaggi che mandano gli altri dispositivi ma con il carattere 0 uguale a "H". In questo modo ogni dispositivo effettua un controllo: se il messaggio inizia con quel carattere, esso va rimosso e poi il messaggio interpretato.
+E' uno stato che ha solo l'hub e il timer. Entrambi controllano se il/i figlio/i sia/siano in uno stato consistente oppure no.
 
 [...]
 
@@ -176,8 +171,15 @@ Il sistema utilizza una sola shell per l'interazione con l'utente. I processi no
 
 Il progetto funziona sui seguenti ambienti testati: 
 - Ubuntu 18.x (come richiesto)
+- macOS Mojave ( 14.1.2 )
+- macOS High Sierra ( 13.4.1 )
 - 
+
 [inserire ambienti testati oltre Ubuntu 18.x, se non ce ne sono cancellare questa parte xD, LoOOo0o0oL]
+
+
+Comando "add" nella centralina:
+Quando si esegue un comando "add" per un nuovo dispositivo (qualsiasi tipo), vi è la generazione di un processo figlio, il quale genera un altro processo figlio per poi terminare. In questo modo il processo del componente viene adottato da init() e quindi non risulta figlio della centralina.
 
 
 /*
@@ -197,20 +199,20 @@ E' importante spiegare come sia implementato l'override. (OK?)
 
 DA AGGIUNGERE:
 - tipi di messaggi 																	--> TODO (in lavorazione)
-- override																			--> OK?
-- gestione delle pipe (blocking)													--> TODO (Claudio)
+- override																			--> OK (sistemato)
+- gestione delle pipe (blocking)													--> TODO (Claudio) (a quanto pare da non scrivere)
 - cose in comune tra i Dispositivi  												--> altro?
 - differenze tra Dispositivi 														--> altro?
 - messaggi in secondi per alarm   													--> TODO (da mettere nel messaggio delay del frigo!)
 - shell: gestione (una sola shell e perché) 										--> altro?
-- tipi di errori/exit 																--> in lavorazione
+- tipi di errori/exit 																--> in lavorazione //TODO MAKEFILE
 - ricette "in più" nel makefile (oltre a help, clean e build)						--> TODO
-- versioni di Ubuntu testate oltre la 18.x (se abbiamo testato altro)				--> TODO
+- versioni di Ubuntu testate oltre la 18.x (se abbiamo testato altro)				--> TODO (aggiunto macOS)
 - cancellare commenti inutili in questo file quando è completo						
 - controllare la sintassi e la grammatica di questo file
 - rileggere tutto quanto un paio di volte per sincerarsi della correttezza di ciò che ho scritto qua dentro
-- la storia dei tre processini e delle tre pipe(ine)								--> OK? (mancano i nomi dei processi)
-- 
+- la storia dei tre processini e delle tre pipe(ine)								--> OK 
+- add: processo creato																--> OK
 -
 -
 
