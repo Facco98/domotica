@@ -109,10 +109,32 @@ int main( int argn, char** argv ){
   * Leggo gli stati degli eventuali figli che devo creare.
   */
   int i;
-  for( i = 3; i < argn; i++ ){
+  for( i = 4; i < argn-1; i++ ){
 
-    coda_stringhe* parametri_figlio = crea_coda_da_stringa(argv[i], "_");
-    genera_figlio(parametri_figlio);
+    printf("[HUB]%s\n", argv[i]);
+    int count = 0;
+    int j;
+    for( j = 0; argv[i][j] != '\0'; j++ ){
+      if( argv[i][j] == '[' || argv[i][j] == ']'){
+
+        if( (count == 0 && argv[i][j] == '[')  || (count == 1 && argv[i][j] == ']') ){
+
+          if( argv[i][j-1] == '_')
+            argv[i][j-1] = ' ';
+
+          if( argv[i][j+1] == '_')
+            argv[i][j+1] = ' ';
+
+        }
+        count += argv[i][j] == '[' ? 1 : -1;
+
+      }
+      if( count == 0 && argv[i][j] == '_')
+        argv[i][j] = ' ';
+    }
+    printf("[HUB-EDIT]%s\n", argv[i]);
+    coda_stringhe* coda = crea_coda_da_stringa(argv[i], " ");
+    genera_figlio(coda);
 
   }
 
@@ -329,9 +351,10 @@ void gestisci_STATUSGET(coda_stringhe* separata){
     }
     // Rispondo sulla pipe_interna.
     char tmp[20];
-    sprintf(tmp, " %s", override == TRUE ? "TRUE":"FALSE" );
+    sprintf(tmp, " %s [", override == TRUE ? "TRUE":"FALSE" );
     strcat(my_status, tmp);
     strcat(my_status, response);
+    strcat(my_status, " ]");
     send_msg(pipe_interna, my_status);
     free(response);
     free(tipi_figli);
@@ -412,7 +435,7 @@ void gestisci_LABELUP(coda_stringhe* separata){
     }
 
   }
-  
+
   nodo_stringa* it = lista_pipes -> testa;
   while( it != NULL ){
 
@@ -531,7 +554,6 @@ void gestisci_SPAWN(coda_stringhe* separata){
   if( id_comp == id || id_comp == ID_UNIVERSALE ){
 
     genera_figlio(separata);
-
 
   }
 
