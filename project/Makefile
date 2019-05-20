@@ -2,6 +2,10 @@
 SRC_FOLDER=src
 OUT_FOLDER=out
 COMPILED_LIBRARIES_FOLDER=$(OUT_FOLDER)/libraries
+#questa parte è da controllare 
+COMPILED_COMPONENTS_FOLDER=$(OUT_FOLDER)/componenti
+#come sopra
+COMPILED_UMANO_FOLDER=$(OUT_FOLDER)/umano
 
 # Definizione delle librerie che servono al progetto
 COMUNICAZIONE_LIB=$(COMPILED_LIBRARIES_FOLDER)/comunicazione.o
@@ -12,10 +16,17 @@ $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o $(COMPILED_LIBRARIES_FOLDER)/lista_
 LIBS=$(STRUTTURE_DATI_LIB) $(COMUNICAZIONE_LIB)
 
 
-.PHONY: help build clean libraries componenti umano
+#in phony deve andarci anche run, se viene implementata?
+.PHONY: help build clean libraries componenti umano 
 
 help:
-	@echo "Mostrare info veramente utili, come ad esempio le ricette disponibili"
+	@echo "Ricette disponibili\n"
+	@echo "                   - help: per mostrare questa lista (comandi disponibili)"
+	@echo "                   - clean: rimuove file temporanei e riporta allo stato iniziale"
+	@echo "                   - build: compila il progetto con il tool gcc e il flag -std=gnu90"
+	@echo "                   - run: (da implementare)"
+
+	@echo "[Mostrare altre ricette disponibili]"
 
 build: libraries componenti umano
 
@@ -70,8 +81,40 @@ $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o: $(SRC_FOLDER)/strutture_dati/tip
 componenti:
 	@echo "Componenti still to be implemented"
 
+	#nota: da qua in poi non so se sia giusto, se è corretto bene, altrimenti sentitevi liberi di cancellare tutto e rifare
+
+	$(COMPILED_COMPONENTS_FOLDER)/centralina.o: $(SRC_FOLDER)/centralina.c 
+	@echo "Sto compilando la componente 'centralina'"
+	gcc -std=gnu90 -c  $(SRC_FOLDER)/centralina.c -o $(COMPILED_COMPONENTS_FOLDER)/centralina.o -I $(SRC_FOLDER)
+
+	$(COMPILED_COMPONENTS_FOLDER)/hub.o: $(SRC_FOLDER)/componenti/hub.c 
+	@echo "Sto compilando la componente 'hub'"
+	gcc -std=gnu90 -c  $(SRC_FOLDER)/componenti/hub.c -o $(COMPILED_COMPONENTS_FOLDER)/hub.o -I $(SRC_FOLDER)
+
+	$(COMPILED_COMPONENTS_FOLDER)/timer.o: $(SRC_FOLDER)/componenti/timer.c 
+	@echo "Sto compilando la componente 'timer'"
+	gcc -std=gnu90 -c  $(SRC_FOLDER)/componenti/timer.c -o $(COMPILED_COMPONENTS_FOLDER)/timer.o -I $(SRC_FOLDER)
+
+	$(COMPILED_COMPONENTS_FOLDER)/lampadina.o: $(SRC_FOLDER)/componenti/lampadina.c 
+	@echo "Sto compilando la componente 'lampadina'"
+	gcc -std=gnu90 -c  $(SRC_FOLDER)/componenti/lampadina.c -o $(COMPILED_COMPONENTS_FOLDER)/lampadina.o -I $(SRC_FOLDER)
+
+	$(COMPILED_COMPONENTS_FOLDER)/fridge.o: $(SRC_FOLDER)/componenti/frigo.c 
+	@echo "Sto compilando la componente 'frigo'"
+	gcc -std=gnu90 -c  $(SRC_FOLDER)/componenti/frigo.c -o $(COMPILED_COMPONENTS_FOLDER)/fridge.o -I $(SRC_FOLDER)
+
+	$(COMPILED_COMPONENTS_FOLDER)/window.o: $(SRC_FOLDER)/componenti/frigo.c 
+	@echo "Sto compilando la componente 'finestra'"
+	gcc -std=gnu90 -c  $(SRC_FOLDER)/componenti/finestra.c -o $(COMPILED_COMPONENTS_FOLDER)/window.o -I $(SRC_FOLDER)
+
 
 # Regole per la generazione dell'umano
 
 umano:
 	@echo "Umano still to be implemented"
+
+#questa parte è da controllare
+	$(COMPILED_UMANO_FOLDER)/umano.o: $(SRC_FOLDER)/umano.c 
+	@echo "Sto compilando il file 'umano'"
+	gcc -std=gnu90 -c  $(SRC_FOLDER)/umano.c -o $(COMPILED_UMANO_FOLDER)/umano.o -I $(SRC_FOLDER)
+
