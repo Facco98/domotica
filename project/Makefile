@@ -134,3 +134,19 @@ umano:
 	@echo "Sto compilando il file 'umano'"
 	gcc -std=gnu90 -c  $(SRC_FOLDER)/umano.c -o $(COMPILED_UMANO_FOLDER)/umano.o -I $(SRC_FOLDER)
 
+
+#--------------------------------------to do list: makefile edition-------------------------------------------
+#IMPLEMENTATO, DA CONTROLLARE
+#- controllare la correttezza di umano
+#- controllare la correttezza di componenti
+#- controllare la correttezza di clean (modificato) 
+#- controllare la correttezza delle cartelle nuove aggiunte
+
+#DA IMPLEMENTARE (*)
+#- eliminare gli echo inutili in questo file
+#- eliminare i commenti inutili in questo file
+#- mostrare altre ricette disponibili in help 
+
+#DA IMPLEMENTARE (**)
+#- implementare run
+#- (creare altre ricette ?)
