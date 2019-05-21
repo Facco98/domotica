@@ -23,6 +23,7 @@ void stampa_componente_list(string msg, int indent);
 void stampa_componente_info(string msg, int indent);
 void genera_figlio( string status );
 void decodifica_controllo( string str );
+void decodifica_figli( string tmp );
 void crea_dispositivo_non_connesso(string tipo, lista_stringhe* lista_pipes, lista_stringhe* da_creare);
 boolean suffix(const char *str, const char *suffix);
 
@@ -147,6 +148,7 @@ void gestisci_list(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
         rimuovi_nodo(lista_pipes, it);
         flag = TRUE;
         it = it -> succ;
+        free(tmp -> val);
         free(tmp);
       } else {
         if( prefix(GET_STATUS_RESPONSE, msg) == TRUE ){
@@ -210,6 +212,7 @@ void gestisci_del( coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
       nodo_stringa* l = it;
       rimuovi_nodo(lista_pipes, it);
       it = it -> succ;
+      free(l -> val);
       free(l);
 
     } else if( strcmp(res, "TRUE") == 0 ){
@@ -218,6 +221,7 @@ void gestisci_del( coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
       nodo_stringa* l = it;
       rimuovi_nodo(lista_pipes, it);
       it = it -> succ;
+      free( l -> val);
       free(l);
 
     } else{
@@ -238,6 +242,7 @@ void gestisci_del( coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
       nodo_stringa* l = it;
       rimuovi_nodo(da_creare, it);
       it = it -> succ;
+      free(l -> val);
       free(l);
 
     } else if( strcmp(res, "TRUE") == 0 ){
@@ -246,6 +251,7 @@ void gestisci_del( coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
       nodo_stringa* l = it;
       rimuovi_nodo(da_creare, it);
       it = it -> succ;
+      free(l -> val);
       free(l);
 
     } else{
@@ -274,11 +280,13 @@ void gestisci_switch(coda_stringhe* separata, lista_stringhe* lista_pipes){
 
     string pipe = it -> val;
 
-    if( send_msg(pipe, msg ) == FALSE ){
+    char res[10];
+    if( send_msg(pipe, msg ) == FALSE || read_msg(pipe, res, 9) == FALSE ){
 
       nodo_stringa* tmp = it;
       rimuovi_nodo(lista_pipes, it);
       it = it -> succ;
+      free(tmp -> val);
       free(tmp);
 
     } else
@@ -333,6 +341,7 @@ void gestisci_info(coda_stringhe* separata, lista_stringhe* lista_pipes){
       nodo_stringa* l = it;
       rimuovi_nodo(lista_pipes, it);
       it = it -> succ;
+      free(l-> val);
       free(l);
       flag = TRUE;
 
@@ -351,6 +360,7 @@ void gestisci_info(coda_stringhe* separata, lista_stringhe* lista_pipes){
     string pipe = it -> val;
     if( send_msg(pipe, msg) == FALSE || read_msg(pipe, msg, 199) == FALSE ){
       rimuovi_nodo(lista_pipes, it);
+      free(it -> val);
       free(it);
     } else{
       stampa_componente_info(msg+13, 0);
@@ -409,12 +419,12 @@ void stampa_componente_list(string msg, int indent){
 
     printf("HUB id: %s override: %s[\n", id, stato);
     primo(coda, tmp, FALSE);
+    primo(coda, tmp, FALSE);
+    distruggi(coda);
+    decodifica_figli(tmp);
+    coda = crea_coda_da_stringa(tmp, " ");
     while(primo(coda, tmp, FALSE) == TRUE){
 
-      if( strcmp(tmp, "]") == 0 )
-        break;
-      int count = 0;
-      int j;
       decodifica_controllo(tmp);
       stampa_componente_list(tmp, indent+1);
 
@@ -595,6 +605,7 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
       nodo_stringa* l = pipe_padre;
       rimuovi_nodo(lista_pipes, pipe_padre);
       pipe_padre = pipe_padre -> succ;
+      free(l -> val);
       free(l);
 
     } else if( strcmp(res, "TRUE") == 0 ){
@@ -639,6 +650,7 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
       nodo_stringa* l = pipe_padre;
       rimuovi_nodo(da_creare, pipe_padre);
       pipe_figlio = pipe_figlio -> succ;
+      free(l -> val);
       free(l);
 
     } else if( strcmp(res, "TRUE") == 0 ){
@@ -676,6 +688,7 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
         nodo_stringa* l = pipe_figlio;
         rimuovi_nodo(lista_pipes, pipe_figlio);
         pipe_figlio = pipe_figlio -> succ;
+        free(l -> val);
         free(l);
 
       } else if( strcmp(res, "TRUE") == 0 ){
@@ -742,8 +755,10 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
 
     sprintf(msg, "%s %s %s", "SPAWN", id_padre, status);
     send_msg(pipe_padre -> val, msg);
-    if( da_rimuovere == TRUE )
+    if( da_rimuovere == TRUE ){
+      free(pipe_figlio -> val);
       free(pipe_figlio);
+    }
 
   }
 
@@ -781,6 +796,20 @@ void genera_figlio( string status ){
 
 }
 
+void decodifica_figli( string tmp ){
+
+  int count = 0;
+  int j;
+  for( j = 0; tmp[j] != '\0'; j++ ){
+    if( tmp[j] == '[' || tmp[j] == ']'){
+      count += tmp[j] == '[' ? 1 : -1;
+    }
+    if( count == 0 && tmp[j] == ',')
+      tmp[j] = ' ';
+  }
+
+}
+
 void decodifica_controllo( string tmp ){
 
   int count = 0;
@@ -801,8 +830,6 @@ void decodifica_controllo( string tmp ){
 
     }
     if( count == 0 && tmp[j] == '_')
-      tmp[j] = ' ';
-    if( count == 0 && tmp[j] == ',' )
       tmp[j] = ' ';
   }
 
