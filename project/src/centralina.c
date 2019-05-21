@@ -28,7 +28,7 @@ boolean suffix(const char *str, const char *suffix);
 
 
 const int id = 0;
-int id_successivo = id + 1;
+int id_successivo = 1;
 
 int main( int argn, char** argv ){
 
@@ -550,10 +550,6 @@ void stampa_componente_info(string msg, int indent){
 
     primo(coda, tmp, TRUE);
 
-    if( strcmp(tmp, "]") == 0 )
-    {
-      break;
-    }
     int count = 0;
     int j;
     for( j = 0; tmp[j] != '\0'; j++ )
@@ -618,7 +614,7 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
 
   nodo_stringa* pipe_padre = lista_pipes -> testa;
   char msg[200];
-  char status[200];
+  char status[1024];
   sprintf(msg, "%s %s", ID, id_padre);
   boolean trovato = atoi(id_padre) == id ? TRUE : FALSE;
   while( pipe_padre != NULL && trovato == FALSE ){
@@ -634,11 +630,11 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
 
     } else if( strcmp(res, "TRUE") == 0 ){
 
-      char stato_padre[200];
-      char tmp[200];
+      char stato_padre[1024];
+      char tmp[1024];
       sprintf(tmp, "%s %s", GET_STATUS, id_padre);
       send_msg(pipe, tmp);
-      read_msg(pipe, tmp, 199);
+      read_msg(pipe, tmp, 1023);
       strtok(tmp, " ");
       string s = strtok(NULL, " ");
       trovato = TRUE;
@@ -681,10 +677,11 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
       rimuovi_nodo(da_creare, pipe_figlio);
       trovato = TRUE;
       nuovo = TRUE;
-      char tmp[200];
+      char tmp[1024];
       sprintf(tmp, "%s %s", GET_STATUS, id_componente);
       send_msg(pipe, tmp);
-      read_msg(pipe, tmp, 199);
+      read_msg(pipe, tmp, 1023);
+      strcat(tmp, "\0");
       strcpy(status, tmp + strlen(GET_STATUS_RESPONSE)+1);
 
 
@@ -738,6 +735,8 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
 
   }
 
+  printf("[STATUS]%s\n", status);
+
   boolean da_rimuovere = FALSE;
   if( nuovo == FALSE ){
 
@@ -754,14 +753,18 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
   sprintf(msg, "%s %s", REMOVE, id_componente);
   send_msg(pipe_figlio -> val, msg);
 
+
   if( atoi(id_padre) == 0 ){
 
+    printf("[ID PADRE]\n");
     pid_t pid = fork();
     if( pid == 0 ){
 
+      // Se sono il figlio cambio l'immagine.
       genera_figlio(status);
 
     } else if( pid > 0 ){
+
 
       char tmp[50];
       sprintf(tmp, "%s/%s", (string) PERCORSO_BASE_DEFAULT, id_componente);
@@ -784,34 +787,33 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
 
 void genera_figlio( string status ){
 
-  coda_stringhe* coda = crea_coda_da_stringa(status, " ");
-  char tmp[40], percorso[50];
-  primo(coda, tmp, TRUE);
-  sprintf(percorso, "./%s.out", tmp);
+  strtok(status, " ");
+  char tmp[40], percorso[150];
+  sprintf(percorso, "./%s.out", status);
 
 
   char* params[] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
-  // Se sono il figlio cambio l'immagine.
+
 
   params[0] = (char*) malloc(sizeof(char)*40);
   strcpy(params[0], percorso);
 
-  primo(coda, tmp, TRUE);
+  params[1] = strtok(NULL, " ");
 
-  params[1] = (char*) malloc(sizeof(char)*40);
-  strcpy(params[1], tmp);
 
-  int i = 2;
-  while( primo(coda, tmp, TRUE) ==  TRUE ){
+  printf("[ID]%s\n", params[1]);
 
-    params[i] = (char*) malloc((strlen(tmp)+1) * sizeof(char));
-    strcpy(params[i], tmp);
+  int i = 1;
+  while( params[i] != NULL ){
+
     i++;
+    params[i] = strtok(NULL, " ");
+
   }
 
-  printf("[STATUS]%s", status);
   execv(params[0], params);
   perror("exec");
+
 
 }
 
