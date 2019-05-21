@@ -50,6 +50,7 @@ char pipe_esterna[50]; //pipe per comunicare con l'umano
 
 pid_t figli[1]; //memorizza process-id del figlio
 
+registro* registri[2];
 
 int main (int argn, char** argv)  //argomenti servono ??
 {
@@ -73,7 +74,8 @@ int main (int argn, char** argv)  //argomenti servono ??
   disattivazione.is_intero = TRUE;
 
   int numero_registri = 2;
-  registro* registri[] = {&attivazione, &disattivazione};
+  registri[0] = &attivazione;
+  registro[1] = &disattivazione;
 
   if(argn < 2) //se il numero di argomenti passati a funzione è minore di 2 --> errore
   {
@@ -457,9 +459,37 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], int numer
 
 }
 
-void gestisci_begin()
+/* Dovrebbe far fare un azione al figlio (inviando un messaggio)
+   controllare l'override da parte dell'umano (?)
+*/
+void gestisci_begin(int x)
 {
+  if(stcmp(pipe_figlio, "") != 0)
+  {
+    char msg1[200], msg2[200];
+    sprintf(msg1, "%s %s %s %s", UPDATE_LABEL, ID_UNIVERSALE, "ACCENSIONE", "ON");
+    sprintf(msg2, "%s %s %s %s", UPDATE_LABEL, ID_UNIVERSALE, "OPEN", "ON");
 
+    send_msg(pipe_figlio, msg1);
+    send_msg(pipe_figlio, msg2);
+
+    signal(SIGALRM, gestisci_end);
+    alarm(registri[1] -> valore.integer);
+  }
+
+}
+
+void gestisci_end(int x)
+{
+  if(stcmp(pipe_figlio, "") != 0)
+  {
+    char msg1[200], msg2[200];
+    sprintf(msg1, "%s %s %s %s", UPDATE_LABEL, ID_UNIVERSALE, "ACCENSIONE", "OFF");
+    sprintf(msg2, "%s %s %s %s", UPDATE_LABEL, ID_UNIVERSALE, "CLOSE", "ON");
+
+    send_msg(pipe_figlio, msg1);
+    send_msg(pipe_figlio, msg2);
+  }
 }
 
 
