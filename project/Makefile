@@ -150,6 +150,7 @@ umano:
 
 rum: 
 	@echo "Perché hai bruciato il RUUUUUUUMMM???!!?"
+	@echo "WHY IS THE RUUM GOOOONEEE???!!?"
 
 
 #--------------------------------------to do list: makefile edition-------------------------------------------
