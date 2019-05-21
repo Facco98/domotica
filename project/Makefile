@@ -16,7 +16,7 @@ LIBS=$(STRUTTURE_DATI_LIB) $(COMUNICAZIONE_LIB)
 
 
 
-.PHONY: help build clean libraries componenti umano run rum
+.PHONY: help build clean libraries componenti umano run rum spiegazione_processi_pipe
 
 help:
 	@echo "Ricette disponibili"
@@ -24,7 +24,7 @@ help:
 	@echo "                   - clean: rimuove file temporanei e riporta allo stato iniziale"
 	@echo "                   - build: compila il progetto con il tool gcc e il flag -std=gnu90"
 	@echo "                   - run: esegue il progetto"
-	@echo "                   - easter eggs: ricetta rum "
+	@echo "                   - easter eggs: ricetta spiegazione_processi_pipe (e rum) "
 
 	@echo "[Mostrare altre ricette disponibili]"
 
@@ -151,6 +151,11 @@ umano:
 rum: 
 	@echo "Perché hai bruciato il RUUUUUUUMMM???!!?"
 	@echo "WHY IS THE RUUM GOOOONEEE???!!?"
+
+spiegazione_processi_pipe:
+	@echo " pipe_interna  <---> (1) processo dispositivo                                                            "
+	@echo " pipe_interna  <---- (2) processo per l'interazione esterna        <----   pipe_esterna   <---   umano   "
+	@echo " pipe_interna  <---> (3) processo per l'interazione con il padre   <--->   pipe <id>      <--->  padre   "
 
 
 #--------------------------------------to do list: makefile edition-------------------------------------------
