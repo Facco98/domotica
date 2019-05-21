@@ -26,10 +26,8 @@ help:
 	@echo "                   - clean: rimuove file temporanei e riporta allo stato iniziale"
 	@echo "                   - build: compila il progetto con il tool gcc e il flag -std=gnu90"
 	@echo "                   - run: esegue il progetto"
-		#sono da togliere le easter egg nell'help???
-	@echo "                   - easter eggs: ricetta spiegazione_processi_pipe (e rum) "
-		#ci sono altre ricette??
-	@echo "[Mostrare altre ricette disponibili]"
+	@echo "                   - easter eggs: ricetta spiegazione_processi_pipe (disegno/spiegazione)"
+		#altre ricette?
 
 build: libraries componenti umano
 
@@ -153,16 +151,19 @@ umano:
 	@echo "Sto compilando il file 'umano'"
 	gcc -std=gnu90 -c  $(SRC_FOLDER)/human.c -o $(COMPILED_UMANO_FOLDER)/human.o -I $(SRC_FOLDER)
 
-#easter egg rum: citazione a Jack Sparrow
-rum: 
-	@echo "Perché hai bruciato il RUUUUUUUMMM???!!?"
-	@echo "WHY IS THE RUUM GOOOONEEE???!!?"
 
 #easter egg disegno: disegno/spiegazione dei processi e delle pipe di un dispositivo
 spiegazione_processi_pipe:
 	@echo " pipe_interna  <---> (1) processo dispositivo                                                            "
 	@echo " pipe_interna  <---- (2) processo per l'interazione esterna        <----   pipe_esterna   <---   umano   "
 	@echo " pipe_interna  <---> (3) processo per l'interazione con il padre   <--->   pipe <id>      <--->  padre   "
+
+
+#easter egg rum: citazione a Jack Sparrow
+rum: 
+	@echo "Perché hai bruciato il RUUUUUUUMMM???!!?"
+	@echo "WHY IS THE RUUM GOOOONEEE???!!?"
+
 
 
 #--------------------------------------to do list: makefile edition-------------------------------------------
