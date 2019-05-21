@@ -99,7 +99,6 @@ int main( int argn, char** argv ){
   */
   id = atoi(argv[1]);
 
-  printf("[ARGN]%d\n", argn);
   /*
   * E' possibile fornire anche gli altri valori al posto di quelli standard in questo
   * ordine: stato tempo_di_utilizzo.
@@ -153,11 +152,13 @@ boolean calcola_registro_intero( const registro* registro, int* res ){
 
 void ascolta_e_interpreta( registro* registri[], int numero_registri, boolean* accesa ){
 
+
   registro* tempo_utilizzo = registri[0];
   // Quando arriva un messaggio lo leggo e tolgo il \n finale, se presente.
   char messaggio[100];
   while( read_msg(pipe_interna, messaggio, 99) == FALSE)
     perror("Errore in lettura");
+
 
   strtok(messaggio, "\n");
 
@@ -200,7 +201,6 @@ void ascolta_e_interpreta( registro* registri[], int numero_registri, boolean* a
 
   } else{
 
-      printf("Comando non supportato: %s\n", nome_comando);
       send_msg(pipe_interna, "DONE");
 
   }
@@ -248,7 +248,7 @@ void gestisci_LABELUP( coda_stringhe* separata, registro* registri[], boolean* a
     }
   } else
     distruggi_coda(separata);
-  send_msg(pipe_interna, "DONE");
+  send_msg(pipe_interna, "TRUE");
 
 }
 
@@ -327,12 +327,12 @@ void crea_processi_supporto(registro* registri[], int numero_registri, boolean* 
     figli[0] = pid;
     pid = fork();
     if( pid == 0 ){
-
+      crea_pipe(id, (string) PERCORSO_BASE_DEFAULT);
       // Il padre sta in ascolto sulla PIPE del controllore del componente e invia
       // tutto quello che riceve sulla FIFO interna al componente, aspettando un messaggio
       // DONE o altro e in caso lo restituisce al padre.
       while(1){
-        crea_pipe(id, (string) PERCORSO_BASE_DEFAULT);
+
         char msg[200];
         leggi_messaggio(id, (string) PERCORSO_BASE_DEFAULT, msg, 199);
         send_msg(pipe_interna, msg);
