@@ -227,6 +227,7 @@ void gestisci_del( coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
     } else{
       printf("[RES-CONFIRM]%s\n", res);
       send_msg(it -> val, remove_msg);
+      read_msg(it -> val, res, 9);
       it = it -> succ;
     }
 
@@ -256,6 +257,7 @@ void gestisci_del( coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
 
     } else{
       send_msg(it -> val, remove_msg);
+      read_msg( it -> val, res, 9);
       it = it -> succ;
     }
 
@@ -732,7 +734,10 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
   }
   sprintf(msg, "%s %s", REMOVE, id_componente);
   send_msg(pipe_figlio -> val, msg);
-
+  if( da_rimuovere == FALSE && nuovo == FALSE ){
+    char res[10];
+    read_msg(pipe_figlio -> val, res, 9);
+  }
 
   if( atoi(id_padre) == 0 ){
 
