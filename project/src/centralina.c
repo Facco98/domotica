@@ -735,8 +735,6 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
 
   }
 
-  printf("[STATUS]%s\n", status);
-
   boolean da_rimuovere = FALSE;
   if( nuovo == FALSE ){
 
@@ -756,7 +754,6 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
 
   if( atoi(id_padre) == 0 ){
 
-    printf("[ID PADRE]\n");
     pid_t pid = fork();
     if( pid == 0 ){
 
@@ -801,8 +798,6 @@ void genera_figlio( string status ){
   params[1] = strtok(NULL, " ");
 
 
-  printf("[ID]%s\n", params[1]);
-
   int i = 1;
   while( params[i] != NULL ){
 
@@ -830,12 +825,10 @@ void crea_dispositivo_non_connesso(string tipo, lista_stringhe* lista_pipes, lis
 
       char stato_figlio[50];
       sprintf(stato_figlio, "%s %d", tipo, id_dispositivo);
-      printf("[STATO]%s\n", stato_figlio);
       genera_figlio(stato_figlio);
 
     } else if ( pid > 0 ){
 
-      printf("[STO MORENDO]\n");
       exit(0);
 
     }
