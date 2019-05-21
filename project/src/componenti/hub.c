@@ -20,6 +20,8 @@ int id;
 * Lista che contiene le pipes dei figli.
 */
 lista_stringhe* lista_pipes;
+lista_stringhe* tipi_figli;
+lista_stringhe* stati_attesi;
 
 /*
 * pipe_interna: FIFO per le comunicazioni interne al processo.
@@ -82,6 +84,7 @@ void gestisci_LABELUP(coda_stringhe* separata);
 void genera_figlio(coda_stringhe* separata);
 
 boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe* confronti);
+void aggiorna_stati(string str);
 
 /*
 * Funzione per terminare il processo quando arriva un SIGINT.
@@ -106,6 +109,9 @@ int main( int argn, char** argv ){
 
   lista_pipes = crea_lista();
   append(lista_pipes, "/tmp/10");
+
+  tipi_figli = crea_lista();
+  stati_attesi = crea_lista();
 
   /*
   * Leggo gli stati degli eventuali figli che devo creare.
@@ -299,8 +305,6 @@ void gestisci_STATUSGET(coda_stringhe* separata){
     string my_status = (char*) malloc(sizeof(char) * 200 * lista_pipes -> n);
     sprintf(my_status, "%s hub %d" ,GET_STATUS_RESPONSE, id);
 
-    lista_stringhe* tipi_figli = crea_lista();
-    lista_stringhe* confronti = crea_lista();
 
     // Mando a tutti i miei figli che voglio lo stato.
     nodo_stringa* it = lista_pipes -> testa;
@@ -325,7 +329,7 @@ void gestisci_STATUSGET(coda_stringhe* separata){
         char copia[1024];
         strcpy(copia, msg+strlen(GET_STATUS_RESPONSE)+1);
         if( override == FALSE )
-          override = calcola_override(copia, tipi_figli, confronti );
+          override = calcola_override(copia, tipi_figli, stati_attesi );
         for( i = 0; msg[i] != '\0'; i++ )
           if( msg[i] == ' ')
             msg[i] = '_';
@@ -344,8 +348,6 @@ void gestisci_STATUSGET(coda_stringhe* separata){
     strcat(my_status, " ]");
     send_msg(pipe_interna, my_status);
     free(response);
-    free(tipi_figli);
-    free(confronti);
 
   } else {
 
@@ -409,7 +411,7 @@ void gestisci_LABELUP(coda_stringhe* separata){
 
     // Invio il messaggio a tutti i miei figli.
     sprintf(msg, "%s %d %s %s", UPDATE_LABEL, ID_UNIVERSALE, label, pos);
-
+    printf("[HUB MSG]%s\n", msg);
 
 
   } else {
@@ -434,9 +436,19 @@ void gestisci_LABELUP(coda_stringhe* separata){
       it = it -> succ;
       free(tmp);
 
-    }
+    } else if( id_comp == id || id_comp == ID_UNIVERSALE ){
 
-    it = it -> succ;
+
+      char tmp[200];
+      sprintf(tmp, "%s %d", GET_STATUS, ID_UNIVERSALE);
+      send_msg(pipe, tmp);
+      char stato[1024];
+      read_msg(pipe, stato, 1023);
+      aggiorna_stati(stato+strlen(GET_STATUS_RESPONSE)+1);
+      it = it -> succ;
+
+    } else
+      it = it -> succ;
 
   }
   send_msg(pipe_interna, "DONE");
@@ -619,7 +631,7 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
     while(primo(figli, stato, TRUE) == TRUE )
       if( strcmp(stato, "]") != 0)
         res = calcola_override(stato, tipi_figli, confronti);
-    //distruggi(coda);
+    distruggi(coda);
 
   } else {
 
@@ -689,6 +701,64 @@ void decodifica_hub(string str){
       str[j] = ' ';
     if ( count == 0 && str[j] == ',' )
       str[j] = ' ';
+  }
+
+}
+
+void aggiorna_stati(string str){
+
+  char copia[1024];
+  strcpy(copia, str);
+
+  coda_stringhe* coda = crea_coda_da_stringa(str, " ");
+  char tipo[50];
+
+  primo(coda, tipo, TRUE);
+  if( strcmp(tipo, "hub") == 0 || strcmp(tipo, "timer") == 0 ){
+
+    decodifica_hub(copia);
+    coda_stringhe* figli = crea_coda_da_stringa(copia, " ");
+    char stato[400];
+    primo(figli, stato, TRUE);
+    primo(figli, stato, TRUE);
+    primo(figli, stato, TRUE);
+    primo(figli, stato, TRUE);
+    while(primo(figli, stato, TRUE) == TRUE )
+      if( strcmp(stato, "]") != 0)
+        aggiorna_stati(stato);
+    distruggi(coda);
+
+  } else{
+
+
+    nodo_stringa* it = tipi_figli -> testa;
+
+    char confronto[20];
+    primo(coda, confronto, FALSE);
+    primo(coda, confronto, FALSE);
+
+    int i = 0;
+    boolean trovato = FALSE;
+    while( it != NULL && trovato == FALSE ){
+
+      if( strcmp(tipo, it -> val) == 0 )
+        trovato = TRUE;
+      else{
+
+        it = it -> succ;
+        i++;
+
+      }
+
+    }
+
+    if ( trovato == TRUE ) {
+
+      strcpy(it -> val, confronto);
+
+    }
+    distruggi(coda);
+
   }
 
 }
