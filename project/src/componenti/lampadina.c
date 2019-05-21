@@ -188,7 +188,7 @@ void ascolta_e_interpreta( registro* registri[], int numero_registri, boolean* a
       termina(0);
 
     }
-    send_msg(pipe_interna, "DONE");
+    send_msg(pipe_interna, "TRUE");
 
   } else if( strcmp(nome_comando, ID) == 0 ){
 
