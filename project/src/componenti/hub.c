@@ -88,6 +88,8 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
 */
 void termina(int x);
 
+void decodifica_hub(string str);
+
 /*
 * Funzione che crea i processi per gestire le più pipe.
 */
@@ -114,24 +116,7 @@ int main( int argn, char** argv ){
     printf("[HUB]%s\n", argv[i]);
     int count = 0;
     int j;
-    for( j = 0; argv[i][j] != '\0'; j++ ){
-      if( argv[i][j] == '[' || argv[i][j] == ']'){
-
-        if( (count == 0 && argv[i][j] == '[')  || (count == 1 && argv[i][j] == ']') ){
-
-          if( argv[i][j-1] == '_')
-            argv[i][j-1] = ' ';
-
-          if( argv[i][j+1] == '_')
-            argv[i][j+1] = ' ';
-
-        }
-        count += argv[i][j] == '[' ? 1 : -1;
-
-      }
-      if( count == 0 && argv[i][j] == '_')
-        argv[i][j] = ' ';
-    }
+    decodifica_hub(argv[i]);
     printf("[HUB-EDIT]%s\n", argv[i]);
     coda_stringhe* coda = crea_coda_da_stringa(argv[i], " ");
     genera_figlio(coda);
@@ -335,14 +320,16 @@ void gestisci_STATUSGET(coda_stringhe* separata){
 
       } else {
 
-        strcat(response, " ");
+        strcat(response, ",");
         int i = 0;
+        char copia[1024];
+        strcpy(copia, msg+strlen(GET_STATUS_RESPONSE)+1);
+        if( override == FALSE )
+          override = calcola_override(copia, tipi_figli, confronti );
         for( i = 0; msg[i] != '\0'; i++ )
           if( msg[i] == ' ')
             msg[i] = '_';
         strcat(response, msg+strlen(GET_STATUS_RESPONSE)+1);
-        if( override == FALSE )
-          override = calcola_override(msg+strlen(GET_STATUS_RESPONSE)+1, tipi_figli, confronti );
 
       }
       it = it -> succ;
@@ -609,46 +596,99 @@ void genera_figlio(coda_stringhe* separata){
 
 boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe* confronti){
 
+  printf("[STRING]%s\n", str );
   boolean res = TRUE;
-  coda_stringhe* coda = crea_coda_da_stringa(str, "_");
+  char copia[1024];
+  strcpy(copia, str);
+  coda_stringhe* coda = crea_coda_da_stringa(str, " ");
 
   char tipo[20];
   primo(coda, tipo, FALSE);
-  nodo_stringa* it = tipi_figli -> testa;
 
-  char confronto[20];
-  primo(coda, confronto, FALSE);
-  primo(coda, confronto, FALSE);
+  printf("[TIPO]%s\n", tipo);
 
-  int i = 0;
-  boolean trovato = FALSE;
-  while( it != NULL && trovato == FALSE ){
+  if( strcmp(tipo, "hub") == 0 || strcmp(tipo, "timer") == 0 ){
 
-    if( strcmp(tipo, it -> val) == 0 )
-      trovato = TRUE;
-    else{
-
-      it = it -> succ;
-      i++;
-
-    }
-
-  }
-
-  if( trovato == FALSE ){
-
-    append(tipi_figli, tipo);
-    append(confronti, confronto);
-    res = FALSE;
+    decodifica_hub(copia);
+    coda_stringhe* figli = crea_coda_da_stringa(copia, " ");
+    char stato[400];
+    primo(figli, stato, TRUE);
+    primo(figli, stato, TRUE);
+    primo(figli, stato, TRUE);
+    primo(figli, stato, TRUE);
+    while(primo(figli, stato, TRUE) == TRUE )
+      if( strcmp(stato, "]") != 0)
+        res = calcola_override(stato, tipi_figli, confronti);
+    //distruggi(coda);
 
   } else {
 
-    char precedente[20];
-    get(confronti, i, precedente);
-    res = strcmp(precedente, confronto) == 0 ? FALSE : TRUE;
+    printf("[ELSE]\n");
+    nodo_stringa* it = tipi_figli -> testa;
 
+    char confronto[20];
+    primo(coda, confronto, FALSE);
+    primo(coda, confronto, FALSE);
+
+    int i = 0;
+    boolean trovato = FALSE;
+    while( it != NULL && trovato == FALSE ){
+
+      if( strcmp(tipo, it -> val) == 0 )
+        trovato = TRUE;
+      else{
+
+        it = it -> succ;
+        i++;
+
+      }
+
+    }
+
+    if( trovato == FALSE ){
+
+      append(tipi_figli, tipo);
+      append(confronti, confronto);
+      res = FALSE;
+
+    } else {
+
+      char precedente[20];
+
+      get(confronti, i, precedente);
+      printf("[CONFRONTI]%s %s\n", precedente, confronto);
+      res = strcmp(precedente, confronto) == 0 ? FALSE : TRUE;
+
+    }
+    distruggi(coda);
   }
-  distruggi(coda);
+
   return res;
+
+}
+
+void decodifica_hub(string str){
+
+  int count = 0, j;
+  for( j = 0; str[j] != '\0'; j++ ){
+    if( str[j] == '[' || str[j] == ']'){
+
+      if( (count == 0 && str[j] == '[')  || (count == 1 && str[j] == ']') ){
+
+        if( str[j-1] == '_')
+          str[j-1] = ' ';
+
+        if( str[j+1] == '_')
+          str[j+1] = ' ';
+
+      }
+      count += str[j] == '[' ? 1 : -1;
+
+    }
+    if( count == 0 && str[j] == '_')
+      str[j] = ' ';
+    if ( count == 0 && str[j] == ',' )
+      str[j] = ' ';
+  }
 
 }
