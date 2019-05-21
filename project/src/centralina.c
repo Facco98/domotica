@@ -22,6 +22,7 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
 void stampa_componente_list(string msg, int indent);
 void stampa_componente_info(string msg, int indent);
 void genera_figlio( string status );
+void decodifica_controllo( string str );
 void crea_dispositivo_non_connesso(string tipo, lista_stringhe* lista_pipes, lista_stringhe* da_creare);
 boolean suffix(const char *str, const char *suffix);
 
@@ -414,24 +415,7 @@ void stampa_componente_list(string msg, int indent){
         break;
       int count = 0;
       int j;
-      for( j = 0; tmp[j] != '\0'; j++ ){
-        if( tmp[j] == '[' || tmp[j] == ']'){
-
-          if( count == 0 ){
-
-            if( tmp[j-1] == '_')
-              tmp[j-1] = ' ';
-
-            if( tmp[j+1] == '_')
-              tmp[j+1] = ' ';
-
-          }
-          count += tmp[j] == '[' ? 1 : -1;
-
-        }
-        if( count == 0 && tmp[j] == '_')
-          tmp[j] = ' ';
-      }
+      decodifica_controllo(tmp);
       stampa_componente_list(tmp, indent+1);
 
     }
@@ -485,26 +469,7 @@ void stampa_componente_info(string msg, int indent){
 
       if( strcmp(tmp, "]") == 0 )
         break;
-      int count = 0;
-      int j;
-      for( j = 0; tmp[j] != '\0'; j++ ){
-        if( tmp[j] == '[' || tmp[j] == ']'){
-
-          if( count == 0 ){
-
-            if( tmp[j-1] == '_')
-              tmp[j-1] = ' ';
-
-            if( tmp[j+1] == '_')
-              tmp[j+1] = ' ';
-
-          }
-          count += tmp[j] == '[' ? 1 : -1;
-
-        }
-        if( count == 0 && tmp[j] == '_')
-          tmp[j] = ' ';
-      }
+      decodifica_controllo(tmp);
       stampa_componente_info(tmp, indent+1);
 
     }
@@ -570,7 +535,11 @@ void stampa_componente_info(string msg, int indent){
         count += tmp[j] == '[' ? 1 : -1;
 
       }
-      if( count == 0 && tmp[j] == '_')
+      if( count == 0 && tmp[j] == '_' )
+      {
+        tmp[j] = ' ';
+      }
+      if( count == 0 && tmp[j] == ',' )
       {
         tmp[j] = ' ';
       }
@@ -809,6 +778,33 @@ void genera_figlio( string status ){
   execv(params[0], params);
   perror("exec");
 
+
+}
+
+void decodifica_controllo( string tmp ){
+
+  int count = 0;
+  int j;
+  for( j = 0; tmp[j] != '\0'; j++ ){
+    if( tmp[j] == '[' || tmp[j] == ']'){
+
+      if( count == 0 ){
+
+        if( tmp[j-1] == '_')
+          tmp[j-1] = ' ';
+
+        if( tmp[j+1] == '_')
+          tmp[j+1] = ' ';
+
+      }
+      count += tmp[j] == '[' ? 1 : -1;
+
+    }
+    if( count == 0 && tmp[j] == '_')
+      tmp[j] = ' ';
+    if( count == 0 && tmp[j] == ',' )
+      tmp[j] = ' ';
+  }
 
 }
 
