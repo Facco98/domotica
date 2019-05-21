@@ -15,15 +15,15 @@ $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o $(COMPILED_LIBRARIES_FOLDER)/lista_
 LIBS=$(STRUTTURE_DATI_LIB) $(COMUNICAZIONE_LIB)
 
 
-#in phony deve andarci anche run, se viene implementata?
-.PHONY: help build clean libraries componenti umano 
+
+.PHONY: help build clean libraries componenti umano run
 
 help:
-	@echo "Ricette disponibili\n"
+	@echo "Ricette disponibili"
 	@echo "                   - help: per mostrare questa lista (comandi disponibili)"
 	@echo "                   - clean: rimuove file temporanei e riporta allo stato iniziale"
 	@echo "                   - build: compila il progetto con il tool gcc e il flag -std=gnu90"
-	@echo "                   - run: (da implementare)"
+	@echo "                   - run: esegue il progetto"
 
 	@echo "[Mostrare altre ricette disponibili]"
 
@@ -37,6 +37,8 @@ clean:
 
 run:
 	@echo "Run still to be implemented"
+	cd $(OUT_FOLDER) && ./centralina.out
+
 
 # Generazione della cartella di output
 $(OUT_FOLDER):
@@ -144,6 +146,8 @@ umano:
 	$(COMPILED_UMANO_FOLDER)/comunicazione.o 
 	@echo "Sto compilando il file 'umano'"
 	gcc -std=gnu90 -c  $(SRC_FOLDER)/human.c -o $(COMPILED_UMANO_FOLDER)/human.o -I $(SRC_FOLDER)
+
+
 
 
 #--------------------------------------to do list: makefile edition-------------------------------------------
