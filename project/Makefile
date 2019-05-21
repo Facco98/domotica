@@ -16,7 +16,7 @@ LIBS=$(STRUTTURE_DATI_LIB) $(COMUNICAZIONE_LIB)
 
 
 
-.PHONY: help build clean libraries componenti umano run
+.PHONY: help build clean libraries componenti umano run rum
 
 help:
 	@echo "Ricette disponibili"
@@ -24,6 +24,7 @@ help:
 	@echo "                   - clean: rimuove file temporanei e riporta allo stato iniziale"
 	@echo "                   - build: compila il progetto con il tool gcc e il flag -std=gnu90"
 	@echo "                   - run: esegue il progetto"
+	@echo "                   - easter eggs: ricetta rum "
 
 	@echo "[Mostrare altre ricette disponibili]"
 
@@ -36,7 +37,7 @@ clean:
 	rm -rf $(COMPILED_UMANO_FOLDER)
 
 run:
-	@echo "Run still to be implemented"
+	@echo "Running ... "
 	cd $(OUT_FOLDER) && ./centralina.out
 
 
@@ -81,7 +82,7 @@ $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o: $(SRC_FOLDER)/strutture_dati/tip
 
 # Regole per la generazione dei componenti.
 componenti:
-	@echo "Componenti still to be implemented"
+	@echo "Generazione delle componenti"
 
 	#nota: da qua in poi non so se sia giusto, se è corretto bene, altrimenti sentitevi liberi di cancellare tutto e rifare
 	
@@ -131,7 +132,7 @@ componenti:
 # Regole per la generazione dell'umano
 
 umano:
-	@echo "Umano still to be implemented"
+	@echo "Generazione di 'umano'"
 
 #questa parte è da controllare
 	$(COMPILED_UMANO_FOLDER) $(LIBS)
@@ -147,7 +148,8 @@ umano:
 	@echo "Sto compilando il file 'umano'"
 	gcc -std=gnu90 -c  $(SRC_FOLDER)/human.c -o $(COMPILED_UMANO_FOLDER)/human.o -I $(SRC_FOLDER)
 
-
+rum: 
+	@echo "Perché hai bruciato il RUUUUUUUMMM???!!?"
 
 
 #--------------------------------------to do list: makefile edition-------------------------------------------
