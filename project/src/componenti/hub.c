@@ -92,6 +92,7 @@ void aggiorna_stati(string str);
 void termina(int x);
 
 void decodifica_hub(string str);
+void decodifica_figli( string tmp );
 
 /*
 * Funzione che crea i processi per gestire le più pipe.
@@ -119,13 +120,43 @@ int main( int argn, char** argv ){
   int i;
   for( i = 4; i < argn-1; i++ ){
 
-    printf("[HUB]%s\n", argv[i]);
-    int count = 0;
-    int j;
-    decodifica_hub(argv[i]);
-    printf("[HUB-EDIT]%s\n", argv[i]);
-    coda_stringhe* coda = crea_coda_da_stringa(argv[i], " ");
-    genera_figlio(coda);
+    decodifica_figli(argv[i]);
+
+    coda_stringhe* coda = crea_coda();
+    char *l = strtok(argv[i], " ");
+    while(l!=NULL){
+
+      inserisci(coda, l);
+      l = strtok(NULL, " ");
+
+    }
+
+    int j = 0;
+    char tmp[1024];
+    while( coda -> n > 0 && primo(coda, tmp, TRUE) == TRUE  ){
+
+      char s[1024];
+      strcpy(s, tmp);
+      decodifica_hub(s);
+
+      coda_stringhe* c = NULL;
+      do{
+
+        c = crea_coda();
+
+      } while( c == coda );
+      char* appoggio = strtok(s, " ");
+      while( appoggio != NULL ){
+
+        inserisci(c, appoggio);
+        appoggio = strtok(NULL, " ");
+
+      }
+      genera_figlio(c);
+      distruggi(c);
+
+    }
+
 
   }
 
@@ -269,7 +300,6 @@ void crea_processi_supporto(){
         crea_pipe(id, (string) PERCORSO_BASE_DEFAULT);
         char msg[200];
         leggi_messaggio(id, (string) PERCORSO_BASE_DEFAULT, msg, 199);
-        printf("RICEVUTO: %s\n", msg);
         send_msg(pipe_interna, msg);
         read_msg(pipe_interna, msg, 199);
         if( strcmp(msg, "DONE") != 0 )
@@ -309,6 +339,7 @@ void gestisci_STATUSGET(coda_stringhe* separata){
     // Mando a tutti i miei figli che voglio lo stato.
     nodo_stringa* it = lista_pipes -> testa;
 
+    boolean primo = TRUE;
     boolean override = FALSE;
     while( it != NULL ){
 
@@ -319,12 +350,18 @@ void gestisci_STATUSGET(coda_stringhe* separata){
 
         nodo_stringa* tmp = it;
         rimuovi_nodo(lista_pipes, it);
+        it = it -> succ;
+        free(tmp -> val);
         free(tmp);
+
 
 
       } else {
 
-        strcat(response, ",");
+        if ( primo == FALSE ){
+          strcat(response, ",");
+        }
+        primo = FALSE;
         int i = 0;
         char copia[1024];
         strcpy(copia, msg+strlen(GET_STATUS_RESPONSE)+1);
@@ -334,15 +371,16 @@ void gestisci_STATUSGET(coda_stringhe* separata){
           if( msg[i] == ' ')
             msg[i] = '_';
         strcat(response, msg+strlen(GET_STATUS_RESPONSE)+1);
+        it = it -> succ;
 
       }
-      it = it -> succ;
+
 
 
     }
     // Rispondo sulla pipe_interna.
     char tmp[20];
-    sprintf(tmp, " %s [", override == TRUE ? "TRUE":"FALSE" );
+    sprintf(tmp, " %s [ ", override == TRUE ? "TRUE":"FALSE" );
     strcat(my_status, tmp);
     strcat(my_status, response);
     strcat(my_status, " ]");
@@ -363,6 +401,7 @@ void gestisci_STATUSGET(coda_stringhe* separata){
         nodo_stringa* l = it;
         rimuovi_nodo(lista_pipes,it);
         it = it -> succ;
+        free(it -> val);
         free(it);
 
       } else if( strcmp(res, "TRUE") == 0 ){
@@ -411,7 +450,7 @@ void gestisci_LABELUP(coda_stringhe* separata){
 
     // Invio il messaggio a tutti i miei figli.
     sprintf(msg, "%s %d %s %s", UPDATE_LABEL, ID_UNIVERSALE, label, pos);
-    printf("[HUB MSG]%s\n", msg);
+
 
 
   } else {
@@ -429,11 +468,13 @@ void gestisci_LABELUP(coda_stringhe* separata){
   while( it != NULL ){
 
     string pipe = it -> val;
-    if( send_msg(pipe, msg) == FALSE ){
+    char res[10];
+    if( send_msg(pipe, msg) == FALSE || read_msg(pipe, res, 9) == FALSE ){
 
       nodo_stringa* tmp = it;
       rimuovi_nodo(lista_pipes, it);
       it = it -> succ;
+      free(tmp -> val);
       free(tmp);
 
     } else if( id_comp == id || id_comp == ID_UNIVERSALE ){
@@ -442,6 +483,7 @@ void gestisci_LABELUP(coda_stringhe* separata){
       char tmp[200];
       sprintf(tmp, "%s %d", GET_STATUS, ID_UNIVERSALE);
       send_msg(pipe, tmp);
+
       char stato[1024];
       read_msg(pipe, stato, 1023);
       aggiorna_stati(stato+strlen(GET_STATUS_RESPONSE)+1);
@@ -451,7 +493,7 @@ void gestisci_LABELUP(coda_stringhe* separata){
       it = it -> succ;
 
   }
-  send_msg(pipe_interna, "DONE");
+  send_msg(pipe_interna, "TRUE");
 
 }
 
@@ -477,6 +519,7 @@ void gestisci_ID(coda_stringhe* separata){
         nodo_stringa* tmp = it;
         rimuovi_nodo(lista_pipes, it);
         it = it -> succ;
+        free(tmp -> val);
         free(tmp);
 
       } else if( strcmp(res, "TRUE") == 0 ){
@@ -512,14 +555,13 @@ void gestisci_REMOVE(coda_stringhe* separata){
 
     while( it != NULL ){
 
-      printf("[HUB PIPE]%s\n", it -> val);
-
       char res[10];
       if( send_msg( it -> val, confirm_msg ) == FALSE || read_msg(it -> val, res, 9) == FALSE ){
 
         nodo_stringa* l = it;
         rimuovi_nodo(lista_pipes, it);
         it = it -> succ;
+        free(l -> val);
         free(l);
 
       } else if( strcmp(res, "TRUE") == 0 ){
@@ -528,10 +570,10 @@ void gestisci_REMOVE(coda_stringhe* separata){
         nodo_stringa* l = it;
         rimuovi_nodo(lista_pipes, it);
         it = it -> succ;
+        free(l -> val);
         free(l);
 
       } else{
-        printf("[RES-CONFIRM]%s\n", res);
         send_msg(it -> val, remove_msg);
         it = it -> succ;
       }
@@ -546,15 +588,49 @@ void gestisci_REMOVE(coda_stringhe* separata){
 void gestisci_SPAWN(coda_stringhe* separata){
 
 
-  printf("entrato\n");
   char id_ric[20];
   primo(separata, id_ric, TRUE);
   int id_comp = atoi(id_ric);
   if( id_comp == id || id_comp == ID_UNIVERSALE ){
 
     genera_figlio(separata);
+    distruggi(separata);
+
+  } else {
+    //ricostruire il messaggio e rinviarlo sotto
+    //vedi da hub per ricostruire la stringa
+    char msg[1024];
+    sprintf(msg, "%s %s", "SPAWN", id_ric);
+    char tmp[200];
+    while( primo(separata, tmp, TRUE) == TRUE )
+    {
+      strcat(msg, " ");
+      strcat(msg, tmp);
+    }
+
+    nodo_stringa* it = lista_pipes -> testa;
+    while( it != NULL ){
+
+      string pipe_figlio = it -> val;
+      if ( send_msg(pipe_figlio, msg) == FALSE ){
+
+        nodo_stringa* l = it;
+        rimuovi_nodo(lista_pipes, it);
+        it = it -> succ;
+        free(l -> val);
+        free(l);
+
+      } else {
+
+        it = it -> succ;
+
+      }
+
+    }
+
 
   }
+
 
   send_msg(pipe_interna, "DONE");
 
@@ -563,8 +639,9 @@ void gestisci_SPAWN(coda_stringhe* separata){
 void genera_figlio(coda_stringhe* separata){
 
   char tmp[40], percorso[50];
-  primo(separata, tmp, TRUE);
+  primo(separata, tmp, FALSE);
   sprintf(percorso, "./%s.out", tmp);
+
 
 
   pid_t pid = fork();
@@ -577,17 +654,18 @@ void genera_figlio(coda_stringhe* separata){
     params[0] = (char*) malloc(sizeof(char)*40);
     strcpy(params[0], percorso);
 
-    primo(separata, tmp, TRUE);
+    primo(separata, tmp, FALSE);
 
     params[1] = (char*) malloc(sizeof(char)*40);
     strcpy(params[1], tmp);
 
     int i = 2;
-    while( primo(separata, tmp, TRUE) ==  TRUE ){
+    while( primo(separata, tmp, FALSE) ==  TRUE ){
 
       params[i] = (char*) malloc((strlen(tmp)+1) * sizeof(char));
       strcpy(params[i], tmp);
       i++;
+
     }
 
     execv(params[0], params);
@@ -600,7 +678,6 @@ void genera_figlio(coda_stringhe* separata){
     char pipe_figlio[100];
     sprintf(pipe_figlio, "%s/%s", (string) PERCORSO_BASE_DEFAULT, tmp);
     append(lista_pipes, pipe_figlio);
-    distruggi(separata);
 
   }
 
@@ -608,7 +685,6 @@ void genera_figlio(coda_stringhe* separata){
 
 boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe* confronti){
 
-  printf("[STRING]%s\n", str );
   boolean res = TRUE;
   char copia[1024];
   strcpy(copia, str);
@@ -617,7 +693,6 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
   char tipo[20];
   primo(coda, tipo, FALSE);
 
-  printf("[TIPO]%s\n", tipo);
 
   if( strcmp(tipo, "hub") == 0 || strcmp(tipo, "timer") == 0 ){
 
@@ -635,7 +710,6 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
 
   } else {
 
-    printf("[ELSE]\n");
     nodo_stringa* it = tipi_figli -> testa;
 
     char confronto[20];
@@ -668,7 +742,7 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
       char precedente[20];
 
       get(confronti, i, precedente);
-      printf("[CONFRONTI]%s %s\n", precedente, confronto);
+
       res = strcmp(precedente, confronto) == 0 ? FALSE : TRUE;
 
     }
@@ -679,28 +753,44 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
 
 }
 
-void decodifica_hub(string str){
+void decodifica_figli( string tmp ){
+
+  int count = 0;
+  int j;
+  for( j = 0; tmp[j] != '\0'; j++ ){
+    if( tmp[j] == '[' || tmp[j] == ']'){
+      count += tmp[j] == '[' ? 1 : -1;
+    }
+    if( count == 0 && tmp[j] == ',')
+      tmp[j] = ' ';
+  }
+
+}
+
+
+void decodifica_hub(string tmp){
 
   int count = 0, j;
-  for( j = 0; str[j] != '\0'; j++ ){
-    if( str[j] == '[' || str[j] == ']'){
+  for( j = 0; tmp[j] != '\0'; j++ ){
+    if( tmp[j] == '[' || tmp[j] == ']'){
 
-      if( (count == 0 && str[j] == '[')  || (count == 1 && str[j] == ']') ){
+      if( tmp[j] == ']')
+        count -= 1;
 
-        if( str[j-1] == '_')
-          str[j-1] = ' ';
+      if( count == 0 ){
 
-        if( str[j+1] == '_')
-          str[j+1] = ' ';
+        if( tmp[j-1] == '_')
+          tmp[j-1] = ' ';
+
+        if( tmp[j+1] == '_')
+          tmp[j+1] = ' ';
 
       }
-      count += str[j] == '[' ? 1 : -1;
-
+      if( tmp[j] == '[')
+      count += 1;
     }
-    if( count == 0 && str[j] == '_')
-      str[j] = ' ';
-    if ( count == 0 && str[j] == ',' )
-      str[j] = ' ';
+    if( count == 0 && tmp[j] == '_')
+      tmp[j] = ' ';
   }
 
 }
@@ -713,17 +803,17 @@ void aggiorna_stati(string str){
   coda_stringhe* coda = crea_coda_da_stringa(str, " ");
   char tipo[50];
 
-  primo(coda, tipo, TRUE);
+  primo(coda, tipo, FALSE);
   if( strcmp(tipo, "hub") == 0 || strcmp(tipo, "timer") == 0 ){
 
     decodifica_hub(copia);
     coda_stringhe* figli = crea_coda_da_stringa(copia, " ");
     char stato[400];
-    primo(figli, stato, TRUE);
-    primo(figli, stato, TRUE);
-    primo(figli, stato, TRUE);
-    primo(figli, stato, TRUE);
-    while(primo(figli, stato, TRUE) == TRUE )
+    primo(figli, stato, FALSE);
+    primo(figli, stato, FALSE);
+    primo(figli, stato, FALSE);
+    primo(figli, stato, FALSE);
+    while(primo(figli, stato, FALSE) == TRUE )
       if( strcmp(stato, "]") != 0)
         aggiorna_stati(stato);
     distruggi(coda);
@@ -760,5 +850,6 @@ void aggiorna_stati(string str){
     distruggi(coda);
 
   }
+
 
 }
