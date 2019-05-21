@@ -8,15 +8,16 @@ Componenti del gruppo:
 Breve descrizione del progetto:
 Emulazione di un sistema di domotica. Il progetto è stato implementato con la variante dei processi. 
 
-I dispositivi creano tre diversi processi che comunicano tra di loro sulla stessa pipe.
-I processi sono:
+Ciascun dispositivo genera tre diversi processi che collaborano per la gestione del dispositivo e delle sue funzionalità. I processi comunicano tra di loro sulla stessa pipe (pipe_interna).
+I processi sono destinati alla gestione di un particolare aspetto e sono chiamati:
 - 1. il processo del dispositivo
-- 2. il processo che si occupa di comunicare con le interazioni esterne.
-- 3. il processo che si occupa di comunicare con il controllore.
-Le pipe sono chiamate:
-- pipe_interna: comunica tra i processi 1 e 2 e 2 e 3, ossia pipe destinata alle comunicazioni all'interno del dispositivo
-- pipe_esterna: comunica tra i processi 2 e il processo rappresentante l'interazione esterna, ossia pipe destinata alle comunicazioni con l'umano
-- pipe <id>: comunica tra i processi 3 e il controllore del dispositivo, ossia pipe destinata alle comunicazioni con il processo padre
+- 2. il processo che si occupa di comunicare con le interazioni esterne, per comunicare con l'umano.
+- 3. il processo che si occupa di comunicare con il processo padre.
+
+La comunicazione del dispositivo è implementata tramite l'utilizzo di tre pipe, chiamate:
+- pipe_interna: pipe sulla quale scrivono i processi 1, 2 e 3 e leggono i processi 1 e 3. E' la pipe destinata alle comunicazioni all'interno del dispositivo.
+- pipe_esterna: pipe sulla quale legge il processo 2 e scrive il processo rappresentante l'interazione esterna. E' la pipe destinata alle comunicazioni con l'umano.
+- pipe <id>: pipe su cui leggono e scrivono i processi 3 e il controllore del dispositivo. E' la pipe destinata alle comunicazioni con il processo padre.
 
 
 
@@ -29,13 +30,13 @@ Questo sistema di gestione è comune per tutti le tipologie di dispositivi emula
 
 Differenze tra dispositivi di controllo e di interazione
 
-La differenza tra dispositivi di controllo e dispositivi di interazione è principalmente nella gestione di messaggi. 
+La differenza tra dispositivi di controllo e dispositivi di interazione è principalmente nella gestione di messaggi.
 
-La gestione dei messaggi in entrata propri (con id_destinatario == id_dispositivo) è simile per tutti i dispositivi.
-Dopo un controllo sull'id c'è un controllo sul tipo di messaggio, su che interruttore questo agisce e come.
-Ogni dispositivo può gestire messaggi di tipo diverso, i quali sono descritti in seguito in questo file per ogni dispositivo.
+In tutti i dispositivi la gestione dei messaggi in entrata propri (con id_destinatario == id_dispositivo) è simile.
+Dopo un controllo sull'id, c'è un controllo sul tipo di messaggio, su che interruttore (o registro) questo agisce e come.
+Ogni dispositivo può gestire messaggi di tipo diverso, i quali sono descritti in seguito in questo file.
 
-La gestione dei messaggi in entrata non propri (con id_destinatario != id_dispositivo) è descritta in seguito.
+La gestione dei messaggi in entrata non propri (con id_destinatario != id_dispositivo) caratterizza i dispositivi di controllo. 
 Quando un dispositivo di controllo riceve un messaggio non proprio chiede ai/al propri/o figli/o se può mandare il messaggio per arrivare al dispositivo interessato. 
 Se un dispositivo di interazione riceve un messaggio non proprio, ignora il messaggio stesso.
 
