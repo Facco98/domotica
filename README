@@ -31,17 +31,17 @@ Questo sistema di gestione è comune per tutti le tipologie di dispositivi emula
 Differenze tra dispositivi di controllo e di interazione
 
 La differenza tra dispositivi di controllo e dispositivi di interazione è principalmente nella gestione di messaggi.
-
 In tutti i dispositivi la gestione dei messaggi in entrata propri (con id_destinatario == id_dispositivo) è simile.
 Dopo un controllo sull'id, c'è un controllo sul tipo di messaggio, su che interruttore (o registro) questo agisce e come.
 Ogni dispositivo può gestire messaggi di tipo diverso, i quali sono descritti in seguito in questo file.
-
 La gestione dei messaggi in entrata non propri (con id_destinatario != id_dispositivo) caratterizza i dispositivi di controllo. 
-Quando un dispositivo di controllo riceve un messaggio non proprio chiede ai/al propri/o figli/o se può mandare il messaggio per arrivare al dispositivo interessato. 
-Se un dispositivo di interazione riceve un messaggio non proprio, ignora il messaggio stesso.
+Quando un dispositivo di controllo riceve un messaggio non proprio chiede ai/al propri/o figli/o se può mandare il messaggio per arrivare al dispositivo interessato. Se un dispositivo di interazione riceve un messaggio non proprio, ignora il messaggio stesso.
 
-[altre differenze?]
+Un'ulteriore differenza tra dispositivi di interazione e controllo è nella gestione dell'override. L'override è uno stato proprio di hub e timer. Entrambi controllano se il/i figlio/i sia/siano in uno stato consistente oppure no. In questo modo si riesce a capire se un umano sia intervenuto sullo stato di un dispositivo connesso al dispositivo di controllo interessato.
 
+Infine solo i dispositivi di controllo possono generare dispositivi di qualsiasi tipologia e rimuovere dispositivi.
+
+////[altre differenze?]
 //???
 
 // ? altro?
@@ -49,13 +49,13 @@ Se un dispositivo di interazione riceve un messaggio non proprio, ignora il mess
 Note sulla comunicazione
 In seguito sono descritti i tipi di messaggi che i dispositivo gestiscono.
 
-(1) "STATUSGET" per richiedere lo stato di un dispositivo
-(2) "ID": chiede se può arrivare al dispositivo con id <ID> tramite un dispositivo
-(3) "LABELUP": per modificare gli interruttori di un dispositivo. Nota: nella centralina esiste un messaggio "SWITCH" che viene poi modificato in "LABELUP"
-(4) "REMOVE": per rimuovere un dispositivo
+(1) "STATUSGET": per richiedere lo stato di un dispositivo;
+(2) "ID": chiede se può arrivare al dispositivo con id <ID> tramite un dispositivo;
+(3) "LABELUP": per modificare gli interruttori di un dispositivo. Nota: nella centralina esiste un messaggio "SWITCH" che viene poi modificato in "LABELUP";
+(4) "REMOVE": per rimuovere un dispositivo (solo per dispositivi di controllo).
 (6) "STATUSGETRES": messaggio di risposta a messaggi di risposta a messaggi del tipo (1) dai dispositivi, i quali vengono poi interpretati per generare una stampa a video delle informazioni richieste ai dispositivi.
-(7) "CONFIRM": per confermare che l'id richiesto corrisponda al proprio id
-(8) 
+(7) "CONFIRM": per confermare che l'id richiesto corrisponda al proprio id.
+(8) "SPAWN": per generare un dispositivo figlio (solo per dispositivi di controllo).
 
 
 Peculiarità
@@ -63,7 +63,7 @@ Dispositivi di controllo
 
 Centralina
 Comando "add" nella centralina:
-Quando si esegue un comando "add" per un nuovo dispositivo (qualsiasi tipo), vi è la generazione di un processo figlio, il quale genera un altro processo figlio per poi terminare. In questo modo il processo del componente viene adottato da init() e quindi non risulta figlio della centralina.
+Quando si esegue un comando "add" per un nuovo dispositivo (qualsiasi tipo), viene inviato un messaggio "SPAWN". Vi è la generazione di un processo figlio, il quale genera un altro processo figlio per poi terminare. In questo modo il processo del componente viene adottato da init() e quindi non risulta figlio della centralina.
 [...]
 
 Hub:
@@ -78,7 +78,9 @@ Finestra:
 [...]
 
 Frigo:
-[...]
+Il registro delay è gestito con la funzione alarm(int n), dove n esprime il tempo dall'apertura in secondi.
+Il registro riempimento è gestibile solo manualmente (tramite override), quindi il messaggio per la gestione è inviabile solo dall'umano (non dalla centralina).
+[...] 
 
 
 Implementazione di "umano"
@@ -97,23 +99,19 @@ Può inviare ai singoli dispositivi tutti i tipi di messaggi descritti sopra.
 
 Makefile
 Il makefile contiene le tre ricette indicate nella consegna ("help", "build" e "clean"), inoltre:
--
--
--
+- run: esegue il progetto"
+Sono presenti delle easter eggs: 
+- spiegazione_processi_pipe (disegno - spiegazione per i processi e le pipe)
+- rum (citazione a Jack Sparrow)
 
 
 Errori ed exit:
-Il sistema risponde con un errore e una exit nei seguenti casi:
-
-- exit (0): quando gli argomenti in linea di input sono minori di quelli accettati dal programma (meno di 2)
-- exit (130): quando 
-- exit ():
-[...]
+Il sistema risponde con un errore e una exit(0) quando:
+- il numero di argomenti in linea di input minori di quelli accettati dal programma (meno di 2)
+- [da aggiungereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee]
 
 //da aggiungere le varie tipologie di exit, da togliere se sarà sempre exit(0)
 
-Override: 
-E' uno stato che ha solo l'hub e il timer. Entrambi controllano se il/i figlio/i sia/siano in uno stato consistente oppure no.
 
 //in teoria concluso
 [...]
@@ -154,20 +152,30 @@ E' importante spiegare come sia implementato l'override. (OK?)
 DA AGGIUNGERE:
 - sezione messaggi 																	--> OK (?)
 - override																			--> OK (sistemato)
-- gestione delle pipe (blocking)													--> TODO (Claudio) (a quanto pare da non scrivere)
-- cose in comune tra i Dispositivi  												--> altro?
-- differenze tra Dispositivi 														--> altro?
-- shell: gestione (una sola shell e perché) 										--> altro?
-- tipi di errori/exit 																--> in lavorazione //TODO MAKEFILE
-- ricette "in più" nel makefile (oltre a help, clean e build)						--> TODO
-- versioni di Ubuntu testate oltre la 18.x (se abbiamo testato altro)				--> TODO (aggiunto macOS)
-- cancellare commenti inutili in questo file quando è completo						
-- controllare la sintassi e la grammatica di questo file
-- rileggere tutto quanto un paio di volte per sincerarsi della correttezza di ciò che ho scritto qua dentro
+- ricette "in più" nel makefile (oltre a help, clean e build)						--> OK (da aggiungere altri se viene modificato il makefile)
+- versioni di Ubuntu testate oltre la 18.x (se abbiamo testato altro)				--> OK (da aggiungere se viene modificato il makefile)
 - la storia dei tre processini e delle tre pipe(ine)								--> OK 
 - umano																				--> OK (?)
 
 
+- cancellare commenti inutili in questo file quando è completo						
+- controllare la sintassi e la grammatica di questo file
+- rileggere tutto quanto un paio di volte per sincerarsi della correttezza di ciò che ho scritto qua dentro
+
+
+
+todo
+
+- cose in comune tra i Dispositivi  												--> altro?
+- differenze tra Dispositivi 														--> altro?
+- shell: gestione (una sola shell e perché) 										--> altro?
+
+
+- tipi di errori/exit 																--> todo
+
+- gestione delle pipe (blocking)													--> TODO (Claudio) (a quanto pare da non scrivere)
+
+PECULIARITA'?
 - sezione peculiarità dei dispositivi:
 CENTRALINA:
 					- add: processo creato	(per centralina)											--> OK
