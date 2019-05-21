@@ -22,7 +22,7 @@ La comunicazione del dispositivo è implementata tramite l'utilizzo di tre pipe,
 
 
 [inserire qua gestione di blocking @Claudio ]
-[Inserire qua la gestione delle pipe @Claudio]
+
 
 Questo sistema di gestione è comune per tutti le tipologie di dispositivi emulate da questo progetto.
 
@@ -59,28 +59,29 @@ In seguito sono descritti i tipi di messaggi che i dispositivo gestiscono.
 
 
 Peculiarità
-Dispositivi di controllo
+//Dispositivi di controllo
 
 Centralina
 Comando "add" nella centralina:
 Quando si esegue un comando "add" per un nuovo dispositivo (qualsiasi tipo), viene inviato un messaggio "SPAWN". Vi è la generazione di un processo figlio, il quale genera un altro processo figlio per poi terminare. In questo modo il processo del componente viene adottato da init() e quindi non risulta figlio della centralina.
-[...]
 
-Hub:
-[...]
+// [...]
 
-Timer:
-[...]
+//Hub:
+//[...]
 
-Dispositivi di interazione
+//Timer:
+//[...]
 
-Finestra:
-[...]
+//Dispositivi di interazione
+
+//Finestra:
+//[...]
 
 Frigo:
 Il registro delay è gestito con la funzione alarm(int n), dove n esprime il tempo dall'apertura in secondi.
 Il registro riempimento è gestibile solo manualmente (tramite override), quindi il messaggio per la gestione è inviabile solo dall'umano (non dalla centralina).
-[...] 
+//[...] 
 
 
 Implementazione di "umano"
@@ -92,7 +93,7 @@ L'umano esegue sempre la stessa funzione la quale:
 Può inviare ai singoli dispositivi tutti i tipi di messaggi descritti sopra.
 
 
-[...]
+//[...]
 
 //??? è così? Manca qualcosa? 
 
@@ -105,34 +106,27 @@ Sono presenti delle easter eggs:
 - rum (citazione a Jack Sparrow)
 
 
-Errori ed exit:
-Il sistema risponde con un errore e una exit(0) quando:
+Exit:
+Il sistema risponde con una exit(0) quando:
+- viene inviato nella linea di comando della centralina il comando exit, per uscire dal sistema e scollegare tutto
+- la centralina deve generare un dispositivo non direttamente connesso ad essa. Vi è la generazione di un figlio, il quale si auto-rimuove dopo aver generato un nipote
 - il numero di argomenti in linea di input minori di quelli accettati dal programma (meno di 2)
-- [da aggiungereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee]
-
-//da aggiungere le varie tipologie di exit, da togliere se sarà sempre exit(0)
-
-
-//in teoria concluso
-[...]
+- quando un dispositivo viene rimosso (si scollega ed esce)
 
 
 Shell
 Il sistema utilizza una sola shell per l'interazione con l'utente. I processi non generano altre shell e l'interazione può avvenire da terminale testuale.
 
+
+Ambienti testati
 Il progetto funziona sui seguenti ambienti testati: 
 - Ubuntu 18.x (come richiesto)
 - macOS Mojave ( 14.1.2 )
 - macOS High Sierra ( 13.4.1 )
-- 
-
-[inserire ambienti testati oltre Ubuntu 18.x, se non ce ne sono cancellare questa parte xD, LoOOo0o0oL]
 
 
-
-
-Varie ed eventuali:
-[...]
+//Varie ed eventuali:
+//[...]
 
 /*
 * nota:  [...] significa inserire commenti/note relative
@@ -156,31 +150,33 @@ DA AGGIUNGERE:
 - versioni di Ubuntu testate oltre la 18.x (se abbiamo testato altro)				--> OK (da aggiungere se viene modificato il makefile)
 - la storia dei tre processini e delle tre pipe(ine)								--> OK 
 - umano																				--> OK (?)
+- tipi di errori/exit 																--> ok
+- shell: gestione (una sola shell e perché) 										--> ok
+PECULIARITA'
+CENTRALINA:
+					- add: processo creato	(per centralina)											--> OK
+
+FRIGO:
+					- messaggi in secondi per alarm   													--> ok
 
 
+
+sistemare:
 - cancellare commenti inutili in questo file quando è completo						
 - controllare la sintassi e la grammatica di questo file
 - rileggere tutto quanto un paio di volte per sincerarsi della correttezza di ciò che ho scritto qua dentro
 
 
-
-todo
-
-- cose in comune tra i Dispositivi  												--> altro?
-- differenze tra Dispositivi 														--> altro?
-- shell: gestione (una sola shell e perché) 										--> altro?
+c'è altrooo????
+- cose in comune tra i Dispositivi 
+- differenze tra Dispositivi 				
+- sezione peculiarità dei dispositivi
 
 
-- tipi di errori/exit 																--> todo
 
+
+DA SCRIVERE, ASSOLUTAMENTE
 - gestione delle pipe (blocking)													--> TODO (Claudio) (a quanto pare da non scrivere)
 
-PECULIARITA'?
-- sezione peculiarità dei dispositivi:
-CENTRALINA:
-					- add: processo creato	(per centralina)											--> OK
-
-FRIGO:
-					- messaggi in secondi per alarm   													--> TODO (da mettere nel messaggio delay del frigo!)
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
