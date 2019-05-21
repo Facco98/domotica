@@ -183,6 +183,7 @@ void ascolta_e_interpreta(){
   read_msg(pipe_interna, messaggio_in, 199);
   strtok(messaggio_in, "\n");
 
+
   // Divido la stringa per gli spazi.
   coda_stringhe* separata = crea_coda_da_stringa(messaggio_in, " ");
 
@@ -296,8 +297,8 @@ void crea_processi_supporto(){
 
       // Se sono il figlio leggo dalla pipe con il controllore e invio su quella
       // interna, aspettando la risposta.
+      crea_pipe(id, (string) PERCORSO_BASE_DEFAULT);
       while(1){
-        crea_pipe(id, (string) PERCORSO_BASE_DEFAULT);
         char msg[200];
         leggi_messaggio(id, (string) PERCORSO_BASE_DEFAULT, msg, 199);
         send_msg(pipe_interna, msg);
@@ -575,11 +576,12 @@ void gestisci_REMOVE(coda_stringhe* separata){
 
       } else{
         send_msg(it -> val, remove_msg);
+        read_msg(it -> val, res, 9);
         it = it -> succ;
       }
 
     }
-    send_msg(pipe_interna, "DONE");
+    send_msg(pipe_interna, "TRUE");
 
   }
 
