@@ -83,28 +83,45 @@ componenti:
 
 	#nota: da qua in poi non so se sia giusto, se è corretto bene, altrimenti sentitevi liberi di cancellare tutto e rifare
 	
-
-	$(OUT_FOLDER)/centralina.o: $(SRC_FOLDER)/centralina.c  #LIBRERIE.O
+	#centralina
+	@echo "Sto creando le dipendenze della componente 'centralina'"
+	$(OUT_FOLDER)/centralina.o: $(SRC_FOLDER)/centralina.c  $(COMPILED_LIBRARIES_FOLDER)/comunicazione.o $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o \
+	$(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o $(COMPILED_LIBRARIES_FOLDER)/lista_stringhe.o
 	@echo "Sto compilando la componente 'centralina'"
 	gcc -std=gnu90 -c  $(SRC_FOLDER)/centralina.c -o $(OUT_FOLDER)/centralina.o -I $(SRC_FOLDER)
 
-	$(OUT_FOLDER)/hub.o: $(SRC_FOLDER)/componenti/hub.c 
+	#hub
+	@echo "Sto creando le dipendenze della componente'hub'"
+	$(OUT_FOLDER)/hub.o: $(SRC_FOLDER)/componenti/hub.c $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o \
+	$(COMPILED_LIBRARIES_FOLDER)/comunicazione.o
 	@echo "Sto compilando la componente 'hub'"
 	gcc -std=gnu90 -c  $(SRC_FOLDER)/componenti/hub.c -o $(OUT_FOLDER)/hub.o -I $(SRC_FOLDER)
 
-	$(OUT_FOLDER)/timer.o: $(SRC_FOLDER)/componenti/timer.c 
+	#timer
+	@echo "Sto creando le dipendenze della componente 'timer'"
+	$(OUT_FOLDER)/timer.o: $(SRC_FOLDER)/componenti/timer.c $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o \
+	$(COMPILED_LIBRARIES_FOLDER)/comunicazione.o
 	@echo "Sto compilando la componente 'timer'"
 	gcc -std=gnu90 -c  $(SRC_FOLDER)/componenti/timer.c -o $(OUT_FOLDER)/timer.o -I $(SRC_FOLDER)
 
-	$(OUT_FOLDER)/lampadina.o: $(SRC_FOLDER)/componenti/lampadina.c 
+	#lampadina
+	@echo "Sto creando le dipendenze della componente 'lampadina'"
+	$(OUT_FOLDER)/bulb.o: $(SRC_FOLDER)/componenti/lampadina.c $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o \
+	$(COMPILED_LIBRARIES_FOLDER)/comunicazione.o
 	@echo "Sto compilando la componente 'lampadina'"
-	gcc -std=gnu90 -c  $(SRC_FOLDER)/componenti/lampadina.c -o $(OUT_FOLDER)/lampadina.o -I $(SRC_FOLDER)
+	gcc -std=gnu90 -c  $(SRC_FOLDER)/componenti/lampadina.c -o $(OUT_FOLDER)/bulb.o -I $(SRC_FOLDER)
 
-	$(OUT_FOLDER)/fridge.o: $(SRC_FOLDER)/componenti/frigo.c 
+	#frigo
+	@echo "Sto creando le dipendenze della componente 'frigo'"
+	$(OUT_FOLDER)/fridge.o: $(SRC_FOLDER)/componenti/frigo.c $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o \
+	$(COMPILED_LIBRARIES_FOLDER)/comunicazione.o
 	@echo "Sto compilando la componente 'frigo'"
 	gcc -std=gnu90 -c  $(SRC_FOLDER)/componenti/frigo.c -o $(OUT_FOLDER)/fridge.o -I $(SRC_FOLDER)
 
-	$(OUT_FOLDER)/window.o: $(SRC_FOLDER)/componenti/frigo.c 
+	#finestra
+	@echo "Sto creando le dipendenze della componente 'finestra'"
+	$(OUT_FOLDER)/window.o: $(SRC_FOLDER)/componenti/finestra.c $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o \
+	$(COMPILED_LIBRARIES_FOLDER)/comunicazione.o
 	@echo "Sto compilando la componente 'finestra'"
 	gcc -std=gnu90 -c  $(SRC_FOLDER)/componenti/finestra.c -o $(OUT_FOLDER)/window.o -I $(SRC_FOLDER)
 
@@ -117,13 +134,16 @@ umano:
 #questa parte è da controllare
 	$(COMPILED_UMANO_FOLDER) $(LIBS)
 
+
 	$(COMPILED_UMANO_FOLDER): $(OUT_FOLDER)
 	@echo "Sto creando la cartella $(COMPILED_UMANO_FOLDER)"
 	@mkdir $(COMPILED_UMANO_FOLDER)
 
-	$(COMPILED_UMANO_FOLDER)/umano.o: $(SRC_FOLDER)/umano.c 
+	@echo "Sto creando le dipendenze per il file 'umano'"
+	$(COMPILED_UMANO_FOLDER)/human.o: $(SRC_FOLDER)/human.c $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o \
+	$(COMPILED_UMANO_FOLDER)/comunicazione.o 
 	@echo "Sto compilando il file 'umano'"
-	gcc -std=gnu90 -c  $(SRC_FOLDER)/umano.c -o $(COMPILED_UMANO_FOLDER)/umano.o -I $(SRC_FOLDER)
+	gcc -std=gnu90 -c  $(SRC_FOLDER)/human.c -o $(COMPILED_UMANO_FOLDER)/human.o -I $(SRC_FOLDER)
 
 
 #--------------------------------------to do list: makefile edition-------------------------------------------
