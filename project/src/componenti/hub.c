@@ -335,6 +335,7 @@ void gestisci_STATUSGET(coda_stringhe* separata){
     char* response = (char*) malloc(sizeof(char) * 200 * lista_pipes -> n);
     string my_status = (char*) malloc(sizeof(char) * 200 * lista_pipes -> n);
     sprintf(my_status, "%s hub %d" ,GET_STATUS_RESPONSE, id);
+    strcpy(response, "");
 
 
     // Mando a tutti i miei figli che voglio lo stato.
@@ -458,10 +459,16 @@ void gestisci_LABELUP(coda_stringhe* separata){
 
     sprintf(msg, "%s %s", UPDATE_LABEL, id_ric);
     char tmp[20];
-    while( primo(separata, tmp, TRUE) == TRUE ){
+    while( separata -> testa != NULL ){
+      nodo_stringa* it = separata -> testa;
+      separata -> testa = separata -> testa -> succ;
+      strcpy(tmp, it -> val);
+      free(it -> val);
+      free(it);
       strcat(msg, " ");
       strcat(msg, tmp);
     }
+    free(separata);
 
   }
 
@@ -604,11 +611,17 @@ void gestisci_SPAWN(coda_stringhe* separata){
     char msg[1024];
     sprintf(msg, "%s %s", "SPAWN", id_ric);
     char tmp[200];
-    while( primo(separata, tmp, TRUE) == TRUE )
+    while( separata -> testa != NULL )
     {
+      nodo_stringa* it = separata -> testa;
+      strcpy(tmp, it -> val);
+      separata -> testa = separata -> testa -> succ;
+      free(it -> val);
+      free(it);
       strcat(msg, " ");
       strcat(msg, tmp);
     }
+    free(separata);
 
     nodo_stringa* it = lista_pipes -> testa;
     while( it != NULL ){
@@ -705,10 +718,15 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
     primo(figli, stato, TRUE);
     primo(figli, stato, TRUE);
     primo(figli, stato, TRUE);
-    while(primo(figli, stato, TRUE) == TRUE )
+    while( figli -> testa != NULL ){
+      nodo_stringa* it = figli -> testa;
+      strcpy(stato, it -> val);
+      figli -> testa = figli -> testa -> succ;
+      free(it);
       if( strcmp(stato, "]") != 0)
         res = calcola_override(stato, tipi_figli, confronti);
-    distruggi(coda);
+    }
+    distruggi(figli);
 
   } else {
 
