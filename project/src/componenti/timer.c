@@ -32,8 +32,7 @@ void gestisci_STATUSGET(coda_stringhe* istruzioni);
 void gestisci_REMOVE(coda_stringhe* istruzioni);
 
 void ascolta_e_interpreta(registro* registri[], int numero_registri);
-
-void gestisci_LABELUP(coda_stringhe* istruzioni);
+void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], int numero_registri);
 
 void genera_figlio(coda_stringhe* status);
 
@@ -43,6 +42,8 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
 void aggiorna_stati(string str);
 void decodifica_hub(string str);
 void decodifica_figli( string tmp );
+void gestisci_begin(int x);
+void gestisci_end(int x);
 
 
 int id; //id del dispositivo
@@ -52,7 +53,7 @@ char pipe_figlio[50]; //memorizza la pipe del dispositivo a lui collegato
 char pipe_interna[50]; //pipe per comunicare all'interno del timer
 char pipe_esterna[50]; //pipe per comunicare con l'umano
 
-pid_t figli[1]; //memorizza process-id del figlio
+pid_t figli[2]; //memorizza process-id del figlio
 
 registro* registri[2];
 
@@ -86,7 +87,7 @@ int main (int argn, char** argv)  //argomenti servono ??
 
   int numero_registri = 2;
   registri[0] = &attivazione;
-  registro[1] = &disattivazione;
+  registri[1] = &disattivazione;
 
   if(argn < 2) //se il numero di argomenti passati a funzione è minore di 2 --> errore
   {
@@ -209,7 +210,7 @@ void ascolta_e_interpreta(registro* registri[], int numero_registri)
   }
   else //altri comandi non supportati
   {
-    printf("Comando non supportato: %s\n", nome_comando);
+    printf("Comando non supportato: %s\n", comando);
     send_msg(pipe_interna, "DONE");
   }
 
@@ -222,7 +223,7 @@ void gestisci_STATUSGET(coda_stringhe* istruzioni)
   primo(istruzioni, id_ric, TRUE);
   int id_comp = atoi(id_ric);
 
-  boolean oevrride = FALSE;
+  boolean override = FALSE;
 
   if( id_comp == id || id_comp == ID_UNIVERSALE )
   {
@@ -246,8 +247,8 @@ void gestisci_STATUSGET(coda_stringhe* istruzioni)
         override = calcola_override(str, tipi_figli, stati_attesi);
       }
 
-
-      strcat(response, " override: %s [ " , override == TRUE ? "TRUE" : "FALSE" );
+      sprintf(str, " override: %s [ " , override == TRUE ? "TRUE" : "FALSE" );
+      strcat(response, str);
       int i = 0;
       for( i = 0; msg[i] != '\0'; i++ )
       {
@@ -337,8 +338,8 @@ boolean calcola_registro_stringa( const registro* r, string output)
 
 void termina (int x)
 {
-  kill(figlio[0], SIGKILL); //uccido i processini
-  kill(figlio[1], SIGKILL);
+  kill(figli[0], SIGKILL); //uccido i processini
+  kill(figli[1], SIGKILL);
 
   close(file); //chiudo il file descriptor
 
@@ -381,7 +382,7 @@ void gestisci_REMOVE(coda_stringhe* istruzioni)
       sprintf(msg, "%s %s", "CONFIRM", id_ric);
 
       send_msg(pipe_figlio, msg); //invio richiesta di id al dati_figlio
-      read_msg(pipe_figlio, res); //leggo risposta dal dati_figlio
+      read_msg(pipe_figlio, res, 19); //leggo risposta dal dati_figlio
 
       if(strcmp(res, "TRUE") == 0) //se mio figlio deve morire
       {
@@ -538,7 +539,7 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], int numer
   }
 
   char comando[200];
-  sprintf(comando, "%s %s", GET_STATUS, ID_UNIVERSALE); //preparo il messaggio
+  sprintf(comando, "%s %d", GET_STATUS, ID_UNIVERSALE); //preparo il messaggio
   send_msg(pipe_figlio, comando);
 
   char stato[1024];
@@ -555,11 +556,11 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], int numer
 */
 void gestisci_begin(int x)
 {
-  if(stcmp(pipe_figlio, "") != 0)
+  if(strcmp(pipe_figlio, "") != 0)
   {
     char msg1[200], msg2[200];
-    sprintf(msg1, "%s %s %s %s", UPDATE_LABEL, ID_UNIVERSALE, "ACCENSIONE", "ON");
-    sprintf(msg2, "%s %s %s %s", UPDATE_LABEL, ID_UNIVERSALE, "OPEN", "ON");
+    sprintf(msg1, "%s %d %s %s", UPDATE_LABEL, ID_UNIVERSALE, "ACCENSIONE", "ON");
+    sprintf(msg2, "%s %d %s %s", UPDATE_LABEL, ID_UNIVERSALE, "OPEN", "ON");
 
     send_msg(pipe_figlio, msg1);
     send_msg(pipe_figlio, msg2);
@@ -572,11 +573,11 @@ void gestisci_begin(int x)
 
 void gestisci_end(int x)
 {
-  if(stcmp(pipe_figlio, "") != 0)
+  if(strcmp(pipe_figlio, "") != 0)
   {
     char msg1[200], msg2[200];
-    sprintf(msg1, "%s %s %s %s", UPDATE_LABEL, ID_UNIVERSALE, "ACCENSIONE", "OFF");
-    sprintf(msg2, "%s %s %s %s", UPDATE_LABEL, ID_UNIVERSALE, "CLOSE", "ON");
+    sprintf(msg1, "%s %d %s %s", UPDATE_LABEL, ID_UNIVERSALE, "ACCENSIONE", "OFF");
+    sprintf(msg2, "%s %d %s %s", UPDATE_LABEL, ID_UNIVERSALE, "CLOSE", "ON");
 
     send_msg(pipe_figlio, msg1);
     send_msg(pipe_figlio, msg2);
@@ -606,7 +607,7 @@ void gestisci_ID(coda_stringhe* istruzioni)
       sprintf(msg, "%s %s", ID, id_ric);
 
       send_msg(pipe_figlio, msg); //invio messaggio al figlio
-      read_msg(pipe_figlio, res); //aspetto risposta del filgio
+      read_msg(pipe_figlio, res, 19); //aspetto risposta del filgio
 
       send_msg(pipe_interna, res); //invio la risposta ricevuta nella pipe interna
 
@@ -790,4 +791,9 @@ void aggiorna_stati(string str){
   }
 
 
+}
+
+boolean calcola_registro_intero( const registro* registro, int* res )
+{
+  return TRUE;
 }

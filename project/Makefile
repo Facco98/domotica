@@ -17,7 +17,7 @@ $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o $(COMPILED_LIBRARIES_FOLDER)/lista_
 LIBS=$(STRUTTURE_DATI_LIB) $(COMUNICAZIONE_LIB)
 
 COMPONENTS=$(OUT_FOLDER)/centralina.out $(OUT_FOLDER)/hub.out $(OUT_FOLDER)/fridge.out $(OUT_FOLDER)/bulb.out \
- $(OUT_FOLDER)/window.out
+ $(OUT_FOLDER)/window.out $(OUT_FOLDER)/timer.out
 
 .PHONY: help build clean libraries componenti umano run rum spiegazione_processi_pipe
 
@@ -45,17 +45,15 @@ run:
 
 # Generazione della cartella di output
 $(OUT_FOLDER):
-
-	@echo "Sto creando la cartella $(OUT_FOLDER)"
-	@mkdir $(OUT_FOLDER)
+	@if [ ! -d "$(OUT_FOLDER)" ]; then mkdir $(OUT_FOLDER); fi
 
 
 # Regole per la generazione delle librerie.
 libraries: $(COMPILED_LIBRARIES_FOLDER) $(LIBS)
 
 $(COMPILED_LIBRARIES_FOLDER): $(OUT_FOLDER)
-	@echo "Sto creando la cartella $(COMPILED_LIBRARIES_FOLDER)"
-	@mkdir $(COMPILED_LIBRARIES_FOLDER)
+	@if [ ! -d "$(COMPILED_LIBRARIES_FOLDER)" ]; then mkdir $(COMPILED_LIBRARIES_FOLDER); fi
+
 
 #Generazione della libreria comunicazione
 $(COMPILED_LIBRARIES_FOLDER)/comunicazione.o: $(COMPILED_LIBRARIES_FOLDER)/tipi_base.o $(SRC_FOLDER)/comunicazione/comunicazione.c \
@@ -89,7 +87,6 @@ $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o: $(SRC_FOLDER)/strutture_dati/tip
 
 # Regole per la generazione dei componenti.
 componenti: $(COMPONENTS)
-	@echo "Generazione delle componenti"
 
 
 $(OUT_FOLDER)/centralina.out: $(SRC_FOLDER)/centralina.c  $(COMPILED_LIBRARIES_FOLDER)/comunicazione.o $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o \
@@ -134,9 +131,8 @@ $(OUT_FOLDER)/window.out: $(SRC_FOLDER)/componenti/finestra.c $(COMPILED_LIBRARI
 # Regole per la generazione dell'umano
 
 umano: $(COMPILED_UMANO_FOLDER)/human.out
-	@echo "Generazione di 'umano'"
-
-$(COMPILED_UMANO_FOLDER): $(OUT_FOLDER)
+	
+$(COMPILED_UMANO_FOLDER):
 	@echo "Sto creando la cartella $(COMPILED_UMANO_FOLDER)"
 	@mkdir $(COMPILED_UMANO_FOLDER)
 
