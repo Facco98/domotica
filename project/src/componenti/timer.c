@@ -55,6 +55,7 @@ registro* registri[2];
 int main (int argn, char** argv)  //argomenti servono ??
 {
   //stato = mirroring del dispositivo collegato
+  //boolean override = FALSE;
 
   //interruttori = mirroring del dispositivo collegato
 
@@ -333,7 +334,7 @@ void gestisci_REMOVE(coda_stringhe* istruzioni)
       send_msg(pipe_figlio, die_msg);
 
     }
-    send_msg(pipe_interna, "DONE");//informo i processini che ho concluso la missione
+    send_msg(pipe_interna, "TRUE");//informo i processini che ho concluso la missione
   }
 }
 
@@ -405,10 +406,10 @@ void genera_figlio(coda_stringhe* status)
   }
   else if( pid > 0 )
   {
-    // Se sono il padre aggiungo alla mia lista di pipes la pipe del figlio appena creato.
-    char id[30];
+    // Se sono il padre aggiungo la pipe del figlio appena creato.
+    //char id[30];
     primo(status, tmp, FALSE);
-    char pipe_figlio[100];
+    //char pipe_figlio[100];
     sprintf(pipe_figlio, "%s/%s", (string) PERCORSO_BASE_DEFAULT, tmp);
     distruggi(status);
 
@@ -456,6 +457,7 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], int numer
     }
 
   }
+  send_msg(pipe_interna, "TRUE");
 
 }
 
