@@ -1,5 +1,182 @@
-193872 Belotti Federica
-193588 Facchinetti Claudio
-195172 Ress Federica
+Componenti del gruppo:
 
-// --- Inserire breve descrizione del progetto --- //
+    Nome         -           Cognome             -        Numero di matricola
+ Federica        -           Belotti             -           193872
+ Claudio         -           Facchinetti         -           193588
+ Federica        -           Ress                -           195172
+
+Breve descrizione del progetto:
+Emulazione di un sistema di domotica. Il progetto è stato implementato con la variante dei processi. 
+
+Ciascun dispositivo genera tre diversi processi che collaborano per la gestione del dispositivo e delle sue funzionalità. I processi comunicano tra di loro sulla stessa pipe (pipe_interna).
+I processi sono destinati alla gestione di un particolare aspetto e sono chiamati:
+- 1. il processo del dispositivo
+- 2. il processo che si occupa di comunicare con le interazioni esterne, per comunicare con l'umano.
+- 3. il processo che si occupa di comunicare con il processo padre.
+
+La comunicazione del dispositivo è implementata tramite l'utilizzo di tre pipe, chiamate:
+- pipe_interna: pipe sulla quale scrivono i processi 1, 2 e 3 e leggono i processi 1 e 3. E' la pipe destinata alle comunicazioni all'interno del dispositivo.
+- pipe_esterna: pipe sulla quale legge il processo 2 e scrive il processo rappresentante l'interazione esterna. E' la pipe destinata alle comunicazioni con l'umano.
+- pipe <id>: pipe su cui leggono e scrivono i processi 3 e il controllore del dispositivo. E' la pipe destinata alle comunicazioni con il processo padre.
+
+
+
+[inserire qua gestione di blocking @Claudio ]
+
+
+Questo sistema di gestione è comune per tutti le tipologie di dispositivi emulate da questo progetto.
+
+[altre cose in comune?]
+
+Differenze tra dispositivi di controllo e di interazione
+
+La differenza tra dispositivi di controllo e dispositivi di interazione è principalmente nella gestione di messaggi.
+In tutti i dispositivi la gestione dei messaggi in entrata propri (con id_destinatario == id_dispositivo) è simile.
+Dopo un controllo sull'id, c'è un controllo sul tipo di messaggio, su che interruttore (o registro) questo agisce e come.
+Ogni dispositivo può gestire messaggi di tipo diverso, i quali sono descritti in seguito in questo file.
+La gestione dei messaggi in entrata non propri (con id_destinatario != id_dispositivo) caratterizza i dispositivi di controllo. 
+Quando un dispositivo di controllo riceve un messaggio non proprio chiede ai/al propri/o figli/o se può mandare il messaggio per arrivare al dispositivo interessato. Se un dispositivo di interazione riceve un messaggio non proprio, ignora il messaggio stesso.
+
+Un'ulteriore differenza tra dispositivi di interazione e controllo è nella gestione dell'override. L'override è uno stato proprio di hub e timer. Entrambi controllano se il/i figlio/i sia/siano in uno stato consistente oppure no. In questo modo si riesce a capire se un umano sia intervenuto sullo stato di un dispositivo connesso al dispositivo di controllo interessato.
+
+Infine solo i dispositivi di controllo possono generare dispositivi di qualsiasi tipologia e rimuovere dispositivi.
+
+////[altre differenze?]
+//???
+
+// ? altro?
+ 
+Note sulla comunicazione
+In seguito sono descritti i tipi di messaggi che i dispositivo gestiscono.
+
+(1) "STATUSGET": per richiedere lo stato di un dispositivo;
+(2) "ID": chiede se può arrivare al dispositivo con id <ID> tramite un dispositivo;
+(3) "LABELUP": per modificare gli interruttori di un dispositivo. Nota: nella centralina esiste un messaggio "SWITCH" che viene poi modificato in "LABELUP";
+(4) "REMOVE": per rimuovere un dispositivo (solo per dispositivi di controllo).
+(6) "STATUSGETRES": messaggio di risposta a messaggi di risposta a messaggi del tipo (1) dai dispositivi, i quali vengono poi interpretati per generare una stampa a video delle informazioni richieste ai dispositivi.
+(7) "CONFIRM": per confermare che l'id richiesto corrisponda al proprio id.
+(8) "SPAWN": per generare un dispositivo figlio (solo per dispositivi di controllo).
+
+
+Peculiarità
+//Dispositivi di controllo
+
+Centralina
+Comando "add" nella centralina:
+Quando si esegue un comando "add" per un nuovo dispositivo (qualsiasi tipo), viene inviato un messaggio "SPAWN". Vi è la generazione di un processo figlio, il quale genera un altro processo figlio per poi terminare. In questo modo il processo del componente viene adottato da init() e quindi non risulta figlio della centralina.
+
+// [...]
+
+//Hub:
+//[...]
+
+//Timer:
+//[...]
+
+//Dispositivi di interazione
+
+//Finestra:
+//[...]
+
+Frigo:
+Il registro delay è gestito con la funzione alarm(int n), dove n esprime il tempo dall'apertura in secondi.
+Il registro riempimento è gestibile solo manualmente (tramite override), quindi il messaggio per la gestione è inviabile solo dall'umano (non dalla centralina).
+//[...] 
+
+
+Implementazione di "umano"
+
+L'umano esegue sempre la stessa funzione la quale:
+- chiede in input l'id dispositivo e il tipo di messaggio da mandare
+- invia un hmessaggio all'id interessato
+- interpreta i messaggi che arrivano 
+Può inviare ai singoli dispositivi tutti i tipi di messaggi descritti sopra.
+
+
+//[...]
+
+//??? è così? Manca qualcosa? 
+
+
+Makefile
+Il makefile contiene le tre ricette indicate nella consegna ("help", "build" e "clean"), inoltre:
+- run: esegue il progetto"
+Sono presenti delle easter eggs: 
+- spiegazione_processi_pipe (disegno - spiegazione per i processi e le pipe)
+- rum (citazione a Jack Sparrow)
+
+
+Exit:
+Il sistema risponde con una exit(0) quando:
+- viene inviato nella linea di comando della centralina il comando exit, per uscire dal sistema e scollegare tutto
+- la centralina deve generare un dispositivo non direttamente connesso ad essa. Vi è la generazione di un figlio, il quale si auto-rimuove dopo aver generato un nipote
+- il numero di argomenti in linea di input minori di quelli accettati dal programma (meno di 2)
+- quando un dispositivo viene rimosso (si scollega ed esce)
+
+
+Shell
+Il sistema utilizza una sola shell per l'interazione con l'utente. I processi non generano altre shell e l'interazione può avvenire da terminale testuale.
+
+
+Ambienti testati
+Il progetto funziona sui seguenti ambienti testati: 
+- Ubuntu 18.x (come richiesto)
+- macOS Mojave ( 14.1.2 )
+- macOS High Sierra ( 13.4.1 )
+
+
+//Varie ed eventuali:
+//[...]
+
+/*
+* nota:  [...] significa inserire commenti/note relative
+*
+*/
+
+(eof)
+-----------------------------------------------------------------------------------------------------------------------------------
+Piccolo commento:
+Secondo me è inutile scrivere in questo file tutti i registri/interruttori presenti, dal momento che è quello che il professore già sa, dato che richiesto da lui.
+Secondo me vuole capire come abbiamo implementato le varie cose, tipo cosa è per noi un registro (nelle librerie) oppure le funzioni varie. 
+E' utile aggiungere cosa fanno i vari messaggi perché il professore non ha specificato il formato dei messaggi, come ha scritto sulla mail per lui basta ci siano nomi significativi. 
+E' importante spiegare come sia implementato l'override. (OK?)
+
+----------------------------------------------------- [TODO]-----------------------------------------------------------------------
+
+DA AGGIUNGERE:
+- sezione messaggi 																	--> OK (?)
+- override																			--> OK (sistemato)
+- ricette "in più" nel makefile (oltre a help, clean e build)						--> OK (da aggiungere altri se viene modificato il makefile)
+- versioni di Ubuntu testate oltre la 18.x (se abbiamo testato altro)				--> OK (da aggiungere se viene modificato il makefile)
+- la storia dei tre processini e delle tre pipe(ine)								--> OK 
+- umano																				--> OK (?)
+- tipi di errori/exit 																--> ok
+- shell: gestione (una sola shell e perché) 										--> ok
+PECULIARITA'
+CENTRALINA:
+					- add: processo creato	(per centralina)											--> OK
+
+FRIGO:
+					- messaggi in secondi per alarm   													--> ok
+
+
+
+sistemare:
+- cancellare commenti inutili in questo file quando è completo						
+- controllare la sintassi e la grammatica di questo file
+- rileggere tutto quanto un paio di volte per sincerarsi della correttezza di ciò che ho scritto qua dentro
+
+
+c'è altrooo????
+- cose in comune tra i Dispositivi 
+- differenze tra Dispositivi 				
+- sezione peculiarità dei dispositivi
+
+
+
+
+DA SCRIVERE, ASSOLUTAMENTE
+- gestione delle pipe (blocking)													--> TODO (Claudio) (a quanto pare da non scrivere)
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
