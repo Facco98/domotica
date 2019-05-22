@@ -268,14 +268,14 @@ void ascolta_e_interpreta(registro* registri[], int numero_registri, boolean* ap
   else if(strcmp(nome_comando, "CONFIRM") == 0)	//verifica se è il mio id
   {
     gestisci_ID(istruzioni);
-  } 
+  }
   else if (strcmp(nome_comando, "SET_FILL") ==  0)
   { //controllo se devo impostare il riempimento
     char pos[50];
     primo(istruzioni, pos, TRUE);
     int perc = atoi(pos);
-    if( perc <= 100 && perc => 0 )
-      riempimento->valore.integer = atoi(perc);  //imposto il riempimento del frigo al riempimento voluto
+    if( perc <= 100 && perc >= 0 )
+      riempimento->valore.integer = perc;  //imposto il riempimento del frigo al riempimento voluto
   }
   else
   {
