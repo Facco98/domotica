@@ -268,6 +268,14 @@ void ascolta_e_interpreta(registro* registri[], int numero_registri, boolean* ap
   else if(strcmp(nome_comando, "CONFIRM") == 0)	//verifica se è il mio id
   {
     gestisci_ID(istruzioni);
+  } 
+  else if (strcmp(nome_comando, "SET_FILL") ==  0)
+  { //controllo se devo impostare il riempimento
+    char pos[50];
+    primo(istruzioni, pos, TRUE);
+    int perc = atoi(pos);
+    if( perc <= 100 && perc => 0 )
+      riempimento->valore.integer = atoi(perc);  //imposto il riempimento del frigo al riempimento voluto
   }
   else
   {
@@ -367,29 +375,19 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
           alarm(0); //cancella l'alarm di chiusura se inviato precedentemente
         }
       }
-  else if (strcmp(azione, "SET_TEMPERATURE") ==  0)
+  else if (strcmp(azione, "TEMPERATURE") ==  0)
   { //controllo se devo impostare la temperatura
     temperatura->valore.integer = atoi(pos);  //imposto la temperatura del frigo alla temperatura voluta
   }
-// 			???????????????????????????????????????????????
-    else if (strcmp(azione, "HSET_FILL") ==  0)
-    /*qua ho messo l'H all'inizio perché questo è solo override manuale,
-    il comando per cambiare il riempimento da mandare come umano è HHSET_FILL
-    in questo modo gli altri dispositivi non possono mandare questo messaggio, neanche volendo e il prof non può rompere il codice?
-    Alternativa (penso sia quella corretta):
-    gli altri dispositivi in ogni caso NON possono mandare questo messaggio (non è nei tipi supportati) quindi posso
-    togliere la H dall'inizio?
-
-    	*/
-  { //controllo se devo impostare il riempimento
-    riempimento->valore.integer = atoi(pos);  //imposto il riempimento del frigo al riempimento voluto
+  else if (strcmp(azione, "DELAY") == 0) { // se devo modificare il ritardo
+        chiusura -> valore.integer = atoi(pos); //imposto il registro chiusura al valore voluto
   }
   else
   {
     distruggi_coda(istruzioni); //elimino il messaggio arrivato
 
   }
-  send_msg(pipe_interna, "TRUEs"); //rispondo sulla pipe interna di aver fatto (= niente perchè no sono io il processo interessato)
+  send_msg(pipe_interna, "TRUE"); //rispondo sulla pipe interna di aver fatto (= niente perchè no sono io il processo interessato)
 
 }
 
