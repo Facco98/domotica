@@ -258,6 +258,7 @@ void ascolta_e_interpreta(registro* registri[], int numero_registri, boolean* ap
     {
       termina(0);
     }
+    send_msg(pipe_interna, "TRUE");
 
   }
   else if( strcmp(nome_comando, ID) == 0 ) //verifica se è il mio id
@@ -392,7 +393,7 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
     distruggi_coda(istruzioni); //elimino il messaggio arrivato
 
   }
-  send_msg(pipe_interna, "DONE"); //rispondo sulla pipe interna di aver fatto (= niente perchè no sono io il processo interessato)
+  send_msg(pipe_interna, "TRUEs"); //rispondo sulla pipe interna di aver fatto (= niente perchè no sono io il processo interessato)
 
 }
 
