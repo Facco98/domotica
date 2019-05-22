@@ -247,8 +247,6 @@ void gestisci_STATUSGET(coda_stringhe* istruzioni)
         override = calcola_override(str, tipi_figli, stati_attesi);
       }
 
-      sprintf(str, " override: %s [ " , override == TRUE ? "TRUE" : "FALSE" );
-      strcat(response, str);
       int i = 0;
       for( i = 0; msg[i] != '\0'; i++ )
       {
@@ -258,8 +256,10 @@ void gestisci_STATUSGET(coda_stringhe* istruzioni)
         }
       }
 
+
       strcat(response, msg+strlen(GET_STATUS_RESPONSE)+1);
     }
+    sprintf(msg, " override: %s [ " , override == TRUE ? "TRUE" : "FALSE" );
     // Rispondo sulla pipe_interna.
     strcat(response, "]");
     send_msg(pipe_interna, response);
