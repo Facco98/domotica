@@ -46,8 +46,9 @@ Infine solo i dispositivi di controllo possono generare dispositivi di qualsiasi
 
 // ? altro?
  
-Note sulla comunicazione
-In seguito sono descritti i tipi di messaggi che i dispositivo gestiscono.
+Note sulla comunicazione, sui comandi e peculiarità
+
+In seguito sono descritti i tipi di messaggi presenti nella libreria "comunicazione".
 
 (1) "STATUSGET": per richiedere lo stato di un dispositivo;
 (2) "ID": chiede se può arrivare al dispositivo con id <ID> tramite un dispositivo;
@@ -56,32 +57,41 @@ In seguito sono descritti i tipi di messaggi che i dispositivo gestiscono.
 (6) "STATUSGETRES": messaggio di risposta a messaggi di risposta a messaggi del tipo (1) dai dispositivi, i quali vengono poi interpretati per generare una stampa a video delle informazioni richieste ai dispositivi.
 (7) "CONFIRM": per confermare che l'id richiesto corrisponda al proprio id.
 (8) "SPAWN": per generare un dispositivo figlio (solo per dispositivi di controllo).
+(9) "SET_FILL": per gestire il registro riempimento (solo per il frigo)
+(10) "DONE": messaggio inviato da un dispositivo per ???
 
 
-Peculiarità
-//Dispositivi di controllo
+In seguito sono descritti i tipi di messaggi che i dispositivo gestiscono e alcune peculiarità di alcuni dispositivi.
 
-Centralina
-Comando "add" nella centralina:
-Quando si esegue un comando "add" per un nuovo dispositivo (qualsiasi tipo), viene inviato un messaggio "SPAWN". Vi è la generazione di un processo figlio, il quale genera un altro processo figlio per poi terminare. In questo modo il processo del componente viene adottato da init() e quindi non risulta figlio della centralina.
+----Centralina---- 
+La centralina ha i seguenti tipi di comandi.
+(a) "list": stampa a video uno stato del sistema
+(b) "add <tipo_dispositivo>": aggiunge un dispositivo del tipo indicato al sistema. Sono permessi solamente dispositivi dei tipi indicati nella consegna. Quando si esegue un comando "add" per un nuovo dispositivo (qualsiasi tipo), viene inviato un messaggio "SPAWN". Vi è la generazione di un processo figlio, il quale genera un altro processo figlio per poi terminare. In questo modo il processo del componente viene adottato da init() e quindi non risulta figlio della centralina.
+(c) "link <id_0> to <id_1>": collega il dispositivo con id_0 al dispositivo con id_1
+(d) "del <id>": rimuove il dispositivo con id interessato
+(e) "switch <id> <interruttore> <stato>": invia un messaggio di tipo LABELUP per modificare gli interruttori del dispositivo con id interessato.
+(f) "info <id>": stampa a video le informazioni del dispositivo con id interessato
+(g) "exit": esce dal sistema
 
-// [...]
+----Finestra----
+Il comando del tipo (e) inviato dalla centralina gestisce l'interruttore di apertura e di chiusura tramite i seguenti messaggi:
+- switch <id> OPEN ON: apre la finestra 
+- switch <id> CLOSE ON: chiude la finestra
 
-//Hub:
-//[...]
+----Frigo----
+Il comando del tipo (e) inviato dalla centralina gestisce gli interruttori di apertura e di chiusura e i registri della temperatura e della chiusura automatica tramite i seguenti messaggi:
+- switch <id> OPEN ON: apre la finestra 
+- switch <id> CLOSE ON: chiude la finestra
+- switch <id> TEMPERATURE <int n>: imposta il registro della temperatura alla temperatura interessata 
+- switch <id> DELAY <int n>: imposta il registro della chiusura automatica al valore indicato (in secondi). Il registro delay è gestito con la funzione alarm(int n), dove n esprime il tempo dall'apertura in secondi.
 
-//Timer:
-//[...]
+Override manuale del registro di riempimento
+(9) "SET_FILL": messaggio utilizzato da questo componente per la gestione del registro riempimento. Nota: il registro riempimento è gestibile solo manualmente (tramite override), quindi il messaggio per la gestione è inviabile solo dall'umano (non dalla centralina).
 
-//Dispositivi di interazione
-
-//Finestra:
-//[...]
-
-Frigo:
-Il registro delay è gestito con la funzione alarm(int n), dove n esprime il tempo dall'apertura in secondi.
-Il registro riempimento è gestibile solo manualmente (tramite override), quindi il messaggio per la gestione è inviabile solo dall'umano (non dalla centralina).
-//[...] 
+----Lampadina----
+Il comando del tipo (e) inviato dalla centralina gestisce l'interruttore di accensione e di spegnimento tramite i seguenti messaggi:
+- switch <id> ACCENSIONE ON: accende la lampadina
+- switch <id> ACCENSIONE OFF: spegne la lampadina
 
 
 Implementazione di "umano"
@@ -103,7 +113,8 @@ Il makefile contiene le tre ricette indicate nella consegna ("help", "build" e "
 - run: esegue il progetto"
 Sono presenti delle easter eggs: 
 - spiegazione_processi_pipe (disegno - spiegazione per i processi e le pipe)
-- rum (citazione a Jack Sparrow)
+
+La ricetta "build" compila le componenti e le dipendenze in file .out dei vari dispositivi denominati in inglese (grazie al flag -o).
 
 
 Exit:
@@ -121,8 +132,10 @@ Il sistema utilizza una sola shell per l'interazione con l'utente. I processi no
 Ambienti testati
 Il progetto funziona sui seguenti ambienti testati: 
 - Ubuntu 18.x (come richiesto)
+- Ubuntu 19.02
 - macOS Mojave ( 14.1.2 )
 - macOS High Sierra ( 13.4.1 )
+
 
 
 //Varie ed eventuali:
