@@ -37,7 +37,7 @@ void gestisci_LABELUP( coda_stringhe* args, registro* registri[], boolean* stato
 /*
 * Funzione per gestire il messaggio STATUSGET, per avere lo status.
 */
-void gestisci_STATUSGET( coda_stringhe* args, registro* registri[], int numero_registri );
+void gestisci_STATUSGET( coda_stringhe* args, registro* registri[], int numero_registri, boolean* accesa );
 
 /*
 * Funzione per gestire il messaggio ID, per sapere se un dato ID è il mio.
@@ -104,7 +104,7 @@ int main( int argn, char** argv ){
   * ordine: stato tempo_di_utilizzo.
   */
   if( argn >= 3 ){
-    if( strcmp(argv[2], "ON") ){
+    if( strcmp(argv[2], "ON") == 0 ){
       accensione = (long) time(NULL);
       tempo_utilizzo.da_calcolare = TRUE;
       accesa = TRUE;
@@ -152,11 +152,13 @@ boolean calcola_registro_intero( const registro* registro, int* res ){
 
 void ascolta_e_interpreta( registro* registri[], int numero_registri, boolean* accesa ){
 
+
   registro* tempo_utilizzo = registri[0];
   // Quando arriva un messaggio lo leggo e tolgo il \n finale, se presente.
   char messaggio[100];
   while( read_msg(pipe_interna, messaggio, 99) == FALSE)
     perror("Errore in lettura");
+
 
   strtok(messaggio, "\n");
 
@@ -170,7 +172,7 @@ void ascolta_e_interpreta( registro* registri[], int numero_registri, boolean* a
 
   if( strcmp(nome_comando, GET_STATUS) == 0 ){
 
-    gestisci_STATUSGET(separata, registri, numero_registri);
+    gestisci_STATUSGET(separata, registri, numero_registri, accesa);
 
   } else if( strcmp(nome_comando, UPDATE_LABEL) == 0 ){
 
@@ -186,14 +188,20 @@ void ascolta_e_interpreta( registro* registri[], int numero_registri, boolean* a
       termina(0);
 
     }
+    send_msg(pipe_interna, "TRUE");
 
   } else if( strcmp(nome_comando, ID) == 0 ){
 
     gestisci_ID(separata);
 
-  } else {
+  } else if( strcmp(nome_comando, "CONFIRM") == 0 ){
 
-    printf("Comando non supportato: %s\n", nome_comando);
+    gestisci_ID(separata);
+
+
+  } else{
+
+      send_msg(pipe_interna, "DONE");
 
   }
 
@@ -240,11 +248,11 @@ void gestisci_LABELUP( coda_stringhe* separata, registro* registri[], boolean* a
     }
   } else
     distruggi_coda(separata);
-  send_msg(pipe_interna, "DONE");
+  send_msg(pipe_interna, "TRUE");
 
 }
 
-void gestisci_STATUSGET( coda_stringhe* separata, registro* registri[], int numero_registri ){
+void gestisci_STATUSGET( coda_stringhe* separata, registro* registri[], int numero_registri, boolean* accesa ){
 
     char indice_ric[10];
     primo(separata, indice_ric, TRUE);
@@ -252,7 +260,7 @@ void gestisci_STATUSGET( coda_stringhe* separata, registro* registri[], int nume
     if( indice == ID_UNIVERSALE || indice == id ){
       int i = 0;
       char res[1024*2];
-      sprintf(res, "%s bulb id: %d ", GET_STATUS_RESPONSE, id );
+      sprintf(res, "%s bulb %d %s", GET_STATUS_RESPONSE, id, *accesa == TRUE ? "ON" : "OFF" );
       for( i = 0; i < numero_registri; i++ ){
 
         char str[1024];
@@ -262,7 +270,8 @@ void gestisci_STATUSGET( coda_stringhe* separata, registro* registri[], int nume
 
       }
       send_msg(pipe_interna, res);
-    }
+    } else
+      send_msg(pipe_interna, "DONE");
 
 }
 
@@ -318,12 +327,12 @@ void crea_processi_supporto(registro* registri[], int numero_registri, boolean* 
     figli[0] = pid;
     pid = fork();
     if( pid == 0 ){
-
+      crea_pipe(id, (string) PERCORSO_BASE_DEFAULT);
       // Il padre sta in ascolto sulla PIPE del controllore del componente e invia
       // tutto quello che riceve sulla FIFO interna al componente, aspettando un messaggio
       // DONE o altro e in caso lo restituisce al padre.
       while(1){
-        crea_pipe(id, (string) PERCORSO_BASE_DEFAULT);
+
         char msg[200];
         leggi_messaggio(id, (string) PERCORSO_BASE_DEFAULT, msg, 199);
         send_msg(pipe_interna, msg);
