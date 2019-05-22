@@ -263,7 +263,6 @@ void gestisci_STATUSGET(coda_stringhe* istruzioni)
     // Rispondo sulla pipe_interna.
     strcat(response, "]");
     send_msg(pipe_interna, response);
-    free(response);
 
   }
   else
