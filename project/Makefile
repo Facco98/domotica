@@ -16,7 +16,8 @@ $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o $(COMPILED_LIBRARIES_FOLDER)/lista_
 
 LIBS=$(STRUTTURE_DATI_LIB) $(COMUNICAZIONE_LIB)
 
-
+COMPONENTS=$(OUT_FOLDER)/centralina.out $(OUT_FOLDER)/hub.out $(OUT_FOLDER)/fridge.out $(OUT_FOLDER)/bulb.out \
+ $(OUT_FOLDER)/window.out
 
 .PHONY: help build clean libraries componenti umano run rum spiegazione_processi_pipe
 
@@ -87,69 +88,63 @@ $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o: $(SRC_FOLDER)/strutture_dati/tip
 
 
 # Regole per la generazione dei componenti.
-componenti:
+componenti: $(COMPONENTS)
 	@echo "Generazione delle componenti"
-	
-	#Generazione della centralina
-	@echo "Sto creando le dipendenze della componente 'centralina'"
-	$(OUT_FOLDER)/centralina.o: $(SRC_FOLDER)/centralina.c  $(COMPILED_LIBRARIES_FOLDER)/comunicazione.o $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o \
-	$(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o $(COMPILED_LIBRARIES_FOLDER)/lista_stringhe.o
-	@echo "Sto compilando la componente 'centralina'"
-	gcc -std=gnu90 -c  $(SRC_FOLDER)/centralina.c -o $(OUT_FOLDER)/centralina.o -I $(SRC_FOLDER)
 
-	#Generazione di hub
-	@echo "Sto creando le dipendenze della componente'hub'"
-	$(OUT_FOLDER)/hub.o: $(SRC_FOLDER)/componenti/hub.c $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o \
+
+$(OUT_FOLDER)/centralina.out: $(SRC_FOLDER)/centralina.c  $(COMPILED_LIBRARIES_FOLDER)/comunicazione.o $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o \
+$(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o $(COMPILED_LIBRARIES_FOLDER)/lista_stringhe.o
+	@echo "Sto compilando la componente 'centralina'"
+	gcc -std=gnu90  $(SRC_FOLDER)/centralina.c $(COMPILED_LIBRARIES_FOLDER)/* -o $(OUT_FOLDER)/centralina.out -I $(SRC_FOLDER)
+
+#Generazione di hub
+$(OUT_FOLDER)/hub.out: $(SRC_FOLDER)/componenti/hub.c $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o \
 	$(COMPILED_LIBRARIES_FOLDER)/comunicazione.o
 	@echo "Sto compilando la componente 'hub'"
-	gcc -std=gnu90 -c  $(SRC_FOLDER)/componenti/hub.c -o $(OUT_FOLDER)/hub.o -I $(SRC_FOLDER)
+	gcc -std=gnu90  $(SRC_FOLDER)/componenti/hub.c $(COMPILED_LIBRARIES_FOLDER)/* -o $(OUT_FOLDER)/hub.out -I $(SRC_FOLDER)
 
-	#Generazione di timer
-	@echo "Sto creando le dipendenze della componente 'timer'"
-	$(OUT_FOLDER)/timer.o: $(SRC_FOLDER)/componenti/timer.c $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o \
+#Generazione di timer
+
+$(OUT_FOLDER)/timer.out: $(SRC_FOLDER)/componenti/timer.c $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o \
 	$(COMPILED_LIBRARIES_FOLDER)/comunicazione.o
 	@echo "Sto compilando la componente 'timer'"
-	gcc -std=gnu90 -c  $(SRC_FOLDER)/componenti/timer.c -o $(OUT_FOLDER)/timer.o -I $(SRC_FOLDER)
+	gcc -std=gnu90 $(SRC_FOLDER)/componenti/timer.c $(COMPILED_LIBRARIES_FOLDER)/* -o $(OUT_FOLDER)/timer.out -I $(SRC_FOLDER)
 
-	#Generazione della lampadina
-	@echo "Sto creando le dipendenze della componente 'lampadina'"
-	$(OUT_FOLDER)/bulb.o: $(SRC_FOLDER)/componenti/lampadina.c $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o \
+#Generazione della lampadina
+
+$(OUT_FOLDER)/bulb.out: $(SRC_FOLDER)/componenti/lampadina.c $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o \
 	$(COMPILED_LIBRARIES_FOLDER)/comunicazione.o
 	@echo "Sto compilando la componente 'lampadina'"
-	gcc -std=gnu90 -c  $(SRC_FOLDER)/componenti/lampadina.c -o $(OUT_FOLDER)/bulb.o -I $(SRC_FOLDER)
+	gcc -std=gnu90 $(SRC_FOLDER)/componenti/lampadina.c $(COMPILED_LIBRARIES_FOLDER)/* -o $(OUT_FOLDER)/bulb.out -I $(SRC_FOLDER)
 
-	#Generazione del frigo
-	@echo "Sto creando le dipendenze della componente 'frigo'"
-	$(OUT_FOLDER)/fridge.o: $(SRC_FOLDER)/componenti/frigo.c $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o \
+#Generazione del frigo
+
+$(OUT_FOLDER)/fridge.out: $(SRC_FOLDER)/componenti/frigo.c $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o \
 	$(COMPILED_LIBRARIES_FOLDER)/comunicazione.o
 	@echo "Sto compilando la componente 'frigo'"
-	gcc -std=gnu90 -c  $(SRC_FOLDER)/componenti/frigo.c -o $(OUT_FOLDER)/fridge.o -I $(SRC_FOLDER)
+	gcc -std=gnu90 $(SRC_FOLDER)/componenti/frigo.c $(COMPILED_LIBRARIES_FOLDER)/* -o $(OUT_FOLDER)/fridge.out -I $(SRC_FOLDER)
 
-	#Generazione della finestra
-	@echo "Sto creando le dipendenze della componente 'finestra'"
-	$(OUT_FOLDER)/window.o: $(SRC_FOLDER)/componenti/finestra.c $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o \
+#Generazione della finestra
+$(OUT_FOLDER)/window.out: $(SRC_FOLDER)/componenti/finestra.c $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o \
 	$(COMPILED_LIBRARIES_FOLDER)/comunicazione.o
 	@echo "Sto compilando la componente 'finestra'"
-	gcc -std=gnu90 -c  $(SRC_FOLDER)/componenti/finestra.c -o $(OUT_FOLDER)/window.o -I $(SRC_FOLDER)
+	gcc -std=gnu90 $(SRC_FOLDER)/componenti/finestra.c $(COMPILED_LIBRARIES_FOLDER)/* -o $(OUT_FOLDER)/window.out -I $(SRC_FOLDER)
 
 
 # Regole per la generazione dell'umano
 
-umano:
+umano: $(COMPILED_UMANO_FOLDER)/human.out
 	@echo "Generazione di 'umano'"
 
-	$(COMPILED_UMANO_FOLDER) $(LIBS)
-
-
-	$(COMPILED_UMANO_FOLDER): $(OUT_FOLDER)
+$(COMPILED_UMANO_FOLDER): $(OUT_FOLDER)
 	@echo "Sto creando la cartella $(COMPILED_UMANO_FOLDER)"
 	@mkdir $(COMPILED_UMANO_FOLDER)
 
-	@echo "Sto creando le dipendenze per il file 'umano'"
-	$(COMPILED_UMANO_FOLDER)/human.o: $(SRC_FOLDER)/human.c $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o \
-	$(COMPILED_UMANO_FOLDER)/comunicazione.o 
+
+$(COMPILED_UMANO_FOLDER)/human.out: $(COMPILED_UMANO_FOLDER) $(SRC_FOLDER)/human/human.c $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o \
+	$(COMPILED_LIBRARIES_FOLDER)/comunicazione.o
 	@echo "Sto compilando il file 'umano'"
-	gcc -std=gnu90 -c  $(SRC_FOLDER)/human.c -o $(COMPILED_UMANO_FOLDER)/human.o -I $(SRC_FOLDER)
+	gcc -std=gnu90 $(SRC_FOLDER)/human/human.c $(COMPILED_LIBRARIES_FOLDER)/* -o $(COMPILED_UMANO_FOLDER)/human.out -I $(SRC_FOLDER)
 
 
 #easter egg disegno: disegno/spiegazione dei processi e delle pipe di un dispositivo
@@ -160,7 +155,7 @@ spiegazione_processi_pipe:
 
 
 #easter egg rum: citazione a Jack Sparrow
-rum: 
+rum:
 	@echo "Perché hai bruciato il RUUUUUUUMMM???!!?"
 	@echo "WHY IS THE RUUM GOOOONEEE???!!?"
 
@@ -170,14 +165,14 @@ rum:
 #IMPLEMENTATO, DA CONTROLLARE
 #- controllare la correttezza di umano
 #- controllare la correttezza di componenti
-#- controllare la correttezza di clean (modificato) 
+#- controllare la correttezza di clean (modificato)
 #- controllare la correttezza delle cartelle nuove aggiunte
 #- controllare run
 
 #DA IMPLEMENTARE (*)
 #- eliminare gli echo inutili in questo file
 #- eliminare i commenti inutili in questo file
-#- mostrare altre ricette disponibili in help 
+#- mostrare altre ricette disponibili in help
 #- commentare diffusamente
 
 #DA IMPLEMENTARE (**)

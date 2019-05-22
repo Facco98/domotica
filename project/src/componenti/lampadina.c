@@ -342,7 +342,7 @@ void crea_processi_supporto(registro* registri[], int numero_registri, boolean* 
 
       }
 
-    } else if( pid > 0 ) {
+    } else if( pid > 0 ){
 
       // Il figlio sta in ascolto sulla FIFO interna e interpreta i comandi che arrivano.
       figli[1] = pid;

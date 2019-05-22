@@ -341,10 +341,6 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
       *
       */
 //Se è un Hmessaggio tolgo la H dall'inizio e procedo normalmente
-    if (pos[0] == "H"){
-    	*pos += 1;
-    }
-
     //in seguito il codice per aprire o chiudere il frigo (tramite comando), la chiusura automatica non è ancora implementata né la gestione del termostato
      if(strcmp(azione, "OPEN") == 0 && strcmp(pos, "ON") == 0)//se devo aprire il frigo
       {
