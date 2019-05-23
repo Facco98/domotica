@@ -99,15 +99,15 @@ int main (int argn, char** argv)  //argomenti servono ??
   //se ricevo più argomenti da riga di Comando
   // input: id datidelfiglio
   //datidelfiglio ==> stringa separata da underscore
-  if(argn >= 3)
+  if(argn >= 4)
   {
     //controllo se non ho già un figlio ?? è inutile ??
     char dati_figlio[200]; //strigna per contenere i dati di creazione del figlio con _
-    strcpy(dati_figlio, argv[2]); //recupero i dati del figlio con _
+    strcpy(dati_figlio, argv[3]); //recupero i dati del figlio con _
 
     coda_stringhe* status = crea_coda_da_stringa(dati_figlio, "_"); //separo i dati del figlio dagli _ e creo una coda
 
-    genera_figlio(status); //genero il figlio
+    //genera_figlio(status); //genero il figlio
 
   }
 
@@ -259,9 +259,11 @@ void gestisci_STATUSGET(coda_stringhe* istruzioni)
 
       strcat(response, msg+strlen(GET_STATUS_RESPONSE)+1);
     }
-    sprintf(msg, " override: %s [ " , override == TRUE ? "TRUE" : "FALSE" );
-    // Rispondo sulla pipe_interna.
-    strcat(response, "]");
+    sprintf(msg, " %s %d %d [", override == TRUE ? "TRUE" : "FALSE", registri[0]->valore.integer, registri[1]->valore.integer);
+    //sprintf(msg, " override: %s [ " , override == TRUE ? "TRUE" : "FALSE" );
+    // Rispondo sulla pipe_interna
+    strcat(response, msg);
+    strcat(response, " ]");
     send_msg(pipe_interna, response);
 
   }
@@ -434,6 +436,7 @@ void genera_figlio(coda_stringhe* status)
   char tmp[40], percorso[50];
   primo(status, tmp, TRUE);
   sprintf(percorso, "./%s.out", tmp);
+  printf("[PERCORSO]%s\n", percorso);
 
   pid_t pid = fork();
 
@@ -458,6 +461,7 @@ void genera_figlio(coda_stringhe* status)
       i++;
     }
 
+    printf("HELLO IT'S ME MARIO\n");
     execv(params[0], params);
 
     int j = 0;
