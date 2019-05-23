@@ -12,7 +12,7 @@
 /*
 * Funzione che gestisce i comandi da tastiera.
 */
-void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* lista_pipes, lista_stringhe* da_creare, lista_stringhe* dispositivi_ammessi);
+void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* lista_pipes, lista_stringhe* da_creare, lista_stringhe* dispositivi_ammessi, boolean* stato);
 void gestisci_list( coda_stringhe* separata, lista_stringhe* lista_pipes, lista_stringhe* da_creare);
 void gestisci_del( coda_stringhe* separata, lista_stringhe* lista_pipes, lista_stringhe* da_creare);
 void gestisci_exit(coda_stringhe* separata,lista_stringhe* lista_pipes, lista_stringhe* da_creare);
@@ -92,7 +92,6 @@ void crea_processi_supporto(){
     printf("Digita help per una lista dei comandi disponibili\n");
     while(1){
       char msg[1000];
-      printf(">>");
       fgets(msg, 1000, stdin);
       strtok(msg, "\n");
       send_msg(pipe_interna, msg);
@@ -134,6 +133,8 @@ void crea_processi_supporto(){
       strcpy(num.nome, "num");
       num.da_calcolare = TRUE;
 
+      boolean accesa = TRUE;
+
       mkfifo(pipe_interna, 0666);
       while(1){
 
@@ -144,9 +145,9 @@ void crea_processi_supporto(){
         coda_stringhe* coda = crea_coda_da_stringa(str, " ");
 
         char comando[20];
-        primo(coda, comando, TRUE);
+        primo(coda, comando, FALSE);
 
-        gestisci_comando(coda, comando, lista_figli, da_creare, dispositivi_ammessi);
+        gestisci_comando(coda, comando, lista_figli, da_creare, dispositivi_ammessi, &accesa);
 
       }
 
@@ -156,9 +157,32 @@ void crea_processi_supporto(){
 
 }
 
-void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* lista_pipes, lista_stringhe* da_creare, lista_stringhe* dispositivi_ammessi){
+void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* lista_pipes, lista_stringhe* da_creare, lista_stringhe* dispositivi_ammessi, boolean* accesa){
 
-  if( strcmp(comando, "help") == 0 ){
+  if( strcmp(comando, "LABELUP") == 0 ){
+
+    char label[200];
+    primo(separata, label, FALSE);
+    primo(separata, label, FALSE);
+    char pos[200];
+    primo(separata, pos, FALSE);
+
+    if( strcmp(label, "GENERALE") == 0 ){
+
+      *accesa = strcmp(pos, "ON") == 0 ? TRUE : FALSE;
+
+    }
+    free(separata);
+
+  } else if( strcmp(comando, "exit") == 0 ){
+
+    gestisci_exit(separata, lista_pipes, da_creare);
+
+  } else if( *accesa == FALSE ){
+    printf("La centralina è spenta\n");
+    free(separata);
+
+  } else if( strcmp(comando, "help") == 0 ){
 
     printf("----- Lista comandi ------\n");
     printf("- list\n");
@@ -189,10 +213,6 @@ void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* 
 
     gestisci_switch(separata, lista_pipes);
 
-  } else if( strcmp(comando, "exit") == 0 ){
-
-    gestisci_exit(separata, lista_pipes, da_creare);
-
   } else if( strcmp(comando, "info") == 0 ){
 
     gestisci_info(separata, lista_pipes);
@@ -200,7 +220,7 @@ void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* 
   } else {
 
     printf("Comando sconosciuto: %s\n", comando);
-
+    free(separata);
   }
 
 }
