@@ -58,7 +58,7 @@ In seguito sono descritti i tipi di messaggi presenti nella libreria "comunicazi
 (7) "CONFIRM": per confermare che l'id richiesto corrisponda al proprio id.
 (8) "SPAWN": per generare un dispositivo figlio (solo per dispositivi di controllo).
 (9) "SET_FILL": per gestire il registro riempimento (solo per il frigo)
-(10) "DONE": messaggio inviato da un dispositivo per ???
+(10) "DONE": messaggio inviato da un dispositivo per confermare di aver terminato l'azione desiderata e quindi sbloccare la pipe interna
 
 
 In seguito sono descritti i tipi di messaggi che i dispositivo gestiscono e alcune peculiarità di alcuni dispositivi.
@@ -95,7 +95,6 @@ Il comando del tipo (e) inviato dalla centralina gestisce l'interruttore di acce
 
 
 Implementazione di "umano"
-
 L'umano esegue sempre la stessa funzione la quale:
 - chiede in input l'id dispositivo e il tipo di messaggio da mandare
 - invia un hmessaggio all'id interessato
@@ -158,9 +157,10 @@ E' importante spiegare come sia implementato l'override. (OK?)
 
 DA AGGIUNGERE:
 - sezione messaggi 																	--> OK (?)
+- descrizione messaggio DONE 														--> OK
 - override																			--> OK (sistemato)
 - ricette "in più" nel makefile (oltre a help, clean e build)						--> OK (da aggiungere altri se viene modificato il makefile)
-- versioni di Ubuntu testate oltre la 18.x (se abbiamo testato altro)				--> OK (da aggiungere se viene modificato il makefile)
+- versioni di Ubuntu testate oltre la 18.x (se abbiamo testato altro)				--> OK 
 - la storia dei tre processini e delle tre pipe(ine)								--> OK 
 - umano																				--> OK (?)
 - tipi di errori/exit 																--> ok
@@ -173,6 +173,11 @@ FRIGO:
 					- messaggi in secondi per alarm   													--> ok
 
 
+c'è altrooo????
+- cose in comune tra i Dispositivi 
+- differenze tra Dispositivi 				
+- sezione peculiarità dei dispositivi
+
 
 sistemare:
 - cancellare commenti inutili in questo file quando è completo						
@@ -180,16 +185,7 @@ sistemare:
 - rileggere tutto quanto un paio di volte per sincerarsi della correttezza di ciò che ho scritto qua dentro
 
 
-c'è altrooo????
-- cose in comune tra i Dispositivi 
-- differenze tra Dispositivi 				
-- sezione peculiarità dei dispositivi
-
-
-
-
 DA SCRIVERE, ASSOLUTAMENTE
 - gestione delle pipe (blocking)													--> TODO (Claudio) (a quanto pare da non scrivere)
-
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
