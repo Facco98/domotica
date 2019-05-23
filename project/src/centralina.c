@@ -25,53 +25,133 @@ void genera_figlio( string status );
 void decodifica_controllo( string str );
 void decodifica_figli( string tmp );
 void crea_dispositivo_non_connesso(string tipo, lista_stringhe* lista_pipes, lista_stringhe* da_creare);
+void crea_processi_supporto(lista_stringhe* dispositivi_ammessi);
 boolean suffix(const char *str, const char *suffix);
+void termina( int x );
 
 
 
 const int id = 0;
 int id_successivo = 1;
 
+char pipe_interna[100], pipe_esterna[100];
+
+pid_t processi_supporto[2];
+
+lista_stringhe* lista_figli;
+
+lista_stringhe* da_creare;
+
+lista_stringhe* dispositivi_ammessi;
+
 int main( int argn, char** argv ){
 
-
-  lista_stringhe* lista_figli = crea_lista();
-
-  lista_stringhe* da_creare = crea_lista();
-
-  lista_stringhe* dispositivi_ammessi = crea_lista();
-  append(dispositivi_ammessi, "bulb");
-  append(dispositivi_ammessi, "hub");
-  append(dispositivi_ammessi, "timer");
-  append(dispositivi_ammessi, "fridge");
-  append(dispositivi_ammessi, "window");
+  sprintf(pipe_interna, "%s/%d_int", (string) PERCORSO_BASE_DEFAULT, id);
+  sprintf(pipe_esterna, "%s/%d_ext", (string) PERCORSO_BASE_DEFAULT, id);
+  crea_processi_supporto(dispositivi_ammessi);
 
 
-  registro num;
-  strcpy(num.nome, "num");
-  num.da_calcolare = TRUE;
+}
 
-  printf("Centralina\n");
-  printf("Digita help per una lista dei comandi disponibili\n");
+void termina( int x ){
 
-  crea_pipe(id, (string) PERCORSO_BASE_DEFAULT);
-  while(1){
+  kill(processi_supporto[0], SIGKILL);
+  kill(processi_supporto[1], SIGKILL);
 
-    printf(">>");
-    char str[1000];
-    fgets(str, 999, stdin);
-    strtok(str, "\n");
-    coda_stringhe* coda = crea_coda_da_stringa(str, " ");
+  nodo_stringa* it = lista_figli -> testa;
+  char msg[200];
+  sprintf(msg, "%s %d", REMOVE, ID_UNIVERSALE);
+  while(it != NULL){
 
-    char comando[20];
-    primo(coda, comando, TRUE);
+    send_msg(it -> val, msg);
+    it = it -> succ;
 
-    gestisci_comando(coda, comando, lista_figli, da_creare, dispositivi_ammessi);
+  }
+
+  it = da_creare -> testa;
+  while(it != NULL){
+
+    send_msg(it -> val, msg);
+    it = it -> succ;
+
+  }
+
+  unlink(pipe_esterna);
+  unlink(pipe_interna);
+  exit(0);
+
+}
+
+void crea_processi_supporto(){
+
+  pid_t pid = fork();
+  if( pid == 0 ){
+
+    printf("Centralina\n");
+    printf("Digita help per una lista dei comandi disponibili\n");
+    while(1){
+      char msg[1000];
+      printf(">>");
+      fgets(msg, 1000, stdin);
+      strtok(msg, "\n");
+      send_msg(pipe_interna, msg);
+    }
+
+  } else if ( pid > 0 ){
+
+    processi_supporto[0] = pid;
+    pid = fork();
+    if( pid == 0 ){
+
+      mkfifo(pipe_esterna, 0666);
+      while(1){
+
+        char msg[1024];
+        read_msg(pipe_esterna, msg, 1024);
+        send_msg(pipe_interna, msg);
+
+      }
+
+    } else if( pid > 0 ){
+
+      processi_supporto[1] = pid;
+
+      lista_figli = crea_lista();
+      da_creare = crea_lista();
+      dispositivi_ammessi = crea_lista();
+
+      append(dispositivi_ammessi, "bulb");
+      append(dispositivi_ammessi, "hub");
+      append(dispositivi_ammessi, "timer");
+      append(dispositivi_ammessi, "fridge");
+      append(dispositivi_ammessi, "window");
+
+
+      registro num;
+      strcpy(num.nome, "num");
+      num.da_calcolare = TRUE;
+
+      mkfifo(pipe_interna, 0666);
+      while(1){
+
+
+        char str[1000];
+        read_msg(pipe_interna, str, 999);
+        strtok(str, "\n");
+        coda_stringhe* coda = crea_coda_da_stringa(str, " ");
+
+        char comando[20];
+        primo(coda, comando, TRUE);
+
+        gestisci_comando(coda, comando, lista_figli, da_creare, dispositivi_ammessi);
+
+      }
+
+    }
 
   }
 
 }
-
 
 void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* lista_pipes, lista_stringhe* da_creare, lista_stringhe* dispositivi_ammessi){
 
@@ -300,28 +380,8 @@ void gestisci_switch(coda_stringhe* separata, lista_stringhe* lista_pipes){
 
 void gestisci_exit(coda_stringhe* separata,lista_stringhe* lista_pipes, lista_stringhe* da_creare){
 
-  nodo_stringa* it = lista_pipes -> testa;
-  char msg[200];
-  sprintf(msg, "%s %d", REMOVE, ID_UNIVERSALE);
-  while(it != NULL){
 
-    send_msg(it -> val, msg);
-    it = it -> succ;
-
-  }
-
-  it = da_creare -> testa;
-  while(it != NULL){
-
-    send_msg(it -> val, msg);
-    it = it -> succ;
-
-  }
-
-  char percorso[50];
-  sprintf(percorso, "%s/%d", PERCORSO_BASE_DEFAULT, id);
-  unlink(percorso);
-  exit(0);
+  termina(0);
 
 }
 
@@ -427,8 +487,10 @@ void stampa_componente_list(string msg, int indent){
     coda = crea_coda_da_stringa(tmp, " ");
     while(primo(coda, tmp, FALSE) == TRUE){
 
-      decodifica_controllo(tmp);
-      stampa_componente_list(tmp, indent+1);
+      if( strcmp(tmp, "]") != 0){
+        decodifica_controllo(tmp);
+        stampa_componente_list(tmp, indent+1);
+      }
 
     }
 
@@ -857,6 +919,8 @@ void crea_dispositivo_non_connesso(string tipo, lista_stringhe* lista_pipes, lis
 
     } else if ( pid > 0 ){
 
+      int stat;
+      waitpid(pid, &stat, 0);
       exit(0);
 
     }
