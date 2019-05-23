@@ -414,7 +414,9 @@ void termina (int x)
   }
 
   // Distruggo tutte le pipe.
-  unlink(pipe_padre); //pipe con il figlio
+  char percorso[200];
+  sprintf(percorso, "%s/%d", (string) PERCORSO_BASE_DEFAULT, id);
+  unlink(percorso); //pipe con il figlio
   unlink(pipe_esterna); //pipe con umano
   unlink(pipe_interna); //pipe interna
   exit(0); //chiudi tutto
