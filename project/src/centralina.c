@@ -3,6 +3,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <signal.h>
 #include "comunicazione/comunicazione.h"
 #include "strutture_dati/tipi_componente.h"
 #include "strutture_dati/coda_stringhe.h"
@@ -25,7 +26,7 @@ void genera_figlio( string status );
 void decodifica_controllo( string str );
 void decodifica_figli( string tmp );
 void crea_dispositivo_non_connesso(string tipo, lista_stringhe* lista_pipes, lista_stringhe* da_creare);
-void crea_processi_supporto(lista_stringhe* dispositivi_ammessi);
+void crea_processi_supporto();
 boolean suffix(const char *str, const char *suffix);
 void termina( int x );
 
@@ -48,7 +49,7 @@ int main( int argn, char** argv ){
 
   sprintf(pipe_interna, "%s/%d_int", (string) PERCORSO_BASE_DEFAULT, id);
   sprintf(pipe_esterna, "%s/%d_ext", (string) PERCORSO_BASE_DEFAULT, id);
-  crea_processi_supporto(dispositivi_ammessi);
+  crea_processi_supporto();
 
 
 }
@@ -116,6 +117,8 @@ void crea_processi_supporto(){
 
       processi_supporto[1] = pid;
 
+      signal(SIGINT, termina);
+      signal(SIGCHLD, SIG_IGN);
       lista_figli = crea_lista();
       da_creare = crea_lista();
       dispositivi_ammessi = crea_lista();
@@ -877,12 +880,15 @@ void decodifica_figli( string tmp ){
 
 }
 
-void decodifica_controllo( string tmp ){
 
-  int count = 0;
-  int j;
+void decodifica_controllo(string tmp){
+
+  int count = 0, j;
   for( j = 0; tmp[j] != '\0'; j++ ){
     if( tmp[j] == '[' || tmp[j] == ']'){
+
+      if( tmp[j] == ']')
+        count -= 1;
 
       if( count == 0 ){
 
@@ -893,14 +899,15 @@ void decodifica_controllo( string tmp ){
           tmp[j+1] = ' ';
 
       }
-      count += tmp[j] == '[' ? 1 : -1;
-
+      if( tmp[j] == '[')
+      count += 1;
     }
     if( count == 0 && tmp[j] == '_')
       tmp[j] = ' ';
   }
 
 }
+
 
 void crea_dispositivo_non_connesso(string tipo, lista_stringhe* lista_pipes, lista_stringhe* da_creare){
 
