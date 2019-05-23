@@ -162,12 +162,14 @@ void ascolta_e_interpreta( registro* registri[], int numero_registri, boolean* a
 
   strtok(messaggio, "\n");
 
+  printf("[BULB]%s\n",messaggio );
   // Creo la coda di stringhe.
   coda_stringhe* separata = crea_coda_da_stringa(messaggio, " ");
 
+
   // Recupero il nome del comando.
   char nome_comando[20];
-  if(!primo(separata, nome_comando, TRUE) )
+  if(!primo(separata, nome_comando, FALSE) )
     exit(140);
 
   if( strcmp(nome_comando, GET_STATUS) == 0 ){
@@ -181,7 +183,7 @@ void ascolta_e_interpreta( registro* registri[], int numero_registri, boolean* a
   } else if( strcmp(nome_comando, REMOVE) == 0 ){
 
     char tmp[20];
-    primo(separata, tmp, TRUE);
+    primo(separata, tmp, FALSE);
     int id_ric = atoi(tmp);
     if( id_ric == id || id_ric == ID_UNIVERSALE ){
 
@@ -204,6 +206,7 @@ void ascolta_e_interpreta( registro* registri[], int numero_registri, boolean* a
       send_msg(pipe_interna, "DONE");
 
   }
+  free(separata);
 
 }
 
@@ -213,19 +216,19 @@ void gestisci_LABELUP( coda_stringhe* separata, registro* registri[], boolean* a
   registro* tempo_utilizzo = registri[0];
 
   char id_comp[20];
-  primo(separata, id_comp, TRUE);
+  primo(separata, id_comp, FALSE);
   int id_ric = atoi(id_comp);
 
   if( id_ric == id || id_ric == ID_UNIVERSALE ){
 
     // Recupero il nome dell'interrutore, il nuovo stato e aggiorno
     char interruttore[20];
-    primo(separata, interruttore, TRUE);
+    primo(separata, interruttore, FALSE);
 
     if( strcmp(interruttore, "ACCENSIONE") == 0 ){
 
       char nuovo_stato[20];
-      primo(separata, nuovo_stato, TRUE);
+      primo(separata, nuovo_stato, FALSE);
 
       if( strcmp(nuovo_stato, "ON") == 0 ){
         if( *accesa == FALSE ){
@@ -255,7 +258,7 @@ void gestisci_LABELUP( coda_stringhe* separata, registro* registri[], boolean* a
 void gestisci_STATUSGET( coda_stringhe* separata, registro* registri[], int numero_registri, boolean* accesa ){
 
     char indice_ric[10];
-    primo(separata, indice_ric, TRUE);
+    primo(separata, indice_ric, FALSE);
     int indice = atoi(indice_ric);
     if( indice == ID_UNIVERSALE || indice == id ){
       int i = 0;
@@ -278,7 +281,7 @@ void gestisci_STATUSGET( coda_stringhe* separata, registro* registri[], int nume
 void gestisci_ID(coda_stringhe* separata){
 
   char tmp[10];
-  primo(separata, tmp, TRUE);
+  primo(separata, tmp, FALSE);
   if( atoi(tmp) == id )
     send_msg(pipe_interna, "TRUE");
   else

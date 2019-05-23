@@ -230,7 +230,7 @@ void ascolta_e_interpreta(registro* registri[], int numero_registri)
 
 
   char comando[50];
-  primo(istruzioni, comando, TRUE); //recupero il nome del comando
+  primo(istruzioni, comando, FALSE); //recupero il nome del comando
 
   if( strcmp( comando, GET_STATUS ) == 0 ) //stato del componente collegato
   {
@@ -268,7 +268,8 @@ void ascolta_e_interpreta(registro* registri[], int numero_registri)
 void gestisci_STATUSGET(coda_stringhe* istruzioni)
 {
   char id_ric[50];
-  primo(istruzioni, id_ric, TRUE);
+  primo(istruzioni, id_ric, FALSE);
+  printf("[ID_RIC]%s\n", id_ric);
   int id_comp = atoi(id_ric);
 
   boolean override = FALSE;
@@ -276,6 +277,7 @@ void gestisci_STATUSGET(coda_stringhe* istruzioni)
   if( id_comp == id || id_comp == ID_UNIVERSALE )
   {
     // Creo il messaggio contenente la risposta.
+    printf("ENTRATO\n");
     char response[200];
     sprintf(response, "%s timer %d" ,GET_STATUS_RESPONSE, id);
 
@@ -339,8 +341,13 @@ void gestisci_STATUSGET(coda_stringhe* istruzioni)
         char msg2[1024];
         sprintf(msg2, "%s %s", GET_STATUS , id_ric);
         char tmp[200];
-        while( primo(istruzioni, tmp, TRUE) == TRUE )
+        while( istruzioni->testa != NULL )
         {
+          strcpy(tmp, istruzioni->testa->val);
+          nodo_stringa* it = istruzioni->testa;
+          istruzioni->testa = istruzioni->testa->succ;
+          free(it->val);
+          free(it);
           strcat(msg2, " ");
           strcat(msg2, tmp);
         }
@@ -352,16 +359,13 @@ void gestisci_STATUSGET(coda_stringhe* istruzioni)
         read_msg(pipe_figlio, res2, 1023); //leggo lo stato del figlio
         send_msg(pipe_interna, res2); //rinvio il messaggio "sopra"
       }
-      else
-      {
-        send_msg(pipe_interna, "DONE");
-      }
 
     }
     else
     {
       send_msg(pipe_interna, "DONE");
     }
+    free(istruzioni);
 
   }
 
@@ -372,7 +376,7 @@ void gestisci_CONFIRM(coda_stringhe* istruzioni)
 {
   // Recupero l'ID e rispondo se è il mio o no.
   char id_ric[20];
-  primo(istruzioni, id_ric, TRUE);
+  primo(istruzioni, id_ric, FALSE);
   int id_comp = atoi(id_ric);
   if( id_comp == id || id_comp == ID_UNIVERSALE )
   {
@@ -382,6 +386,7 @@ void gestisci_CONFIRM(coda_stringhe* istruzioni)
   {
     send_msg(pipe_interna, "FALSE");
   }
+  free(istruzioni);
 
 }
 
@@ -409,7 +414,7 @@ void termina (int x)
   }
 
   // Distruggo tutte le pipe.
-  unlink(pipe_figlio); //pipe con il figlio
+  unlink(pipe_padre); //pipe con il figlio
   unlink(pipe_esterna); //pipe con umano
   unlink(pipe_interna); //pipe interna
   exit(0); //chiudi tutto
@@ -420,7 +425,7 @@ void gestisci_REMOVE(coda_stringhe* istruzioni)
 {
   // Recupero l'ID e in caso mi termino.
   char id_ric[20];
-  primo(istruzioni, id_ric, TRUE);
+  primo(istruzioni, id_ric, FALSE);
   int id_comp = atoi(id_ric);
   if( id_comp == id || id_comp == ID_UNIVERSALE )
   {
@@ -460,7 +465,7 @@ void gestisci_REMOVE(coda_stringhe* istruzioni)
 void gestisci_SPAWN(coda_stringhe* istruzioni)
 {
   char id_ric[20];
-  primo(istruzioni, id_ric, TRUE);
+  primo(istruzioni, id_ric, FALSE);
   int id_comp = atoi(id_ric);
   if( id_comp == id || id_comp == ID_UNIVERSALE )
   {
@@ -473,7 +478,7 @@ void gestisci_SPAWN(coda_stringhe* istruzioni)
     char msg[1024];
     sprintf(msg, "%s %s", "SPAWN", id_ric);
     char tmp[200];
-    while( primo(istruzioni, tmp, TRUE) == TRUE )
+    while( primo(istruzioni, tmp, FALSE) == TRUE )
     {
       strcat(msg, " ");
       strcat(msg, tmp);
@@ -489,7 +494,7 @@ void gestisci_SPAWN(coda_stringhe* istruzioni)
 void genera_figlio(coda_stringhe* status)
 {
   char tmp[40], percorso[50];
-  primo(status, tmp, TRUE);
+  primo(status, tmp, FALSE);
   sprintf(percorso, "./%s.out", tmp);
   printf("[PERCORSO]%s\n", percorso);
 
@@ -503,7 +508,7 @@ void genera_figlio(coda_stringhe* status)
     params[0] = (char*) malloc(sizeof(char)*40);
     strcpy(params[0], percorso);
 
-    primo(status, tmp, TRUE);
+    primo(status, tmp, FALSE);
 
     params[1] = (char*) malloc(sizeof(char)*40);
     strcpy(params[1], tmp);
@@ -557,7 +562,7 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], int numer
 
   //recupero l'id
   char id_ric[50];
-	primo(istruzioni, id_ric, TRUE);
+	primo(istruzioni, id_ric, FALSE);
 	int id_comp = atoi(id_ric);
 
   if( id_comp == id || id_comp == ID_UNIVERSALE ) //se è l'azione è per me
@@ -565,8 +570,8 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], int numer
     char interruttore[50];
     char nuovo_valore[20];
 
-    primo(istruzioni, interruttore, TRUE); //recupero l'interruttore da gestire
-    primo(istruzioni, nuovo_valore, TRUE); //recupero il valore
+    primo(istruzioni, interruttore, FALSE); //recupero l'interruttore da gestire
+    primo(istruzioni, nuovo_valore, FALSE); //recupero il valore
 
     if(strcmp(interruttore, "BEGIN") == 0) //se devo agire sul registro begin
     {
@@ -584,33 +589,30 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], int numer
     else
     { // SE non è un mio registro
 
+      //printf("[ELSE]\n");
       // Manca da ricostruire il messaggio e mandarlo al figlio
       if(strcmp(pipe_figlio, "") != 0)
       {
         //ricostruisco il  messaggio e lo invio al figlio
         char msg[1024];
-        sprintf(msg, "%s %s", UPDATE_LABEL, id_ric);
-        char tmp[200];
-        while( primo(istruzioni, tmp, TRUE) == TRUE )
-        {
-          strcat(msg, " ");
-          strcat(msg, tmp);
-        }
+        sprintf(msg, "%s %d %s %s", UPDATE_LABEL, ID_UNIVERSALE, interruttore, nuovo_valore);
 
+
+        //printf("[INVIO]\n");
         send_msg(pipe_figlio, msg);
         read_msg(pipe_figlio, msg, 19);
+
+        //printf("[RICEVO]\n");
+        char comando[200];
+        sprintf(comando, "%s %d", GET_STATUS, ID_UNIVERSALE); //preparo il messaggio
+        send_msg(pipe_figlio, comando);
+
+        char stato[1024];
+        read_msg(pipe_figlio, stato, 1023); // leggo risposta dello stato del figlio
+        aggiorna_stati(stato + strlen(GET_STATUS_RESPONSE) + 1);
       }
 
-      char comando[200];
-      sprintf(comando, "%s %d", GET_STATUS, ID_UNIVERSALE); //preparo il messaggio
-      send_msg(pipe_figlio, comando);
 
-      char stato[1024];
-      read_msg(pipe_figlio, stato, 1023); // leggo risposta dello stato del figlio
-      aggiorna_stati(stato + strlen(GET_STATUS_RESPONSE) + 1);
-
-
-      send_msg(pipe_interna, "TRUE");
 
     }
 
@@ -624,8 +626,13 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], int numer
       char msg[1024];
       sprintf(msg, "%s %s", UPDATE_LABEL, id_ric);
       char tmp[200];
-      while( primo(istruzioni, tmp, TRUE) == TRUE )
+      while( istruzioni->testa != NULL )
       {
+        strcpy(tmp, istruzioni->testa->val);
+        nodo_stringa* it = istruzioni->testa;
+        istruzioni->testa = istruzioni->testa->succ;
+        free(it->val);
+        free(it);
         strcat(msg, " ");
         strcat(msg, tmp);
       }
@@ -636,8 +643,7 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], int numer
 
 
   }
-
-
+  send_msg(pipe_interna, "TRUE");
 
 }
 
@@ -653,7 +659,17 @@ void gestisci_begin(int x)
     sprintf(msg2, "%s %d %s %s", UPDATE_LABEL, ID_UNIVERSALE, "OPEN", "ON");
 
     send_msg(pipe_figlio, msg1);
+    read_msg(pipe_figlio, msg1, 199);
     send_msg(pipe_figlio, msg2);
+    read_msg(pipe_figlio, msg2, 199);
+
+    char stato[1024];
+    sprintf(msg1, "%s %d", GET_STATUS, ID_UNIVERSALE);
+    send_msg(pipe_figlio, msg1);
+    read_msg(pipe_figlio, stato, 1023);
+
+    aggiorna_stati(stato + strlen(GET_STATUS_RESPONSE)+1);
+
 
     signal(SIGALRM, gestisci_end);
     alarm(registri[1] -> valore.integer);
@@ -670,7 +686,17 @@ void gestisci_end(int x)
     sprintf(msg2, "%s %d %s %s", UPDATE_LABEL, ID_UNIVERSALE, "CLOSE", "ON");
 
     send_msg(pipe_figlio, msg1);
+    read_msg(pipe_figlio, msg1, 199);
     send_msg(pipe_figlio, msg2);
+    read_msg(pipe_figlio, msg2, 199);
+
+    char stato[1024];
+    sprintf(msg1, "%s %d", GET_STATUS, ID_UNIVERSALE);
+    send_msg(pipe_figlio, msg1);
+    read_msg(pipe_figlio, stato, 1023);
+
+    aggiorna_stati(stato + strlen(GET_STATUS_RESPONSE)+1);
+    aggiorna_stati(stato);
   }
 }
 
@@ -680,7 +706,7 @@ void gestisci_ID(coda_stringhe* istruzioni)
 {
   // Recupero l'ID e rispondo se è il mio o no.
   char id_ric[20];
-  primo(istruzioni, id_ric, TRUE);
+  primo(istruzioni, id_ric, FALSE);
   int id_comp = atoi(id_ric);
 
   //se l'id è il mio -> rispondo TRUE (= sono io)
@@ -701,9 +727,11 @@ void gestisci_ID(coda_stringhe* istruzioni)
 
       send_msg(pipe_interna, res); //invio la risposta ricevuta nella pipe interna
 
-    }
+    } else
+      send_msg(pipe_interna, "FALSE");
 
   }
+  free(istruzioni);
 
 }
 
@@ -723,10 +751,10 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
     decodifica_hub(copia);
     coda_stringhe* figli = crea_coda_da_stringa(copia, " ");
     char stato[400];
-    primo(figli, stato, TRUE);
-    primo(figli, stato, TRUE);
-    primo(figli, stato, TRUE);
-    primo(figli, stato, TRUE);
+    primo(figli, stato, FALSE);
+    primo(figli, stato, FALSE);
+    primo(figli, stato, FALSE);
+    primo(figli, stato, FALSE);
     while( figli -> testa != NULL ){
       nodo_stringa* it = figli -> testa;
       strcpy(stato, it -> val);

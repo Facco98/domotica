@@ -55,8 +55,8 @@ boolean primo(coda_stringhe* coda, string output, boolean distruggi_se_vuota){
     res = TRUE;
 
     coda -> n--;
-    if( distruggi_se_vuota &&  coda -> testa == NULL )
-      distruggi_coda(coda);
+    //if( distruggi_se_vuota &&  coda -> testa == NULL )
+    //  distruggi_coda(coda);
 
   }
   return res;

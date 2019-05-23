@@ -133,7 +133,7 @@ int main( int argn, char** argv ){
 
     int j = 0;
     char tmp[1024];
-    while( coda -> n > 0 && primo(coda, tmp, TRUE) == TRUE  ){
+    while( coda -> n > 0 && primo(coda, tmp, FALSE) == TRUE  ){
 
       char s[1024];
       strcpy(s, tmp);
@@ -188,7 +188,7 @@ void ascolta_e_interpreta(){
   coda_stringhe* separata = crea_coda_da_stringa(messaggio_in, " ");
 
   char comando[50];
-  primo(separata, comando, TRUE);
+  primo(separata, comando, FALSE);
 
   if( strcmp( comando, GET_STATUS ) == 0 ){
 
@@ -213,7 +213,7 @@ void ascolta_e_interpreta(){
   }  else if( strcmp(comando, "CONFIRM") == 0 ){
 
     char tmp[20];
-    primo(separata, tmp, TRUE);
+    primo(separata, tmp, FALSE);
     int d = atoi(tmp);
     if( d == id || d == ID_UNIVERSALE )
       send_msg(pipe_interna, "TRUE");
@@ -326,7 +326,7 @@ void crea_processi_supporto(){
 void gestisci_STATUSGET(coda_stringhe* separata){
 
   char id_ric[50];
-  primo(separata, id_ric, TRUE);
+  primo(separata, id_ric, FALSE);
   int id_comp = atoi(id_ric);
 
   if( id_comp == id || id_comp == ID_UNIVERSALE ){
@@ -439,16 +439,16 @@ void gestisci_STATUSGET(coda_stringhe* separata){
 void gestisci_LABELUP(coda_stringhe* separata){
 
   char id_ric[50];
-  primo(separata, id_ric, TRUE);
+  primo(separata, id_ric, FALSE);
   int id_comp = atoi(id_ric);
   char msg[200];
   if( id_comp == id || id_comp == ID_UNIVERSALE ){
 
     // Prendo il nome dell'interruttore e la nuova posizione.
     char label[50];
-    primo(separata, label, TRUE);
+    primo(separata, label, FALSE);
     char pos[50];
-    primo(separata, pos, TRUE);
+    primo(separata, pos, FALSE);
 
     // Invio il messaggio a tutti i miei figli.
     sprintf(msg, "%s %d %s %s", UPDATE_LABEL, ID_UNIVERSALE, label, pos);
@@ -509,7 +509,7 @@ void gestisci_ID(coda_stringhe* separata){
 
   // Recupero l'ID e rispondo se è il mio o no.
   char id_ric[20];
-  primo(separata, id_ric, TRUE);
+  primo(separata, id_ric, FALSE);
   int id_comp = atoi(id_ric);
   if( id_comp == id || id_comp == ID_UNIVERSALE )
     send_msg(pipe_interna, "TRUE");
@@ -598,7 +598,7 @@ void gestisci_SPAWN(coda_stringhe* separata){
 
 
   char id_ric[20];
-  primo(separata, id_ric, TRUE);
+  primo(separata, id_ric, FALSE);
   int id_comp = atoi(id_ric);
   if( id_comp == id || id_comp == ID_UNIVERSALE ){
 
@@ -714,10 +714,10 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
     decodifica_hub(copia);
     coda_stringhe* figli = crea_coda_da_stringa(copia, " ");
     char stato[400];
-    primo(figli, stato, TRUE);
-    primo(figli, stato, TRUE);
-    primo(figli, stato, TRUE);
-    primo(figli, stato, TRUE);
+    primo(figli, stato, FALSE);
+    primo(figli, stato, FALSE);
+    primo(figli, stato, FALSE);
+    primo(figli, stato, FALSE);
     while( figli -> testa != NULL ){
       nodo_stringa* it = figli -> testa;
       strcpy(stato, it -> val);

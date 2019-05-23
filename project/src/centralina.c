@@ -568,7 +568,7 @@ void stampa_componente_list(string msg, int indent){
 
 void stampa_componente_info(string msg, int indent){
 
-
+  printf("[MSG]%s\n", msg);
   coda_stringhe* coda = crea_coda_da_stringa(msg, " ");
   char tipo[20];
   primo(coda, tipo, TRUE);
@@ -642,38 +642,12 @@ void stampa_componente_info(string msg, int indent){
     printf("TIMER id: %s override: %s begin: %s end: %s[\n", id, stato, begin, end);
 
     primo(coda, tmp, TRUE);
+    primo(coda, tmp, TRUE);
 
-    int count = 0;
-    int j;
-    for( j = 0; tmp[j] != '\0'; j++ )
-    {
-      if( tmp[j] == '[' || tmp[j] == ']')
-      {
-        if( count == 0 )
-        {
-          if( tmp[j-1] == '_')
-          {
-            tmp[j-1] = ' ';
-          }
-          if( tmp[j+1] == '_')
-          {
-            tmp[j+1] = ' ';
-          }
-        }
-        count += tmp[j] == '[' ? 1 : -1;
-
-      }
-      if( count == 0 && tmp[j] == '_' )
-      {
-        tmp[j] = ' ';
-      }
-      if( count == 0 && tmp[j] == ',' )
-      {
-        tmp[j] = ' ';
-      }
+    if( strcmp(tmp, "]") != 0 ){
+      decodifica_controllo(tmp);
+      stampa_componente_info(tmp, indent+1);
     }
-    stampa_componente_info(tmp, indent+1);
-
 
     int i = 0;
     for( i = 0; i < indent+1; i++ )
