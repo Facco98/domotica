@@ -19,14 +19,8 @@ La comunicazione del dispositivo è implementata tramite l'utilizzo di tre pipe,
 - pipe_esterna: pipe sulla quale legge il processo 2 e scrive il processo rappresentante l'interazione esterna. E' la pipe destinata alle comunicazioni con l'umano.
 - pipe <id>: pipe su cui leggono e scrivono i processi 3 e il controllore del dispositivo. E' la pipe destinata alle comunicazioni con il processo padre.
 
-
-
-[inserire qua gestione di blocking @Claudio ]
-
-
 Questo sistema di gestione è comune per tutti le tipologie di dispositivi emulate da questo progetto.
 
-[altre cose in comune?]
 
 Differenze tra dispositivi di controllo e di interazione
 
@@ -41,11 +35,7 @@ Un'ulteriore differenza tra dispositivi di interazione e controllo è nella gest
 
 Infine solo i dispositivi di controllo possono generare dispositivi di qualsiasi tipologia e rimuovere dispositivi.
 
-////[altre differenze?]
-//???
 
-// ? altro?
- 
 Note sulla comunicazione, sui comandi e peculiarità
 
 In seguito sono descritti i tipi di messaggi presenti nella libreria "comunicazione".
@@ -102,11 +92,6 @@ L'umano esegue sempre la stessa funzione la quale:
 Può inviare ai singoli dispositivi tutti i tipi di messaggi descritti sopra.
 
 
-//[...]
-
-//??? è così? Manca qualcosa? 
-
-
 Makefile
 Il makefile contiene le tre ricette indicate nella consegna ("help", "build" e "clean"), inoltre:
 - run: esegue il progetto"
@@ -132,60 +117,11 @@ Ambienti testati
 Il progetto funziona sui seguenti ambienti testati: 
 - Ubuntu 18.x (come richiesto)
 - Ubuntu 19.02
-- macOS Mojave ( 14.1.2 )
-- macOS High Sierra ( 13.4.1 )
+- macOS Mojave (14.1.2)
+- macOS High Sierra (13.4.1)
 
-
-
-//Varie ed eventuali:
-//[...]
-
-/*
-* nota:  [...] significa inserire commenti/note relative
-*
-*/
-
-(eof)
------------------------------------------------------------------------------------------------------------------------------------
-Piccolo commento:
-Secondo me è inutile scrivere in questo file tutti i registri/interruttori presenti, dal momento che è quello che il professore già sa, dato che richiesto da lui.
-Secondo me vuole capire come abbiamo implementato le varie cose, tipo cosa è per noi un registro (nelle librerie) oppure le funzioni varie. 
-E' utile aggiungere cosa fanno i vari messaggi perché il professore non ha specificato il formato dei messaggi, come ha scritto sulla mail per lui basta ci siano nomi significativi. 
-E' importante spiegare come sia implementato l'override. (OK?)
 
 ----------------------------------------------------- [TODO]-----------------------------------------------------------------------
-
-DA AGGIUNGERE:
-- sezione messaggi 																	--> OK (?)
-- descrizione messaggio DONE 														--> OK
-- override																			--> OK (sistemato)
-- ricette "in più" nel makefile (oltre a help, clean e build)						--> OK (da aggiungere altri se viene modificato il makefile)
-- versioni di Ubuntu testate oltre la 18.x (se abbiamo testato altro)				--> OK 
-- la storia dei tre processini e delle tre pipe(ine)								--> OK 
-- umano																				--> OK (?)
-- tipi di errori/exit 																--> ok
-- shell: gestione (una sola shell e perché) 										--> ok
-PECULIARITA'
-CENTRALINA:
-					- add: processo creato	(per centralina)											--> OK
-
-FRIGO:
-					- messaggi in secondi per alarm   													--> ok
-
-
-c'è altrooo????
-- cose in comune tra i Dispositivi 
-- differenze tra Dispositivi 				
-- sezione peculiarità dei dispositivi
-
-
-sistemare:
-- cancellare commenti inutili in questo file quando è completo						
-- controllare la sintassi e la grammatica di questo file
-- rileggere tutto quanto un paio di volte per sincerarsi della correttezza di ciò che ho scritto qua dentro
-
-
-DA SCRIVERE, ASSOLUTAMENTE
-- gestione delle pipe (blocking)													--> TODO (Claudio) (a quanto pare da non scrivere)
-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Controllare la correttezza, la grammatica e la sintassi di questo file.
+Controllare che non ci sia nient'altro da aggiungere in questo file.
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
