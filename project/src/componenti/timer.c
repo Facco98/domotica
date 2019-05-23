@@ -44,6 +44,7 @@ void decodifica_hub(string str);
 void decodifica_figli( string tmp );
 void gestisci_begin(int x);
 void gestisci_end(int x);
+void decodifica_controllo(string tmp);
 
 
 int id; //id del dispositivo
@@ -94,6 +95,16 @@ int main (int argn, char** argv)  //argomenti servono ??
     exit(130);
   }
 
+  /*
+  1 -> ID
+  2 -> ignori
+  3 -> BEGIN
+  4 -> END
+  5 -> [
+  6 -> stato dati_figlio
+  7 -> ]
+  */
+
   id = atoi(argv[1]); //recupero l'id del componente
 
   //se ricevo più argomenti da riga di Comando
@@ -101,15 +112,24 @@ int main (int argn, char** argv)  //argomenti servono ??
   //datidelfiglio ==> stringa separata da underscore
   if(argn >= 4)
   {
-    //controllo se non ho già un figlio ?? è inutile ??
-    char dati_figlio[200]; //strigna per contenere i dati di creazione del figlio con _
-    strcpy(dati_figlio, argv[3]); //recupero i dati del figlio con _
-
-    coda_stringhe* status = crea_coda_da_stringa(dati_figlio, "_"); //separo i dati del figlio dagli _ e creo una coda
-
-    //genera_figlio(status); //genero il figlio
-
+    registri[0]->valore.integer = atoi(argv[3]);
   }
+
+  if(argn >= 5)
+  {
+    registri[1]->valore.integer = atoi(argv[4]);
+  }
+
+  if(argn >= 7)
+  {
+    if((strcmp(argv[6], " ") != 0) && (strcmp(argv[6], "]") != 0) )
+    {
+      decodifica_controllo(argv[6]);
+      coda_stringhe* status = crea_coda_da_stringa(argv[6], " ");
+      genera_figlio(status);
+    }
+  }
+
 
   sprintf(pipe_interna, "%s/%d_int", (string) PERCORSO_BASE_DEFAULT, id);
   sprintf(pipe_esterna, "%s/%d_ext", (string) PERCORSO_BASE_DEFAULT, id);
@@ -117,6 +137,34 @@ int main (int argn, char** argv)  //argomenti servono ??
   crea_processi_supporto(registri, numero_registri);
 
 }
+
+void decodifica_controllo(string tmp){
+
+  int count = 0, j;
+  for( j = 0; tmp[j] != '\0'; j++ ){
+    if( tmp[j] == '[' || tmp[j] == ']'){
+
+      if( tmp[j] == ']')
+        count -= 1;
+
+      if( count == 0 ){
+
+        if( tmp[j-1] == '_')
+          tmp[j-1] = ' ';
+
+        if( tmp[j+1] == '_')
+          tmp[j+1] = ' ';
+
+      }
+      if( tmp[j] == '[')
+      count += 1;
+    }
+    if( count == 0 && tmp[j] == '_')
+      tmp[j] = ' ';
+  }
+
+}
+
 
 //ascolta e interpreta da mettere argomneti
 void crea_processi_supporto(registro* registri[], int numero_registri)
@@ -231,38 +279,43 @@ void gestisci_STATUSGET(coda_stringhe* istruzioni)
     char response[200];
     sprintf(response, "%s timer %d" ,GET_STATUS_RESPONSE, id);
 
-    char msg[200];
+    char msg[1024];
+    char stato_figlio[1024];
+    strcpy(stato_figlio, "");
     sprintf(msg, "%s %d", GET_STATUS, ID_UNIVERSALE );
-    if( strcmp(pipe_figlio, "") == 0 || send_msg(pipe_figlio, msg) == FALSE || read_msg(pipe_figlio, msg, 199) == FALSE  )
+    if( strcmp(pipe_figlio, "") == 0 || send_msg(pipe_figlio, msg) == FALSE || read_msg(pipe_figlio, stato_figlio, 199) == FALSE  )
     {
       strcpy(pipe_figlio, "");
     }
     else
     {
       char str[1024];
-      strcpy(str, msg);
+      strcpy(str, stato_figlio);
 
       if(override == FALSE)
       {
-        override = calcola_override(str, tipi_figli, stati_attesi);
+        override = calcola_override(str + strlen(GET_STATUS_RESPONSE), tipi_figli, stati_attesi);
       }
 
       int i = 0;
-      for( i = 0; msg[i] != '\0'; i++ )
+      for( i = 0; stato_figlio[i] != '\0'; i++ )
       {
-        if( msg[i] == ' ')
+        if( stato_figlio[i] == ' ')
         {
-          msg[i] = '_';
+          stato_figlio[i] = '_';
         }
       }
 
+      strcpy(msg, stato_figlio);
+      strcpy(stato_figlio, msg+strlen(GET_STATUS_RESPONSE)+1 );
 
-      strcat(response, msg+strlen(GET_STATUS_RESPONSE)+1);
     }
-    sprintf(msg, " %s %d %d [", override == TRUE ? "TRUE" : "FALSE", registri[0]->valore.integer, registri[1]->valore.integer);
+    sprintf(msg, " %s %d %d [ ", override == TRUE ? "TRUE" : "FALSE", registri[0]->valore.integer, registri[1]->valore.integer);
+
     //sprintf(msg, " override: %s [ " , override == TRUE ? "TRUE" : "FALSE" );
     // Rispondo sulla pipe_interna
     strcat(response, msg);
+    strcat(response, stato_figlio);
     strcat(response, " ]");
     send_msg(pipe_interna, response);
 
@@ -385,16 +438,18 @@ void gestisci_REMOVE(coda_stringhe* istruzioni)
       send_msg(pipe_figlio, msg); //invio richiesta di id al dati_figlio
       read_msg(pipe_figlio, res, 19); //leggo risposta dal dati_figlio
 
-      if(strcmp(res, "TRUE") == 0) //se mio figlio deve morire
-      {
-        //elimino mio figlio
-        strcpy(pipe_figlio, "");
-      }
+
 
       //non decidi tu se morire muori e basta
       char die_msg[100];
       sprintf(die_msg, "%s %s", REMOVE, id_ric); //preparo il messaggio di morte per il figlio
       send_msg(pipe_figlio, die_msg);
+
+      if(strcmp(res, "TRUE") == 0) //se mio figlio deve morire
+      {
+        //elimino mio figlio
+        strcpy(pipe_figlio, "");
+      }
 
     }
     send_msg(pipe_interna, "TRUE");//informo i processini che ho concluso la missione
@@ -454,8 +509,13 @@ void genera_figlio(coda_stringhe* status)
     strcpy(params[1], tmp);
 
     int i = 2;
-    while( primo(status, tmp, TRUE) ==  TRUE )
+    while( status -> testa !=  NULL )
     {
+      nodo_stringa* it = status -> testa;
+      status -> testa = status -> testa -> succ;
+      strcpy(tmp, it -> val);
+      free(it -> val);
+      free(it);
       params[i] = (char*) malloc((strlen(tmp)+1) * sizeof(char));
       strcpy(params[i], tmp);
       i++;
@@ -521,6 +581,39 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], int numer
       //farà qualcosa al figlio
     }
 
+    else
+    { // SE non è un mio registro
+
+      // Manca da ricostruire il messaggio e mandarlo al figlio
+      if(strcmp(pipe_figlio, "") != 0)
+      {
+        //ricostruisco il  messaggio e lo invio al figlio
+        char msg[1024];
+        sprintf(msg, "%s %s", UPDATE_LABEL, id_ric);
+        char tmp[200];
+        while( primo(istruzioni, tmp, TRUE) == TRUE )
+        {
+          strcat(msg, " ");
+          strcat(msg, tmp);
+        }
+
+        send_msg(pipe_figlio, msg);
+        read_msg(pipe_figlio, msg, 19);
+      }
+
+      char comando[200];
+      sprintf(comando, "%s %d", GET_STATUS, ID_UNIVERSALE); //preparo il messaggio
+      send_msg(pipe_figlio, comando);
+
+      char stato[1024];
+      read_msg(pipe_figlio, stato, 1023); // leggo risposta dello stato del figlio
+      aggiorna_stati(stato + strlen(GET_STATUS_RESPONSE) + 1);
+
+
+      send_msg(pipe_interna, "TRUE");
+
+    }
+
   }
   else //rinviare al figlio
   {
@@ -538,19 +631,13 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], int numer
       }
 
       send_msg(pipe_figlio, msg);
+      read_msg(pipe_figlio, msg, 19);
     }
+
+
   }
 
-  char comando[200];
-  sprintf(comando, "%s %d", GET_STATUS, ID_UNIVERSALE); //preparo il messaggio
-  send_msg(pipe_figlio, comando);
 
-  char stato[1024];
-  read_msg(pipe_figlio, stato, 1023); // leggo risposta dello stato del figlio
-  aggiorna_stati(stato + strlen(GET_STATUS_RESPONSE) + 1);
-
-
-  send_msg(pipe_interna, "TRUE");
 
 }
 
@@ -629,7 +716,7 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
 
   char tipo[20];
   primo(coda, tipo, FALSE);
-
+  printf("[TIPO]%s\n", tipo);
 
   if( strcmp(tipo, "hub") == 0 || strcmp(tipo, "timer") == 0 ){
 
@@ -658,6 +745,7 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
     primo(coda, confronto, FALSE);
     primo(coda, confronto, FALSE);
 
+    printf("[TO CHECK]%s\n", confronto);
     int i = 0;
     boolean trovato = FALSE;
     while( it != NULL && trovato == FALSE ){
@@ -684,7 +772,8 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
       char precedente[20];
 
       get(confronti, i, precedente);
-
+      printf("[CONFRONTO]%s\n", confronto);
+      printf("[PRECEDENTE]%s\n", precedente);
       res = strcmp(precedente, confronto) == 0 ? FALSE : TRUE;
 
     }

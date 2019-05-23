@@ -522,7 +522,38 @@ void stampa_componente_list(string msg, int indent){
       printf("  ");
     printf("]\n");
 
-  } else {
+  }
+  else if(strcmp(tipo, "timer") == 0)
+  {
+    char id[20], tmp[1024], stato[20];
+    primo(coda, id, FALSE);
+    primo(coda, stato, FALSE);
+
+    printf("TIMER id: %s override: %s[\n", id, stato);
+
+    primo(coda, tmp, FALSE); //registro begin
+    primo(coda, tmp, FALSE); //registro end ingorati
+
+    primo(coda, tmp, FALSE); //prendo parentesi quadra da ignorare
+    primo(coda, tmp, FALSE); //figlio
+    decodifica_figli(tmp);
+    //coda = crea_coda_da_stringa(tmp, " ");
+
+    if( strcmp(tmp, "]") != 0 ){
+      decodifica_controllo(tmp);
+      stampa_componente_list(tmp, indent+1);
+    }
+
+
+    int i = 0;
+    for( i = 0; i < indent+1; i++ )
+      printf("  ");
+    printf("]\n");
+
+
+
+  }
+  else {
 
     char id[20], stato[20];
     primo(coda, id, FALSE);
