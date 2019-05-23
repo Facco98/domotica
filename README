@@ -56,12 +56,16 @@ In seguito sono descritti i tipi di messaggi che i dispositivo gestiscono e alcu
 ----Centralina---- 
 La centralina ha i seguenti tipi di comandi.
 (a) "list": stampa a video uno stato del sistema
-(b) "add <tipo_dispositivo>": aggiunge un dispositivo del tipo indicato al sistema. Sono permessi solamente dispositivi dei tipi indicati nella consegna. Quando si esegue un comando "add" per un nuovo dispositivo (qualsiasi tipo), viene inviato un messaggio "SPAWN". Vi è la generazione di un processo figlio, il quale genera un altro processo figlio per poi terminare. In questo modo il processo del componente viene adottato da init() e quindi non risulta figlio della centralina.
-(c) "link <id_0> to <id_1>": collega il dispositivo con id_0 al dispositivo con id_1
+(b) "add <tipo_dispositivo>": aggiunge un dispositivo del tipo indicato al sistema. Sono permessi solamente dispositivi dei tipi indicati nella consegna. Quando si esegue un comando "add" per un nuovo dispositivo (qualsiasi tipo), vi è la generazione di un processo figlio, il quale genera un altro processo figlio per poi terminare. In questo modo il processo del componente viene adottato da init() e quindi non risulta figlio della centralina.
+(c) "link <id_0> to <id_1>": collega il dispositivo con id_0 al dispositivo con id_1. Il comando link genera un messaggio di tipo "SPAWN", il quale ????.
+Funziona anche in caso di dispositivi già collegati (in casi di link consentita, ossia a dispositivi di controllo), scollegando id_0 dal dispositivo a cui era collegato e collegandolo a id_1.
 (d) "del <id>": rimuove il dispositivo con id interessato
 (e) "switch <id> <interruttore> <stato>": invia un messaggio di tipo LABELUP per modificare gli interruttori del dispositivo con id interessato.
 (f) "info <id>": stampa a video le informazioni del dispositivo con id interessato
 (g) "exit": esce dal sistema
+
+----Hub----
+L'implementazione dell'hub di questo sistema è quella più generale. Può avere collegati diversi dispositivi di diverso tipo e riuscire a gestirli.
 
 ----Finestra----
 Il comando del tipo (e) inviato dalla centralina gestisce l'interruttore di apertura e di chiusura tramite i seguenti messaggi:
@@ -124,4 +128,5 @@ Il progetto funziona sui seguenti ambienti testati:
 ----------------------------------------------------- [TODO]-----------------------------------------------------------------------
 Controllare la correttezza, la grammatica e la sintassi di questo file.
 Controllare che non ci sia nient'altro da aggiungere in questo file.
+Aggiungere librerie incluse (e perché) 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------
