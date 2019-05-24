@@ -298,11 +298,13 @@ void termina(int x)
 
 void crea_processi_supporto(registro* registri[], int numero_registri, boolean* stato, boolean* apri, boolean* chiudi)
 {
+  crea_pipe(id, (string) PERCORSO_BASE_DEFAULT); //creo la mia pipe destinata alle comunicazioni con il processo padre
+  mkfifo(pipe_interna, 0666); //genero la pipe interna
+  mkfifo(pipe_esterna, 0666); //genero la pipe esterna che comunica con l'umano
 
   pid_t pid = fork(); //genero un processo identico a me (finestra)
   if( pid == 0 ) //se sono il figlio (= processo appena generato)
   {
-    mkfifo(pipe_esterna, 0666); //genero la pipe esterna che comunica con l'umano
     while(1) //continua a copiare i messaggi da pipe esterna a pipe interna
     {
       char msg[200];
@@ -319,7 +321,6 @@ void crea_processi_supporto(registro* registri[], int numero_registri, boolean* 
     {
       while(1)
       {
-        crea_pipe(id, (string) PERCORSO_BASE_DEFAULT); //creo la mia pipe destinata alle comunicazioni con il processo padre
         char msg[200];
         leggi_messaggio(id, (string) PERCORSO_BASE_DEFAULT, msg, 199); //legge messaggio da pipe con il padre
         send_msg(pipe_interna, msg); //scrive sulla pipe interna il messaggio preso dal padre
@@ -334,7 +335,6 @@ void crea_processi_supporto(registro* registri[], int numero_registri, boolean* 
     {
       figli[1] = pid; //mi salvo il process-id del figlio appena generato dalla fork sopra
       signal(SIGINT, termina); //se ricevo segnale di morte --> chiamo funzione termina
-      mkfifo(pipe_interna, 0666); //genero la pipe interna
 
       while(1) //resto perennemente in ascolto sulla mia pipe interna
       {
