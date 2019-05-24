@@ -19,7 +19,7 @@ LIBS=$(STRUTTURE_DATI_LIB) $(COMUNICAZIONE_LIB)
 COMPONENTS=$(OUT_FOLDER)/centralina.out $(OUT_FOLDER)/hub.out $(OUT_FOLDER)/fridge.out $(OUT_FOLDER)/bulb.out \
  $(OUT_FOLDER)/window.out $(OUT_FOLDER)/timer.out
 
-.PHONY: help build clean libraries componenti umano run rum spiegazione_processi_pipe
+.PHONY: help build clean libraries componenti umano run run_human rum spiegazione_processi_pipe
 
 help:
 	@echo "Ricette disponibili"
@@ -27,6 +27,7 @@ help:
 	@echo "                   - clean: rimuove file temporanei e riporta allo stato iniziale"
 	@echo "                   - build: compila il progetto con il tool gcc e il flag -std=gnu90"
 	@echo "                   - run: esegue il progetto"
+	@echo "                   - run_human: esegue il file per l'interazione esterna (umano)"
 	@echo "                   - easter eggs: ricetta spiegazione_processi_pipe (disegno/spiegazione)"
 		#altre ricette?
 
@@ -41,6 +42,10 @@ clean:
 run:
 	@echo "Running ... "
 	cd $(OUT_FOLDER) && ./centralina.out
+
+run_human:
+	@echo "External interaction running ..."
+	cd $(COMPILED_UMANO_FOLDER) && ./human.out
 
 
 # Generazione della cartella di output
