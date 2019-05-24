@@ -375,23 +375,21 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
           alarm(0); //cancella l'alarm di chiusura se inviato precedentemente
         }
       }
-  else if (strcmp(azione, "TEMPERATURE") ==  0)
-  { //controllo se devo impostare la temperatura
-    temperatura->valore.integer = atoi(pos);  //imposto la temperatura del frigo alla temperatura voluta
+    else if (strcmp(azione, "TEMPERATURE") ==  0)
+    { //controllo se devo impostare la temperatura
+      temperatura->valore.integer = atoi(pos);  //imposto la temperatura del frigo alla temperatura voluta
+    }
+    else if (strcmp(azione, "DELAY") == 0) { // se devo modificare il ritardo
+      chiusura -> valore.integer = atoi(pos); //imposto il registro chiusura al valore voluto
+      if( chiusura -> valore.integer >= 0 && *stato == TRUE ){
+
+        alarm(0);
+        alarm(chiusura -> valore.integer);
+
+      }
+    }
   }
-  else if (strcmp(azione, "DELAY") == 0) { // se devo modificare il ritardo
-        chiusura -> valore.integer = atoi(pos); //imposto il registro chiusura al valore voluto
-  }
-  else
-  {
-    distruggi_coda(istruzioni); //elimino il messaggio arrivato
-
-  }
-  send_msg(pipe_interna, "TRUE"); //rispondo sulla pipe interna di aver fatto (= niente perchè no sono io il processo interessato)
-
-}
-
-
+  send_msg(pipe_interna, "TRUE");
 }
 
 void gestisci_STATUSGET(coda_stringhe* istruzioni, registro* registri[], int numero_registri, boolean* stato){

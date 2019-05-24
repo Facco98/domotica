@@ -489,6 +489,7 @@ void gestisci_SPAWN(coda_stringhe* istruzioni)
     send_msg(pipe_figlio, msg);
 
   }
+  send_msg(pipe_interna, "DONE");
 
 }
 
@@ -750,20 +751,28 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
 
   if( strcmp(tipo, "hub") == 0 || strcmp(tipo, "timer") == 0 ){
 
-    decodifica_hub(copia);
     coda_stringhe* figli = crea_coda_da_stringa(copia, " ");
-    char stato[400];
-    primo(figli, stato, FALSE);
-    primo(figli, stato, FALSE);
-    primo(figli, stato, FALSE);
-    primo(figli, stato, FALSE);
+    char stato[1024];
+    primo(figli, stato, FALSE); // tipo
+    primo(figli, stato, FALSE); // id
+    primo(figli, stato, FALSE); // stato
+    primo(figli, stato, FALSE); // [ BEGIN
+    if( strcmp(tipo, "timer") == 0 ){
+
+      primo(figli, stato, FALSE);
+      primo(figli, stato, FALSE);
+
+    }
+    decodifica_figli(copia);
     while( figli -> testa != NULL ){
       nodo_stringa* it = figli -> testa;
       strcpy(stato, it -> val);
       figli -> testa = figli -> testa -> succ;
       free(it);
-      if( strcmp(stato, "]") != 0)
+      if( strcmp(stato, "]") != 0 ){
+        decodifica_controllo(stato);
         res = calcola_override(stato, tipi_figli, confronti);
+      }
     }
     distruggi(figli);
 

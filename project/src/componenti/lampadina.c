@@ -249,8 +249,7 @@ void gestisci_LABELUP( coda_stringhe* separata, registro* registri[], boolean* a
       }
 
     }
-  } else
-    distruggi_coda(separata);
+  }
   send_msg(pipe_interna, "TRUE");
 
 }
