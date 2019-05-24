@@ -67,6 +67,7 @@ int main (int argn, char** argv)  //argomenti servono ??
   tipi_figli = crea_lista();
   stati_attesi = crea_lista();
 
+  strcpy(pipe_figlio, "");
   //stato = mirroring del dispositivo collegato
 
   //interruttori = mirroring del dispositivo collegato
@@ -170,10 +171,14 @@ void decodifica_controllo(string tmp){
 void crea_processi_supporto(registro* registri[], int numero_registri)
 {
 
-  pid_t pid = fork(); //genera un processo identico a se stesso (timer)
+  mkfifo(pipe_interna, 0666);
+  mkfifo(pipe_esterna, 0666);
+  crea_pipe(id, (string) PERCORSO_BASE_DEFAULT);
+  pid_t pid = fork();
+   //genera un processo identico a se stesso (timer)
   if( pid == 0 ) //se sono il figlio (= processo appena generato)
   {
-    mkfifo(pipe_esterna, 0666); //creo la pipe per comunicare con l'umano
+     //creo la pipe per comunicare con l'umano
     while(1) //continua a spostare i messaggi da pipe esterna a pipe interna
     {
       char msg[200];
@@ -189,13 +194,14 @@ void crea_processi_supporto(registro* registri[], int numero_registri)
     pid = fork(); //genera un altro processo identico a se stesso
     if( pid == 0 ) //se sono il figlio
     {
+
       while(1) //sposta messaggi da pipe padre a pipe interna
       {
-        crea_pipe(id, (string) PERCORSO_BASE_DEFAULT); //crea pipe_padre
+        //crea pipe_padre
         char msg[200];
         leggi_messaggio(id, (string) PERCORSO_BASE_DEFAULT, msg, 199);
-        printf("RICEVUTO: %s\n", msg);
         send_msg(pipe_interna, msg);
+        printf("RICEVUTO: %s\n", msg);
         read_msg(pipe_interna, msg, 199);
         if( strcmp(msg, "DONE") != 0 ) //se riceve messaggi diversi da "DONE" li rinvia alla pipe_padre
         {
@@ -208,7 +214,7 @@ void crea_processi_supporto(registro* registri[], int numero_registri)
     {
       figli[1] = pid; //mi salvo il process-id del figlio creato dalla precedente fork
       signal(SIGINT, termina); //se riceve segnale di morte, muore
-      mkfifo(pipe_interna, 0666); //crea la pipe interna
+       //crea la pipe interna
       while(1) //resta in perenne attesa sulla sua pipe interna
       {
         ascolta_e_interpreta(registri, numero_registri); //--> da implementare
@@ -226,6 +232,7 @@ void ascolta_e_interpreta(registro* registri[], int numero_registri)
   read_msg(pipe_interna, messaggio, 199); //leggo messaggio da pipe_interna
   strtok(messaggio, "\n"); //elimino lo "\n" alla fine della stringa
 
+  printf("[TIMER]%s\n", messaggio);
   coda_stringhe* istruzioni = crea_coda_da_stringa(messaggio, " ");
 
 
@@ -267,17 +274,17 @@ void ascolta_e_interpreta(registro* registri[], int numero_registri)
 
 void gestisci_STATUSGET(coda_stringhe* istruzioni)
 {
+  printf("[TIMER STATUSGET INIZIO]\n");
   char id_ric[50];
   primo(istruzioni, id_ric, FALSE);
-  printf("[ID_RIC]%s\n", id_ric);
   int id_comp = atoi(id_ric);
 
+  printf("[TIMER STATUSGET]\n");
   boolean override = FALSE;
 
   if( id_comp == id || id_comp == ID_UNIVERSALE )
   {
     // Creo il messaggio contenente la risposta.
-    printf("ENTRATO\n");
     char response[200];
     sprintf(response, "%s timer %d" ,GET_STATUS_RESPONSE, id);
 
@@ -285,20 +292,22 @@ void gestisci_STATUSGET(coda_stringhe* istruzioni)
     char stato_figlio[1024];
     strcpy(stato_figlio, "");
     sprintf(msg, "%s %d", GET_STATUS, ID_UNIVERSALE );
+    printf("[PRONTO PER INVIARE]\n");
     if( strcmp(pipe_figlio, "") == 0 || send_msg(pipe_figlio, msg) == FALSE || read_msg(pipe_figlio, stato_figlio, 199) == FALSE  )
     {
+      printf("[TIMER ENTRATO]\n");
       strcpy(pipe_figlio, "");
     }
     else
     {
       char str[1024];
       strcpy(str, stato_figlio);
-
+      printf("[TIMER ELSE]");
       if(override == FALSE)
       {
         override = calcola_override(str + strlen(GET_STATUS_RESPONSE), tipi_figli, stati_attesi);
       }
-
+      printf("[TIMER OVERRIDE CALCOLATO]\n");
       int i = 0;
       for( i = 0; stato_figlio[i] != '\0'; i++ )
       {
@@ -320,6 +329,7 @@ void gestisci_STATUSGET(coda_stringhe* istruzioni)
     strcat(response, stato_figlio);
     strcat(response, " ]");
     send_msg(pipe_interna, response);
+    printf("[RISPOSTO]\n");
 
   }
   else
@@ -487,9 +497,8 @@ void gestisci_SPAWN(coda_stringhe* istruzioni)
     }
 
     send_msg(pipe_figlio, msg);
-
+    send_msg(pipe_interna, "DONE");
   }
-  send_msg(pipe_interna, "DONE");
 
 }
 
@@ -543,6 +552,13 @@ void genera_figlio(coda_stringhe* status)
     //char id[30];
     primo(status, tmp, FALSE);
     //char pipe_figlio[100];
+    if( strcmp(pipe_figlio, "") != 0 ){
+
+      char msg[100];
+      sprintf(msg, "%s %d", REMOVE, ID_UNIVERSALE);
+      send_msg(pipe_figlio);
+
+    }
     sprintf(pipe_figlio, "%s/%s", (string) PERCORSO_BASE_DEFAULT, tmp);
     distruggi(status);
 
@@ -740,7 +756,7 @@ void gestisci_ID(coda_stringhe* istruzioni)
 
 boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe* confronti){
 
-  boolean res = TRUE;
+  boolean res = FALSE;
   char copia[1024];
   strcpy(copia, str);
   coda_stringhe* coda = crea_coda_da_stringa(str, " ");
@@ -751,20 +767,20 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
 
   if( strcmp(tipo, "hub") == 0 || strcmp(tipo, "timer") == 0 ){
 
-    coda_stringhe* figli = crea_coda_da_stringa(copia, " ");
     char stato[1024];
-    primo(figli, stato, FALSE); // tipo
-    primo(figli, stato, FALSE); // id
-    primo(figli, stato, FALSE); // stato
-    primo(figli, stato, FALSE); // [ BEGIN
+    primo(coda, stato, FALSE); // tipo
+    primo(coda, stato, FALSE); // id
+    primo(coda, stato, FALSE); // stato
+    primo(coda, stato, FALSE); // [ BEGIN
     if( strcmp(tipo, "timer") == 0 ){
 
-      primo(figli, stato, FALSE);
-      primo(figli, stato, FALSE);
+      primo(coda, stato, FALSE);
+      primo(coda, stato, FALSE); //figlio del timer.
 
     }
-    decodifica_figli(copia);
-    while( figli -> testa != NULL ){
+    decodifica_figli(stato);
+    coda_stringhe* figli = crea_coda_da_stringa(stato, " ");
+    while( figli -> testa != NULL && res == FALSE ){
       nodo_stringa* it = figli -> testa;
       strcpy(stato, it -> val);
       figli -> testa = figli -> testa -> succ;

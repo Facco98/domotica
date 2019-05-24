@@ -183,7 +183,7 @@ void ascolta_e_interpreta(){
   read_msg(pipe_interna, messaggio_in, 199);
   strtok(messaggio_in, "\n");
 
-
+  printf("[HUB]%s\n", messaggio_in);
   // Divido la stringa per gli spazi.
   coda_stringhe* separata = crea_coda_da_stringa(messaggio_in, " ");
 
@@ -274,12 +274,14 @@ void termina(int x){
 
 void crea_processi_supporto(){
 
+  mkfifo(pipe_interna, 0666);
+  mkfifo(pipe_esterna, 0666);
+  crea_pipe(id, (string) PERCORSO_BASE_DEFAULT);
   pid_t pid = fork();
   if( pid == 0 ){
 
     // Se sono il figlio sto perennemente in ascolto sulla pipe con l'umano
     // e scrivo tutto su quella interna
-    mkfifo(pipe_esterna, 0666);
     while(1){
 
       char msg[200];
@@ -297,7 +299,6 @@ void crea_processi_supporto(){
 
       // Se sono il figlio leggo dalla pipe con il controllore e invio su quella
       // interna, aspettando la risposta.
-      crea_pipe(id, (string) PERCORSO_BASE_DEFAULT);
       while(1){
         char msg[200];
         leggi_messaggio(id, (string) PERCORSO_BASE_DEFAULT, msg, 199);
@@ -312,7 +313,6 @@ void crea_processi_supporto(){
       // Se sono il padre sto in ascolto sulla pipe interna e interpreto i messaggi.
       figli[1] = pid;
       signal(SIGINT, termina);
-      mkfifo(pipe_interna, 0666);
       while(1){
         ascolta_e_interpreta();
       }
@@ -711,20 +711,28 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
 
   if( strcmp(tipo, "hub") == 0 || strcmp(tipo, "timer") == 0 ){
 
-    decodifica_hub(copia);
-    coda_stringhe* figli = crea_coda_da_stringa(copia, " ");
-    char stato[400];
-    primo(figli, stato, FALSE);
-    primo(figli, stato, FALSE);
-    primo(figli, stato, FALSE);
-    primo(figli, stato, FALSE);
-    while( figli -> testa != NULL ){
+    char stato[1024];
+    primo(coda, stato, FALSE); // tipo
+    primo(coda, stato, FALSE); // id
+    primo(coda, stato, FALSE); // stato
+    primo(coda, stato, FALSE); // [ BEGIN
+    if( strcmp(tipo, "timer") == 0 ){
+
+      primo(coda, stato, FALSE);
+      primo(coda, stato, FALSE); //figlio del timer.
+
+    }
+    decodifica_figli(stato);
+    coda_stringhe* figli = crea_coda_da_stringa(stato, " ");
+    while( figli -> testa != NULL && res == FALSE ){
       nodo_stringa* it = figli -> testa;
       strcpy(stato, it -> val);
       figli -> testa = figli -> testa -> succ;
       free(it);
-      if( strcmp(stato, "]") != 0)
+      if( strcmp(stato, "]") != 0 ){
+        decodifica_hub(stato);
         res = calcola_override(stato, tipi_figli, confronti);
+      }
     }
     distruggi(figli);
 
