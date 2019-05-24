@@ -556,7 +556,7 @@ void genera_figlio(coda_stringhe* status)
 
       char msg[100];
       sprintf(msg, "%s %d", REMOVE, ID_UNIVERSALE);
-      send_msg(pipe_figlio);
+      send_msg(pipe_figlio, msg);
 
     }
     sprintf(pipe_figlio, "%s/%s", (string) PERCORSO_BASE_DEFAULT, tmp);
