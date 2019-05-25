@@ -29,8 +29,8 @@ void crea_dispositivo_non_connesso(string tipo, lista_stringhe* lista_pipes, lis
 void crea_processi_supporto();
 boolean suffix(const char *str, const char *suffix);
 void termina( int x );
-
-
+char* trim(char* s);
+char* a;
 
 const int id = 0;
 int id_successivo = 1;
@@ -139,8 +139,10 @@ void crea_processi_supporto(){
       while(1){
 
 
-        char str[1000];
-        read_msg(pipe_interna, str, 999);
+        char tmp[1000];
+        string str;
+        read_msg(pipe_interna, tmp, 999);
+        str = trim(tmp);
         strtok(str, "\n");
         coda_stringhe* coda = crea_coda_da_stringa(str, " ");
 
@@ -199,23 +201,38 @@ void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* 
 
   } else if( strcmp(comando, "add") == 0 ){
 
-    gestisci_add(separata, lista_pipes, da_creare, dispositivi_ammessi);
+    if( separata -> n >= 1 )
+      gestisci_add(separata, lista_pipes, da_creare, dispositivi_ammessi);
+    else
+      printf("Argomento mancante\n");
 
   } else if( strcmp(comando, "link") == 0 ){
 
-    gestisci_link(separata, lista_pipes, da_creare);
+    if( separata -> n >= 3 )
+      gestisci_link(separata, lista_pipes, da_creare);
+    else
+      printf("Argomento mancante\n");
 
   } else if( strcmp( comando, "del") == 0 ){
 
-    gestisci_del(separata, lista_pipes, da_creare);
+    if( separata -> n >= 3 )
+      gestisci_del(separata, lista_pipes, da_creare);
+    else
+      printf("Argomento mancante\n");
 
   } else if( strcmp(comando, "switch") == 0 ){
 
-    gestisci_switch(separata, lista_pipes);
+    if( separata -> n >= 3 )
+      gestisci_switch(separata, lista_pipes);
+    else
+      printf("Argomento mancante\n");
 
   } else if( strcmp(comando, "info") == 0 ){
 
-    gestisci_info(separata, lista_pipes);
+    if( separata ->n >= 1 )
+      gestisci_info(separata, lista_pipes);
+    else
+      printf("Argomento mancante");
 
   } else {
 
@@ -299,6 +316,12 @@ void gestisci_list(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
 void gestisci_del( coda_stringhe* separata, lista_stringhe* lista_pipes, lista_stringhe* da_creare){
 
   char id_ric[20];
+  if( strtol(id_ric, &a, 10) == id ){
+
+    printf("Non puoi rimuovere la centralina\n");
+    return;
+
+  }
   primo(separata, id_ric, TRUE);
   char remove_msg[200], confirm_msg[50];
   sprintf(remove_msg, "%s %s", REMOVE, id_ric);
@@ -371,12 +394,20 @@ void gestisci_del( coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
 void gestisci_switch(coda_stringhe* separata, lista_stringhe* lista_pipes){
   char label[20], pos[20];
   primo(separata, label, TRUE);
-  int id_dispositivo = atoi(label);
+  int id_dispositivo = strtol(label, &a, 10);
   primo(separata, label, TRUE);
   primo(separata, pos, TRUE);
 
   char msg[100];
   sprintf(msg, "%s %d %s %s",UPDATE_LABEL ,id_dispositivo, label, pos);
+
+
+  if( id_dispositivo == id ){
+
+    send_msg(pipe_esterna, msg);
+    return;
+
+  }
 
   nodo_stringa* it = lista_pipes -> testa;
 
@@ -412,7 +443,15 @@ void gestisci_info(coda_stringhe* separata, lista_stringhe* lista_pipes){
 
   char tmp[20];
   primo(separata, tmp, TRUE);
-  int id_comp = atoi(tmp);
+  int id_comp = strtol(tmp, &a, 10);
+
+  if( id_comp == 0 ){
+
+    printf("ID non valido\n");
+    return;
+
+  }
+
   char msg[200];
   nodo_stringa* it = lista_pipes -> testa;
   boolean flag = FALSE;
@@ -477,6 +516,7 @@ void gestisci_add(coda_stringhe* separata, lista_stringhe* lista_figli,
   if( ammesso == TRUE ){
 
     crea_dispositivo_non_connesso(tipo, lista_figli, da_creare);
+    printf("Aggiunto %s con id %d\n", tipo, id_successivo-1 );
 
   } else {
 
@@ -684,11 +724,18 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
   primo(separata, id_padre, TRUE);
   primo(separata, id_padre, TRUE);
 
+  if( strtol(id_componente, &a, 10) == 0 || strtol(id_componente, &a, 10) == strtol(id_padre, &a, 10) ){
+
+    printf("ID non validi\n");
+    return;
+
+  }
+
   nodo_stringa* pipe_padre = lista_pipes -> testa;
   char msg[200];
   char status[1024];
   sprintf(msg, "%s %s", ID, id_padre);
-  boolean trovato = atoi(id_padre) == id ? TRUE : FALSE;
+  boolean trovato = strtol(id_padre, &a, 10) == id ? TRUE : FALSE;
   while( pipe_padre != NULL && trovato == FALSE ){
 
     string pipe = pipe_padre -> val;
@@ -830,7 +877,7 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
     read_msg(pipe_figlio -> val, res, 9);
   }
 
-  if( atoi(id_padre) == 0 ){
+  if( strtol(id_padre, &a, 10) == 0 ){
 
     pid_t pid = fork();
     if( pid == 0 ){
@@ -967,4 +1014,15 @@ void crea_dispositivo_non_connesso(string tipo, lista_stringhe* lista_pipes, lis
   }
 
 
+}
+
+char* trim(char* s) {
+    char *ptr;
+    if (!s)
+        return NULL;   // handle NULL string
+    if (!*s)
+        return s;      // handle empty string
+    for (ptr = s + strlen(s) - 1; (ptr >= s) && isspace(*ptr); --ptr);
+    ptr[1] = '\0';
+    return s;
 }
