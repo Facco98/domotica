@@ -277,12 +277,12 @@ void crea_processi_supporto(){
     // Se sono il figlio sto perennemente in ascolto sulla pipe con l'umano
     // e scrivo tutto su quella interna
     while(1){
-
       char msg[200];
       read_msg(pipe_esterna, msg, 200);
-      if( msg[0] == 'H' )
-        send_msg(pipe_interna, msg+1);
-
+      sem_wait(sem);
+      send_msg(pipe_interna, msg);
+      read_msg(pipe_interna, msg, 199);
+      sem_post(sem);
     }
 
   } else if( pid > 0 ){
@@ -295,11 +295,13 @@ void crea_processi_supporto(){
       // interna, aspettando la risposta.
       while(1){
         char msg[200];
-        leggi_messaggio(id, (string) PERCORSO_BASE_DEFAULT, msg, 199);
-        send_msg(pipe_interna, msg);
-        read_msg(pipe_interna, msg, 199);
-        if( strcmp(msg, "DONE") != 0 )
+        leggi_messaggio(id, (string) PERCORSO_BASE_DEFAULT, msg, 199); //legge messaggio da pipe con il padre
+        sem_wait(sem);
+        send_msg(pipe_interna, msg); //scrive sulla pipe interna il messaggio preso dal padre
+        read_msg(pipe_interna, msg, 199); //legge dalla pipe interna
+        if( strcmp(msg, "DONE") != 0 ) //se riceve "DONE" non fa nulla, qualsiasi altra cosa viene inviata sulla pipe con il padre
           manda_messaggio(id, (string) PERCORSO_BASE_DEFAULT, msg);
+        sem_post(sem);
       }
 
     } else if( pid > 0 ) {

@@ -326,11 +326,12 @@ void crea_processi_supporto(registro* registri[], int numero_registri, boolean* 
     // Se sono il figlio, sto in ascolto perennemente sulla pipe dell'umano
     // e invio quello che ricevo sulla pipe interna.
     while(1){
-
       char msg[200];
       read_msg(pipe_esterna, msg, 200);
+      sem_wait(sem);
       send_msg(pipe_interna, msg);
-
+      read_msg(pipe_interna, msg, 199);
+      sem_post(sem);
     }
 
   } else if( pid > 0 ){ //se sono il padre
@@ -343,14 +344,14 @@ void crea_processi_supporto(registro* registri[], int numero_registri, boolean* 
       // tutto quello che riceve sulla FIFO interna al componente, aspettando un messaggio
       // DONE o altro e in caso lo restituisce al padre.
       while(1){
-
         char msg[200];
-        leggi_messaggio(id, (string) PERCORSO_BASE_DEFAULT, msg, 199); //leggo messaggi dalla pipe con il padre
-        send_msg(pipe_interna, msg);//invio i messaggi sulla pipe interna
-        read_msg(pipe_interna, msg, 199); //leggo i messaggi dalla pipe interna
-        if( strcmp(msg, "DONE") != 0 ) //tutto ciò che è diverso da "DONE", lo riinvia sulla pipe con il padre
+        leggi_messaggio(id, (string) PERCORSO_BASE_DEFAULT, msg, 199); //legge messaggio da pipe con il padre
+        sem_wait(sem);
+        send_msg(pipe_interna, msg); //scrive sulla pipe interna il messaggio preso dal padre
+        read_msg(pipe_interna, msg, 199); //legge dalla pipe interna
+        if( strcmp(msg, "DONE") != 0 ) //se riceve "DONE" non fa nulla, qualsiasi altra cosa viene inviata sulla pipe con il padre
           manda_messaggio(id, (string) PERCORSO_BASE_DEFAULT, msg);
-
+        sem_post(sem);
       }
 
     } else if( pid > 0 ){ //se sono il padre

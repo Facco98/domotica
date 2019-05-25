@@ -182,8 +182,11 @@ void crea_processi_supporto(registro* registri[], int numero_registri)
     while(1) //continua a spostare i messaggi da pipe esterna a pipe interna
     {
       char msg[200];
-      read_msg(pipe_esterna, msg, 200); //leggo da pipe esterna
-      send_msg(pipe_interna, msg); //scrivo su pipe_interna
+      read_msg(pipe_esterna, msg, 200);
+      sem_wait(sem);
+      send_msg(pipe_interna, msg);
+      read_msg(pipe_interna, msg, 199);
+      sem_post(sem);
     }
 
   }
@@ -198,14 +201,13 @@ void crea_processi_supporto(registro* registri[], int numero_registri)
       while(1) //sposta messaggi da pipe padre a pipe interna
       {
         char msg[200];
-        leggi_messaggio(id, (string) PERCORSO_BASE_DEFAULT, msg, 199);
-        send_msg(pipe_interna, msg);
-        //printf("RICEVUTO: %s\n", msg);
-        read_msg(pipe_interna, msg, 199);
-        if( strcmp(msg, "DONE") != 0 ) //se riceve messaggi diversi da "DONE" li rinvia alla pipe_padre
-        {
+        leggi_messaggio(id, (string) PERCORSO_BASE_DEFAULT, msg, 199); //legge messaggio da pipe con il padre
+        sem_wait(sem);
+        send_msg(pipe_interna, msg); //scrive sulla pipe interna il messaggio preso dal padre
+        read_msg(pipe_interna, msg, 199); //legge dalla pipe interna
+        if( strcmp(msg, "DONE") != 0 ) //se riceve "DONE" non fa nulla, qualsiasi altra cosa viene inviata sulla pipe con il padre
           manda_messaggio(id, (string) PERCORSO_BASE_DEFAULT, msg);
-        }
+        sem_post(sem);
       }
 
     }
