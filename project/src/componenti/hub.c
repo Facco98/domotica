@@ -34,6 +34,7 @@ char pipe_esterna[50];
 * I process ID dei processi di supporto figli.
 */
 pid_t figli[2];
+char* a;
 
 /*
 * Funzione che calcola il valore di un registro intero.
@@ -113,7 +114,10 @@ int main( int argn, char** argv ){
   */
   if( argn < 2 )
     exit(130);
-  id = atoi(argv[1]);
+  id = strtol(argv[1], &a, 10);
+
+  if( id == 0 )
+    exit(0);
 
   /*
   * Inizializzo la lista delle PIPE dei miei figli.
@@ -223,7 +227,7 @@ void ascolta_e_interpreta(){
 
     char tmp[20];
     primo(separata, tmp, FALSE);
-    int d = atoi(tmp);
+    int d = strtol(tmp, &a, 10);
     if( d == id || d == ID_UNIVERSALE )
       send_msg(pipe_interna, "TRUE");
     else
@@ -331,7 +335,7 @@ void gestisci_STATUSGET(coda_stringhe* separata){
 
   char id_ric[50];
   primo(separata, id_ric, FALSE);
-  int id_comp = atoi(id_ric);
+  int id_comp = strtol(id_ric, &a, 10);
 
   //se l'id è il mio
   if( id_comp == id || id_comp == ID_UNIVERSALE ){
@@ -445,7 +449,7 @@ void gestisci_LABELUP(coda_stringhe* separata){
 
   char id_ric[50];
   primo(separata, id_ric, FALSE);
-  int id_comp = atoi(id_ric);
+  int id_comp = strtol(id_ric, &a, 10);
   char msg[200];
 
   boolean ret = FALSE;
@@ -526,7 +530,7 @@ void gestisci_ID(coda_stringhe* separata){
   // Recupero l'ID e rispondo se è il mio o no.
   char id_ric[20];
   primo(separata, id_ric, FALSE);
-  int id_comp = atoi(id_ric);
+  int id_comp = strtol(id_ric, &a, 10);
   if( id_comp == id || id_comp == ID_UNIVERSALE ) //se id è mio
     send_msg(pipe_interna, "TRUE");
   else{ //se id non è mio, invio ai miei figli il messaggio
@@ -566,7 +570,7 @@ void gestisci_REMOVE(coda_stringhe* separata){
   // Recupero l'ID e in caso mi termino.
   char id_ric[20];
   primo(separata, id_ric, TRUE);
-  int id_comp = atoi(id_ric);
+  int id_comp = strtol(id_ric, &a, 10);
   if( id_comp == id || id_comp == ID_UNIVERSALE ) //se id è mio, termino
     termina(0);
   else{ //se id non è mio, invio messaggio di REMOVE a tutti i miei figli
@@ -615,7 +619,7 @@ void gestisci_SPAWN(coda_stringhe* separata){
 
   char id_ric[20];
   primo(separata, id_ric, FALSE);
-  int id_comp = atoi(id_ric);
+  int id_comp = strtol(id_ric, &a, 10);
   if( id_comp == id || id_comp == ID_UNIVERSALE ){
 
     genera_figlio(separata);
