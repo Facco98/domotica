@@ -520,7 +520,6 @@ void gestisci_LABELUP(coda_stringhe* separata){
       read_msg(pipe, stato, 1023);
       aggiorna_stati(stato+strlen(GET_STATUS_RESPONSE)+1);
       ret = TRUE;
-
       it = it -> succ;
 
     } else
@@ -761,7 +760,7 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
       figli -> testa = figli -> testa -> succ;
       free(it -> val);
       free(it);
-      if( strcmp(stato, "]") != 0 ){
+      if( strcmp(stato, "]") != 0 && res == FALSE ){
         decodifica_hub(stato);
         res = calcola_override(stato, tipi_figli, confronti);
       }
@@ -869,7 +868,7 @@ void aggiorna_stati(string str){
   //se è un hub o un timer deve chiedere anche ai suoi figli
   if( strcmp(tipo, "hub") == 0 || strcmp(tipo, "timer") == 0 ){
 
-    decodifica_hub(copia);
+    decodifica_figli(copia);
     coda_stringhe* figli = crea_coda_da_stringa(copia, " ");
     char stato[400];
     primo(figli, stato, FALSE);
@@ -877,8 +876,10 @@ void aggiorna_stati(string str){
     primo(figli, stato, FALSE);
     primo(figli, stato, FALSE);
     while(primo(figli, stato, FALSE) == TRUE )
-      if( strcmp(stato, "]") != 0)
+      if( strcmp(stato, "]") != 0){
+        decodifica_hub(stato);
         aggiorna_stati(stato);
+      }
     distruggi(coda);
 
   } else{ //altri dispositivi
