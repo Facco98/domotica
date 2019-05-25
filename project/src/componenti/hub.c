@@ -85,7 +85,7 @@ void gestisci_LABELUP(coda_stringhe* separata);
 //funzione pe rgenerare un figlio
 void genera_figlio(coda_stringhe* separata);
 
-//funzione ch ecalcola se c'è stato override manuale
+//funzione che calcola se c'è stato override manuale
 boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe* confronti);
 
 //fnzione che aggiorna gli stati attesi dei figli
@@ -99,18 +99,18 @@ void termina(int x);
 //funzione che sostituisce gli '_' con gli ' ' in una stringa
 void decodifica_hub(string str);
 
-//funzion eche sostituisce ',' con ' '
+//funzione che sostituisce ',' con ' '
 void decodifica_figli( string tmp );
 
 /*
-* Funzione che crea i processi per gestire le più pipe.
+* Funzione che crea i processi per gestire le pipe.
 */
 void crea_processi_supporto();
 
 int main( int argn, char** argv ){
 
   /*
-  * Leggo l'id dalla riga fi comando.
+  * Leggo l'id dalla riga di comando.
   */
   if( argn < 2 )
     exit(130);
@@ -124,7 +124,6 @@ int main( int argn, char** argv ){
   */
 
   lista_pipes = crea_lista();
-  append(lista_pipes, "/tmp/10");
 
   tipi_figli = crea_lista();
   stati_attesi = crea_lista();
@@ -359,6 +358,8 @@ void gestisci_STATUSGET(coda_stringhe* separata){
       sprintf(msg, "%s %d", GET_STATUS, ID_UNIVERSALE );
       if( send_msg(pipe, msg) == FALSE || read_msg(pipe, msg, 199) == FALSE  ){
 
+        //Se ho avuto problemi in lettura elimino il riferimento alla pipe
+        //del figlio
         nodo_stringa* tmp = it;
         rimuovi_nodo(lista_pipes, it);
         it = it -> succ;
@@ -376,11 +377,16 @@ void gestisci_STATUSGET(coda_stringhe* separata){
         int i = 0;
         char copia[1024];
         strcpy(copia, msg+strlen(GET_STATUS_RESPONSE)+1);
+        // Controllo lo stato di override
         if( override == FALSE )
           override = calcola_override(copia, tipi_figli, stati_attesi );
+
+        // Codifico lo stato di mio figlio
         for( i = 0; msg[i] != '\0'; i++ )
           if( msg[i] == ' ')
             msg[i] = '_';
+
+        //Appendo lo stato di mio figlio al mio.
         strcat(response, msg+strlen(GET_STATUS_RESPONSE)+1);
         it = it -> succ;
 
@@ -404,6 +410,8 @@ void gestisci_STATUSGET(coda_stringhe* separata){
     sprintf(msg, "%s %s", ID, id_ric);
     nodo_stringa* it = lista_pipes -> testa;
     boolean trovato = FALSE;
+
+    // Cerco se tra i miei figli c'è quello di cui serve lo stato.
     while( it != NULL && trovato == FALSE ){
 
       char res[10];
@@ -427,6 +435,7 @@ void gestisci_STATUSGET(coda_stringhe* separata){
 
     }
 
+    // Se lo ho trovato recupero lo stato.
     if( trovato == TRUE ){
 
       char status[1024];
@@ -533,7 +542,7 @@ void gestisci_ID(coda_stringhe* separata){
   int id_comp = strtol(id_ric, &a, 10);
   if( id_comp == id || id_comp == ID_UNIVERSALE ) //se id è mio
     send_msg(pipe_interna, "TRUE");
-  else{ //se id non è mio, invio ai miei figli il messaggio
+  else{ //se id non è mio, controllo se i miei figli possono raggiungere quell'id.
 
     char msg[20];
     sprintf(msg, "%s %s", ID, id_ric);
@@ -581,6 +590,7 @@ void gestisci_REMOVE(coda_stringhe* separata){
     sprintf(confirm_msg, "%s %s", "CONFIRM", id_ric);
     nodo_stringa* it = lista_pipes -> testa;
 
+    // Mando il messagigo ai miei figli
     while( it != NULL ){
 
       char res[10];
@@ -594,6 +604,7 @@ void gestisci_REMOVE(coda_stringhe* separata){
 
       } else if( strcmp(res, "TRUE") == 0 ){
 
+        // Se il figlio che deve morire è uno dei miei lo rimuovo dalla lista delle pipe.
         send_msg(it -> val, remove_msg);
         nodo_stringa* l = it;
         rimuovi_nodo(lista_pipes, it);
@@ -642,6 +653,7 @@ void gestisci_SPAWN(coda_stringhe* separata){
     }
     //free(separata);
 
+    // Reinvio il messaggio a tutti i miei figli.
     nodo_stringa* it = lista_pipes -> testa;
     while( it != NULL ){
 
@@ -757,6 +769,7 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
 
   } else { //altri tipi di dispositivi
 
+    // Cerco se ho gia uno stato per quel dispositivo.
     nodo_stringa* it = tipi_figli -> testa;
 
     char confronto[20];
@@ -780,12 +793,14 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
 
     if( trovato == FALSE ){
 
+      // Se non lo ho lo aggiungo alla lista
       append(tipi_figli, tipo);
       append(confronti, confronto);
       res = FALSE;
 
     } else {
 
+      // altrimenti lo confronto con quello ricevuto.
       char precedente[20];
 
       get(confronti, i, precedente);
