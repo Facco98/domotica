@@ -17,6 +17,7 @@ void crea_processi_supporto(registro* registri[], int numero_registri);
 //risponde TRUE se l'id è il suo
 void gestisci_CONFIRM(coda_stringhe* istruzioni);
 
+//funzione che calcola il valore stringa di un registro, FALSE in caso di error, TRUE altrimenti
 boolean calcola_registro_stringa( const registro* r, string output);
 
 //termina il processo
@@ -31,19 +32,34 @@ void gestisci_STATUSGET(coda_stringhe* istruzioni);
 //gestisce la rimozione dei componenti
 void gestisci_REMOVE(coda_stringhe* istruzioni);
 
+//gestisce i messaggi in arrivo al timer
 void ascolta_e_interpreta(registro* registri[], int numero_registri);
+
+//gestisce l'aggiornamento degli interruttori (sia del timer, che del componente a lui collegato)
 void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], int numero_registri);
 
+//gestisce la creazione di una nuova componente
 void genera_figlio(coda_stringhe* status);
 
+//risponde TRUE se è in grado di raggiungere il dispositivo con l'id passato
 void gestisci_ID(coda_stringhe* istruzioni);
 
+//calcola se c'è stato override manuale
 boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe* confronti);
+
+//aggiorna gli stati attesi del figlio
 void aggiorna_stati(string str);
-void decodifica_hub(string str);
+
+//sostituisce ',' con spazi ' ' per separar ei figli di un hub
 void decodifica_figli( string tmp );
+
+//gestisce l'avvio del timer
 void gestisci_begin(int x);
+
+//gestisce lo spegnimento del timer
 void gestisci_end(int x);
+
+//sostituisce gli '_' con gli spazi ' ' all'interno di una stringa
 void decodifica_controllo(string tmp);
 
 
@@ -62,29 +78,26 @@ lista_stringhe* tipi_figli;
 lista_stringhe* stati_attesi;
 
 
-int main (int argn, char** argv)  //argomenti servono ??
+int main (int argn, char** argv)
 {
   tipi_figli = crea_lista();
   stati_attesi = crea_lista();
 
   strcpy(pipe_figlio, "");
-  //stato = mirroring del dispositivo collegato
-
-  //interruttori = mirroring del dispositivo collegato
 
   //registri:
-  //registro che indica l'orario di attivazione --> va bene così ?
+  //registro che indica l'orario di attivazione
   registro attivazione;
   strcpy(attivazione.nome, "begin");
   attivazione.da_calcolare = FALSE;
-  attivazione.valore.integer = 0;
+  attivazione.valore.integer = 1;
   attivazione.is_intero = TRUE;
 
   //registro che indica l'orario di disattivazione
   registro disattivazione;
   strcpy(disattivazione.nome, "end");
   disattivazione.da_calcolare = FALSE;
-  disattivazione.valore.integer = 0;
+  disattivazione.valore.integer = 10;
   disattivazione.is_intero = TRUE;
 
   int numero_registri = 2;
@@ -96,52 +109,43 @@ int main (int argn, char** argv)  //argomenti servono ??
     exit(130);
   }
 
-  /*
-  1 -> ID
-  2 -> ignori
-  3 -> BEGIN
-  4 -> END
-  5 -> [
-  6 -> stato dati_figlio
-  7 -> ]
-  */
-
   id = atoi(argv[1]); //recupero l'id del componente
 
   //se ricevo più argomenti da riga di Comando
-  // input: id datidelfiglio
+  //FORMATO INPUT : nome_file id stato_timer begin end [dati_del_figlio]
   //datidelfiglio ==> stringa separata da underscore
-  if(argn >= 4)
+  if(argn >= 4) //recupero registro begin
   {
     registri[0]->valore.integer = atoi(argv[3]);
   }
 
-  if(argn >= 5)
+  if(argn >= 5) //recupero registro end
   {
     registri[1]->valore.integer = atoi(argv[4]);
   }
 
-  if(argn >= 7)
+  if(argn >= 7) //recupero i dati del figlio
   {
     if((strcmp(argv[6], " ") != 0) && (strcmp(argv[6], "]") != 0) )
     {
-      decodifica_controllo(argv[6]);
-      coda_stringhe* status = crea_coda_da_stringa(argv[6], " ");
-      genera_figlio(status);
+      decodifica_controllo(argv[6]); //sostituisco '_' con ' '
+      coda_stringhe* status = crea_coda_da_stringa(argv[6], " "); //creo la coda di stringhe
+      genera_figlio(status); //genero il figlio
       distruggi(status);
     }
   }
 
-
+  //creo le due pipe per gestire messaggi da centralina e da umano
   sprintf(pipe_interna, "%s/%d_int", (string) PERCORSO_BASE_DEFAULT, id);
   sprintf(pipe_esterna, "%s/%d_ext", (string) PERCORSO_BASE_DEFAULT, id);
 
+  //gestisco la generazione dei processi che costituiscono il timer
   crea_processi_supporto(registri, numero_registri);
 
 }
 
 void decodifica_controllo(string tmp){
-
+  //sostituisce all'interno di una stringa i caratteri '_' con gli spazi ' '
   int count = 0, j;
   for( j = 0; tmp[j] != '\0'; j++ ){
     if( tmp[j] == '[' || tmp[j] == ']'){
@@ -168,21 +172,18 @@ void decodifica_controllo(string tmp){
 }
 
 
-//ascolta e interpreta da mettere argomneti
 void crea_processi_supporto(registro* registri[], int numero_registri)
 {
-
+  //inizializza le pipe per la comunicazine e il semaforo
   crea_pipe(id, (string) PERCORSO_BASE_DEFAULT);
-  pid_t pid = fork();
-   //genera un processo identico a se stesso (timer)
+  pid_t pid = fork(); //genera un processo identico a se stesso (timer)
   if( pid == 0 ) //se sono il figlio (= processo appena generato)
   {
-     //creo la pipe per comunicare con l'umano
     while(1) //continua a spostare i messaggi da pipe esterna a pipe interna
     {
       char msg[200];
-      read_msg(pipe_esterna, msg, 200);
-      send_msg(pipe_interna, msg);
+      read_msg(pipe_esterna, msg, 200); //leggo da pipe esterna
+      send_msg(pipe_interna, msg); //scrivo su pipe_interna
     }
 
   }
@@ -196,11 +197,10 @@ void crea_processi_supporto(registro* registri[], int numero_registri)
 
       while(1) //sposta messaggi da pipe padre a pipe interna
       {
-        //crea pipe_padre
         char msg[200];
         leggi_messaggio(id, (string) PERCORSO_BASE_DEFAULT, msg, 199);
         send_msg(pipe_interna, msg);
-        printf("RICEVUTO: %s\n", msg);
+        //printf("RICEVUTO: %s\n", msg);
         read_msg(pipe_interna, msg, 199);
         if( strcmp(msg, "DONE") != 0 ) //se riceve messaggi diversi da "DONE" li rinvia alla pipe_padre
         {
@@ -213,10 +213,9 @@ void crea_processi_supporto(registro* registri[], int numero_registri)
     {
       figli[1] = pid; //mi salvo il process-id del figlio creato dalla precedente fork
       signal(SIGINT, termina); //se riceve segnale di morte, muore
-       //crea la pipe interna
       while(1) //resta in perenne attesa sulla sua pipe interna
       {
-        ascolta_e_interpreta(registri, numero_registri); //--> da implementare
+        ascolta_e_interpreta(registri, numero_registri);
       }
 
     }
@@ -227,40 +226,42 @@ void crea_processi_supporto(registro* registri[], int numero_registri)
 
 void ascolta_e_interpreta(registro* registri[], int numero_registri)
 {
+  //leggo messaggio, elimino "\n" finale e gestisco il comando
   char messaggio[200];
   read_msg(pipe_interna, messaggio, 199); //leggo messaggio da pipe_interna
   strtok(messaggio, "\n"); //elimino lo "\n" alla fine della stringa
 
-  printf("[TIMER]%s\n", messaggio);
+  //printf("[TIMER]%s\n", messaggio);
+  //creo la coda di stringhe
   coda_stringhe* istruzioni = crea_coda_da_stringa(messaggio, " ");
 
 
   char comando[50];
   primo(istruzioni, comando, FALSE); //recupero il nome del comando
 
-  if( strcmp( comando, GET_STATUS ) == 0 ) //stato del componente collegato
+  if( strcmp( comando, GET_STATUS ) == 0 ) //stato del timer e del componente collegato
   {
-    gestisci_STATUSGET(istruzioni); //OK
+    gestisci_STATUSGET(istruzioni);
   }
-  else if( strcmp(comando, UPDATE_LABEL) == 0 ) //aggiornamento interruttori
+  else if( strcmp(comando, UPDATE_LABEL) == 0 ) //aggiornamento interruttori del timer e del comonente collegato
   {
-    gestisci_LABELUP(istruzioni, registri, numero_registri); // !!!!!
+    gestisci_LABELUP(istruzioni, registri, numero_registri);
   }
-  else if( strcmp( comando, ID ) == 0 ) //risponde TRUE se l'id è il proprio, FALSE altrimenti
+  else if( strcmp( comando, ID ) == 0 ) //risponde TRUE se l'id è raggiungibile attraverso il timer
   {
-    gestisci_ID(istruzioni); //OK
+    gestisci_ID(istruzioni);
   }
   else if( strcmp(comando, REMOVE) == 0 ) //rimuovi timer o dispositivo collegato
   {
-    gestisci_REMOVE(istruzioni); //OK
+    gestisci_REMOVE(istruzioni);
   }
   else if( strcmp(comando, "SPAWN") == 0 ) //genera figlio
   {
-    gestisci_SPAWN(istruzioni); //OK
+    gestisci_SPAWN(istruzioni);
   }
-  else if( strcmp(comando, "CONFIRM") == 0)
+  else if( strcmp(comando, "CONFIRM") == 0) //risponde TREU se l'id è il suo, altrimenti FALSE
   {
-    gestisci_CONFIRM(istruzioni); //OK
+    gestisci_CONFIRM(istruzioni);
   }
   else //altri comandi non supportati
   {
@@ -272,14 +273,15 @@ void ascolta_e_interpreta(registro* registri[], int numero_registri)
 
 void gestisci_STATUSGET(coda_stringhe* istruzioni)
 {
-  printf("[TIMER STATUSGET INIZIO]\n");
+  //printf("[TIMER STATUSGET INIZIO]\n");
   char id_ric[50];
-  primo(istruzioni, id_ric, FALSE);
+  primo(istruzioni, id_ric, FALSE); //recupero l'id
   int id_comp = atoi(id_ric);
 
-  printf("[TIMER STATUSGET]\n");
+  //printf("[TIMER STATUSGET]\n");
   boolean override = FALSE;
 
+  //se l'id è il mio, restitusco il mio stato e quello del figlio
   if( id_comp == id || id_comp == ID_UNIVERSALE )
   {
     // Creo il messaggio contenente la risposta.
@@ -289,23 +291,26 @@ void gestisci_STATUSGET(coda_stringhe* istruzioni)
     char msg[1024];
     char stato_figlio[1024];
     strcpy(stato_figlio, "");
-    sprintf(msg, "%s %d", GET_STATUS, ID_UNIVERSALE );
-    printf("[PRONTO PER INVIARE]\n");
+    sprintf(msg, "%s %d", GET_STATUS, ID_UNIVERSALE ); //preparo messaggio da inviare al figlio
+    //printf("[PRONTO PER INVIARE]\n");
+    //se il figlio non esiste o ci sono problemi in lettura e scrittura
     if( strcmp(pipe_figlio, "") == 0 || send_msg(pipe_figlio, msg) == FALSE || read_msg(pipe_figlio, stato_figlio, 199) == FALSE  )
     {
-      printf("[TIMER ENTRATO]\n");
-      strcpy(pipe_figlio, "");
+      //printf("[TIMER ENTRATO]\n");
+      strcpy(pipe_figlio, ""); //elimino la pipe de figlio
     }
-    else
+    else //nessun problema nel comunicare con il filgio
     {
       char str[1024];
       strcpy(str, stato_figlio);
-      printf("[TIMER ELSE]");
+      //printf("[TIMER ELSE]");
+      //calcolo se c'è stato override
       if(override == FALSE)
       {
         override = calcola_override(str + strlen(GET_STATUS_RESPONSE), tipi_figli, stati_attesi);
       }
-      printf("[TIMER OVERRIDE CALCOLATO]\n");
+      //printf("[TIMER OVERRIDE CALCOLATO]\n");
+      //nello stato del figlio inserisco gli '_'
       int i = 0;
       for( i = 0; stato_figlio[i] != '\0'; i++ )
       {
@@ -314,36 +319,35 @@ void gestisci_STATUSGET(coda_stringhe* istruzioni)
           stato_figlio[i] = '_';
         }
       }
-
       strcpy(msg, stato_figlio);
       strcpy(stato_figlio, msg+strlen(GET_STATUS_RESPONSE)+1 );
 
     }
-    sprintf(msg, " %s %d %d [ ", override == TRUE ? "TRUE" : "FALSE", registri[0]->valore.integer, registri[1]->valore.integer);
-
-    //sprintf(msg, " override: %s [ " , override == TRUE ? "TRUE" : "FALSE" );
+    // preparo il messaggio finale con il mio stato e lo stato del figlio
     // Rispondo sulla pipe_interna
+    sprintf(msg, " %s %d %d [ ", override == TRUE ? "TRUE" : "FALSE", registri[0]->valore.integer, registri[1]->valore.integer);
     strcat(response, msg);
     strcat(response, stato_figlio);
     strcat(response, " ]");
     send_msg(pipe_interna, response);
-    printf("[RISPOSTO]\n");
+    //printf("[RISPOSTO]\n");
 
   }
-  else
+  else //se l'id non è il mio, rimando il messaggio al figlio
   {
-    if(strcmp(pipe_figlio, "") != 0)
+    if(strcmp(pipe_figlio, "") != 0) //se il figlio esiste
     {
       //chiedo al figlio se posso raggiungere id_ric attraverso lui, se si mando msg altrimenti no
       char msg[200], res[200];
       sprintf(msg, "%s %s", ID, id_ric); //messaggio che chiede al figlio se può raggiungere quell'id
 
-      if(send_msg(pipe_figlio, msg) == FALSE || read_msg(pipe_figlio, res, 199) == FALSE)  //invio messaggio al figlio
+      //invio messaggio al figlio
+      if(send_msg(pipe_figlio, msg) == FALSE || read_msg(pipe_figlio, res, 199) == FALSE)
       {
         strcpy(pipe_figlio, ""); //se non riesco a leggere o scrivere elimino pipe del figlio
       }
-
-      else if(strcmp(res, "TRUE") == 0) //se posso passare pe ril figlio, gli rimando il messaggio originale
+      //se posso passare per il figlio, gli rimando il messaggio originale
+      else if(strcmp(res, "TRUE") == 0)
       {
         //ricostruisco il messaggio originale
         char msg2[1024];
@@ -362,7 +366,7 @@ void gestisci_STATUSGET(coda_stringhe* istruzioni)
         //invio al figlio il messaggio
         send_msg(pipe_figlio, msg2);
 
-        //rinviare sopra il messaggio
+        //rinviare sopra il messaggio (al padre del timer)
         char res2[1024];
         read_msg(pipe_figlio, res2, 1023); //leggo lo stato del figlio
         send_msg(pipe_interna, res2); //rinvio il messaggio "sopra"
@@ -371,9 +375,9 @@ void gestisci_STATUSGET(coda_stringhe* istruzioni)
     }
     else
     {
+      //informo gli altri processi del timer che ho concluso
       send_msg(pipe_interna, "DONE");
     }
-    //free(istruzioni);
 
   }
 
@@ -386,15 +390,14 @@ void gestisci_CONFIRM(coda_stringhe* istruzioni)
   char id_ric[20];
   primo(istruzioni, id_ric, FALSE);
   int id_comp = atoi(id_ric);
-  if( id_comp == id || id_comp == ID_UNIVERSALE )
+  if( id_comp == id || id_comp == ID_UNIVERSALE ) //se l'id è mio
   {
     send_msg(pipe_interna, "TRUE");
   }
-  else
+  else //se l'id non è mio
   {
     send_msg(pipe_interna, "FALSE");
   }
-  //free(istruzioni);
 
 }
 
@@ -405,7 +408,8 @@ boolean calcola_registro_stringa( const registro* r, string output)
 
 void termina (int x)
 {
-  kill(figli[0], SIGKILL); //uccido i processini
+  //uccido i miei filgi (processi timer)
+  kill(figli[0], SIGKILL);
   kill(figli[1], SIGKILL);
 
   close(file); //chiudo il file descriptor
@@ -413,7 +417,7 @@ void termina (int x)
   //mando al figlio messaggio di morte
   char msg[50];
   sprintf(msg, "%s %d", REMOVE, ID_UNIVERSALE);
-  if(strcmp(pipe_figlio, "") != 0)
+  if(strcmp(pipe_figlio, "") != 0) //se figlio esiste
   {
     send_msg(pipe_figlio, msg);
   }
@@ -430,11 +434,11 @@ void gestisci_REMOVE(coda_stringhe* istruzioni)
   char id_ric[20];
   primo(istruzioni, id_ric, FALSE);
   int id_comp = atoi(id_ric);
-  if( id_comp == id || id_comp == ID_UNIVERSALE )
+  if( id_comp == id || id_comp == ID_UNIVERSALE ) //se l'id corrisponde al mio
   {
     termina(0);
   }
-  else      //chiedere id al figlio, se è il figlio a dover morire
+  else //chiedere id al figlio, se è il figlio a dover morire
   {
     if(strcmp(pipe_figlio, "") != 0) //se il figlio esiste
     {
@@ -443,14 +447,12 @@ void gestisci_REMOVE(coda_stringhe* istruzioni)
       char res[20];
       sprintf(msg, "%s %s", "CONFIRM", id_ric);
 
-      send_msg(pipe_figlio, msg); //invio richiesta di id al dati_figlio
-      read_msg(pipe_figlio, res, 19); //leggo risposta dal dati_figlio
+      send_msg(pipe_figlio, msg); //invio richiesta di id al figlio
+      read_msg(pipe_figlio, res, 19); //leggo risposta dal figlio
 
-
-
-      //non decidi tu se morire muori e basta
+      //gli invio messaggio per rimuoverlo
       char die_msg[100];
-      sprintf(die_msg, "%s %s", REMOVE, id_ric); //preparo il messaggio di morte per il figlio
+      sprintf(die_msg, "%s %s", REMOVE, id_ric); //preparo il messaggio di rimozione per il figlio
       send_msg(pipe_figlio, die_msg);
 
       if(strcmp(res, "TRUE") == 0) //se mio figlio deve morire
@@ -460,24 +462,23 @@ void gestisci_REMOVE(coda_stringhe* istruzioni)
       }
 
     }
-    send_msg(pipe_interna, "TRUE");//informo i processini che ho concluso la missione
+    send_msg(pipe_interna, "TRUE");//informo gli altri processi che ho finito
   }
 }
 
-//controllo se sono io a dover generare un figlio se si genero
 void gestisci_SPAWN(coda_stringhe* istruzioni)
 {
+  //controllo se sono io a dover generare un figlio se si genero
   char id_ric[20];
   primo(istruzioni, id_ric, FALSE);
   int id_comp = atoi(id_ric);
-  if( id_comp == id || id_comp == ID_UNIVERSALE )
+  if( id_comp == id || id_comp == ID_UNIVERSALE ) //se l'id è mio
   {
-    genera_figlio(istruzioni);
+    genera_figlio(istruzioni); //genero il figlio
   }
-  else
+  else //se non è mio l'id
   {
-    //ricostruire il messaggio e rinviarlo sotto
-    //vedi da hub per ricostruire la stringa
+    //ricostruisco il messaggio e lo rinvio al figlio
     char msg[1024];
     sprintf(msg, "%s %s", "SPAWN", id_ric);
     char tmp[200];
@@ -487,26 +488,25 @@ void gestisci_SPAWN(coda_stringhe* istruzioni)
       strcat(msg, tmp);
     }
 
-    send_msg(pipe_figlio, msg);
-    send_msg(pipe_interna, "DONE");
+    send_msg(pipe_figlio, msg); //invio messaggio SPAWN al figlio
+    send_msg(pipe_interna, "DONE"); //informo i processi del timer che ho finito
   }
 
 }
 
-//prendo in input una coda di strighe con i dati del filgio
 void genera_figlio(coda_stringhe* status)
 {
+  //prendo in input una coda di strighe con i dati del filgio
   char tmp[40], percorso[50];
   primo(status, tmp, FALSE);
   sprintf(percorso, "./%s.out", tmp);
-  printf("[PERCORSO]%s\n", percorso);
+  //printf("[PERCORSO]%s\n", percorso);
 
-  pid_t pid = fork();
+  pid_t pid = fork(); //genero un processo identico a me
 
-  if( pid == 0 )
+  if( pid == 0 )     // Se sono il figlio cambio l'immagine.
   {
     char* params[] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
-    // Se sono il figlio cambio l'immagine.
 
     params[0] = (char*) malloc(sizeof(char)*40);
     strcpy(params[0], percorso);
@@ -529,7 +529,7 @@ void genera_figlio(coda_stringhe* status)
       i++;
     }
 
-    printf("HELLO IT'S ME MARIO\n");
+    //printf("HELLO IT'S ME MARIO\n");
     execv(params[0], params);
 
     int j = 0;
@@ -540,31 +540,20 @@ void genera_figlio(coda_stringhe* status)
   else if( pid > 0 )
   {
     // Se sono il padre aggiungo la pipe del figlio appena creato.
-    //char id[30];
     primo(status, tmp, FALSE);
-    //char pipe_figlio[100];
-    if( strcmp(pipe_figlio, "") != 0 ){
-
+    if( strcmp(pipe_figlio, "") != 0 ) //se il figlio esiste
+    {
       char msg[100];
       sprintf(msg, "%s %d", REMOVE, ID_UNIVERSALE);
       send_msg(pipe_figlio, msg);
-
     }
     sprintf(pipe_figlio, "%s/%s", (string) PERCORSO_BASE_DEFAULT, tmp);
-    //distruggi(status);
 
   }
-
+  //informo i processi del timer di aver terminato
   send_msg(pipe_interna, "DONE");
 
 }
-
-//aggiornare i miei registri e di conseguenza quelli del figlio
-//mi arriva un messaggio per settare i miei registri e poi io ne invio uno al figlio per settare i suoi
-/*
-LABELUP id interruttore(begin/end) nuovo_stato(=valore int)
-
-*/
 
 
 void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], int numero_registri)
@@ -578,7 +567,7 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], int numer
 	int id_comp = atoi(id_ric);
   boolean ret = FALSE;
 
-  if( id_comp == id || id_comp == ID_UNIVERSALE ) //se è l'azione è per me
+  if( id_comp == id || id_comp == ID_UNIVERSALE ) //se l'azione è per me
   {
     char interruttore[50];
     char nuovo_valore[20];
@@ -586,27 +575,23 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], int numer
     primo(istruzioni, interruttore, FALSE); //recupero l'interruttore da gestire
     primo(istruzioni, nuovo_valore, FALSE); //recupero il valore
 
-    if(strcmp(interruttore, "BEGIN") == 0) //se devo agire sul registro begin
+    if(strcmp(interruttore, "BEGIN") == 0 && (atoi(nuovo_valore) >= 1)) //se devo agire sul registro begin
     {
-      begin -> valore.integer = atoi(nuovo_valore);
-      signal(SIGALRM, gestisci_begin); //da fare --> l agestisci begin gestirà la end
+      begin -> valore.integer = atoi(nuovo_valore); //imposto valore del registro
+      signal(SIGALRM, gestisci_begin);
       alarm(begin -> valore.integer); //in secondi
-      //alarm => fra tot tempo fai qualcosa
       ret = TRUE;
     }
-    else if(strcmp(interruttore, "END") == 0) //se devo agire sul registro end
+    else if(strcmp(interruttore, "END") == 0 && (atoi(nuovo_valore) >= 1)) //se devo agire sul registro end
     {
       end -> valore.integer = atoi(nuovo_valore);
       ret = TRUE;
-      //farà qualcosa al figlio
     }
 
-    else
-    { // SE non è un mio registro
+    else //se non è un mio registro
+    {
 
-      //printf("[ELSE]\n");
-      // Manca da ricostruire il messaggio e mandarlo al figlio
-      if(strcmp(pipe_figlio, "") != 0)
+      if(strcmp(pipe_figlio, "") != 0) //se il figlio esiste
       {
         //ricostruisco il  messaggio e lo invio al figlio
         char msg[1024];
@@ -668,9 +653,6 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], int numer
 
 }
 
-/* Dovrebbe far fare un azione al figlio (inviando un messaggio)
-   controllare l'override da parte dell'umano (?)
-*/
 void gestisci_begin(int x)
 {
   if(strcmp(pipe_figlio, "") != 0)
@@ -856,32 +838,6 @@ void decodifica_figli( string tmp ){
 }
 
 
-void decodifica_hub(string tmp){
-
-  int count = 0, j;
-  for( j = 0; tmp[j] != '\0'; j++ ){
-    if( tmp[j] == '[' || tmp[j] == ']'){
-
-      if( tmp[j] == ']')
-        count -= 1;
-
-      if( count == 0 ){
-
-        if( tmp[j-1] == '_')
-          tmp[j-1] = ' ';
-
-        if( tmp[j+1] == '_')
-          tmp[j+1] = ' ';
-
-      }
-      if( tmp[j] == '[')
-      count += 1;
-    }
-    if( count == 0 && tmp[j] == '_')
-      tmp[j] = ' ';
-  }
-
-}
 
 void aggiorna_stati(string str){
 
