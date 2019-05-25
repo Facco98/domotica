@@ -787,7 +787,7 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
 
   // Cerco la pipe per comunicare col padre
   nodo_stringa* pipe_padre = lista_pipes -> testa;
-  char msg[200];
+  char msg[2000];
   char status[1024];
   sprintf(msg, "%s %s", ID, id_padre);
   boolean trovato = strtol(id_padre, &a, 10) == id ? TRUE : FALSE;

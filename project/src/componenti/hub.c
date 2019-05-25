@@ -544,7 +544,7 @@ void gestisci_ID(coda_stringhe* separata){
     send_msg(pipe_interna, "TRUE");
   else{ //se id non è mio, controllo se i miei figli possono raggiungere quell'id.
 
-    char msg[20];
+    char msg[200];
     sprintf(msg, "%s %s", ID, id_ric);
     nodo_stringa* it = lista_pipes -> testa;
     boolean flag = FALSE;
