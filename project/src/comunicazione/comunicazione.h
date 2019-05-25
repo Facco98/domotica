@@ -5,7 +5,7 @@
 
 extern int file;
 extern char GET_STATUS[], GET_STATUS_RESPONSE[], ID[], UPDATE_LABEL[], REMOVE[];
-
+extern sem_t* sem;
 /*
 * Dichiarazione delle funzioni.
 */

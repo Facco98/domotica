@@ -169,8 +169,11 @@ void crea_processi_supporto(registro* registri[], int numero_registri, boolean* 
     while(1) //continuo a trasferire messaggi da pipe_esterna a pipe_interna
     {
       char msg[200];
+      sem_wait(sem);
       read_msg(pipe_esterna, msg, 200);
       send_msg(pipe_interna, msg);
+      read_msg(pipe_interna, msg, 199);
+      sem_post(sem);
     }
 
   }
@@ -185,12 +188,14 @@ void crea_processi_supporto(registro* registri[], int numero_registri, boolean* 
       {
         char msg[200];
         leggi_messaggio(id, (string) PERCORSO_BASE_DEFAULT, msg, 199);
+        sem_wait(sem);
         send_msg(pipe_interna, msg);
         read_msg(pipe_interna, msg, 199);
         if( strcmp(msg, "DONE") != 0 ) //invio sulla pipe_padre tutto ciò che non è "DONE"
         {
           manda_messaggio(id, (string) PERCORSO_BASE_DEFAULT, msg);
         }
+        sem_post(sem);
       }
 
     }

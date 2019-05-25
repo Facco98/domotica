@@ -28,7 +28,7 @@ void gestisci_ID(coda_stringhe* istruzioni);
 void termina(int x);
 
 //gestisce la creazione dei processi che costiutiscono il componente (finestra)
-void crea_processi_supporto(registro* registri[], int numero_registri, boolean* stato, boolean* apri, boolean* chiudi);
+void rocessi_supporto(registro* registri[], int numero_registri, boolean* stato, boolean* apri, boolean* chiudi);
 
 //funzione per interpretare messaggi
 void ascolta_e_interpreta (registro* registri[], int numero_registri, boolean* stato, boolean* apri, boolean* chiudi);
@@ -305,7 +305,10 @@ void crea_processi_supporto(registro* registri[], int numero_registri, boolean* 
     {
       char msg[200];
       read_msg(pipe_esterna, msg, 200);
+      sem_wait(sem);
       send_msg(pipe_interna, msg);
+      read_msg(pipe_interna, msg, 199);
+      sem_post(sem);
     }
   }
 
@@ -319,10 +322,12 @@ void crea_processi_supporto(registro* registri[], int numero_registri, boolean* 
       {
         char msg[200];
         leggi_messaggio(id, (string) PERCORSO_BASE_DEFAULT, msg, 199); //legge messaggio da pipe con il padre
+        sem_wait(sem);
         send_msg(pipe_interna, msg); //scrive sulla pipe interna il messaggio preso dal padre
         read_msg(pipe_interna, msg, 199); //legge dalla pipe interna
         if( strcmp(msg, "DONE") != 0 ) //se riceve "DONE" non fa nulla, qualsiasi altra cosa viene inviata sulla pipe con il padre
           manda_messaggio(id, (string) PERCORSO_BASE_DEFAULT, msg);
+        sem_post(sem);
       }
 
     }

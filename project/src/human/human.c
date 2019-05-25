@@ -8,10 +8,6 @@
 #include "comunicazione/comunicazione.h"
 
 
-/*
-HUMAN
-
-*/
 //funzione sempre eseguita dall'umano, fino a quando non muore
 void leggi_e_manda_messaggi();
 
@@ -32,29 +28,15 @@ void leggi_e_manda_messaggi(){
 	printf("%s\n", "Inserire l'id dispositivo e il tipo di messaggio:");
 	//stampare i tipi di messaggi disponibili. Attendere in input gli id e il tipo di messaggio
 	printf("Digitare help per la lista di comandi disponibili");
-	//sprintf() è la funzione contraria a atoi() (quindi tipo itoa())
-	// crea una stringa in cui inserire l'input inserito dall'utente
-	//input_string = id_dispositivo + messaggio
+
 	char input_string[200];
 	fgets(input_string, 199, stdin);
+	strtok(input_string, "\n");
 
-	//creo una coda dei messaggi
-	coda_stringhe* coda_messaggi = crea_coda();
-	//inserisco il messaggio in input nella coda
-	boolean ris = inserisci(coda_messaggi, input_string);
-	//trovo l'id destinatario con la funzione trova_id, che restituisce un intero
-	int idD;
-	char tipo_msg[200];
 
-	char input_string1[200];
-	char input_string2 [200];
-
-	strcpy(input_string1, input_string);
-	strcpy(input_string2 input_string);
-
-	//trovo a chi devo mandare il messaggio e che tipologia di messaggio devo mandare
-	idD = trova_id(input_string1);
-	tipo_msg = trova_tipo_msg(input_string2);
+	coda_stringhe* coda = crea_coda_da_stringa(input_string, " ");
+	char tipo_msg[50];
+	primo(coda, tipo_msg, FALSE);
 
 	if (strcmp (tipo_msg, "help") == 0){
 		printf ("I comandi disponibili sono i seguenti:\n");
@@ -71,38 +53,29 @@ void leggi_e_manda_messaggi(){
 		printf ("timer  --> BEGIN <n>, END <n>, <interruttori dei dispositivi figli>");
 		printf ("hub    --> <interruttori dei dispositivi figli>");
 		printf ("centralina --> GENERALE ON, GENERALE OFF, <interruttori dei dispositivi figli>");
+	} else if( strcmp(tipo_msg, "switch") == 0 ){
+		if( coda -> n >= 3 ){
+			char id[20], label[100], pos[100];
+			primo(coda, id, FALSE);
+			char percorso_pipe[200];
+			sprintf(percorso_pipe, "%s/%s_ext", (string) PERCORSO_BASE_DEFAULT, id);
+			//invio a quell'id il messaggio in input
+
+			primo(coda, label, FALSE);
+			primo(coda, pos, FALSE);
+			char msg[200];
+			sprintf(msg, "%s %s %s %s", UPDATE_LABEL, id, label, pos);
+			send_msg( percorso_pipe, msg );
+
+		}
 	} else {
-	char percorso_pipe[200];
-	sprintf(percorso_pipe, "%s/%d_ext", (string) PERCORSO_BASE_DEFAULT, idD);
-	//invio a quell'id il messaggio in input 
-	send_msg( percorso_pipe, input_string );
+
+		printf("Comando non valido: %s\n", tipo_msg);
+
 	}
+	distruggi(coda);
 
-	
-}
 
-/*La funzione trova_id prende in input la stringa e restituisce la prima stringa tra i due spazi convertita in intero
-* in questo caso il numero trovato sarà l'id perché i comandi dati dagli umani sono del tipo:
-* "<LABELUP> 10 ACCENSIONE ON"
-*/
-
-int trova_id (string input_string){
-
-	string res;
-	res = strtok(input_string, " ");
-	res = strtok(NULL, " ");
-	return atoi(res);
-}
-
-/*La funzione trova_tipo_msg restituisce il tipo di comando inserito dall'utente. E' da utilizzare in caso di comando help 
-* per restituire una lista di comandi disponibili 
-(magari qua possiamo mettere una stampa con comandi disponibili per dispositivi )
-*/
-
-char trova_tipo_msg(string input_string) {
-	string res [200];
-	res = strtok (input_string, " ");
-	return res;
 }
 
 boolean calcola_registro_intero( const registro* r, int* res ){

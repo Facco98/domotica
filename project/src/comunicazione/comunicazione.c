@@ -18,6 +18,8 @@ char REMOVE[] = "REMOVE";
 */
 int file = -1;
 
+sem_t* sem;
+
 /*
 * Funzione interna per mandare un messaggio a una pipe FIFO
 * pipe: percorso della pipe
@@ -30,19 +32,11 @@ boolean send_msg( const string pipe, const string messaggio ){
   if( access(pipe, F_OK) == -1 )
     return FALSE;
   char percorso[100];
-  sprintf(percorso, "/sem_%s", pipe);
-  sem_t* sem = sem_open(percorso, O_RDWR);
-  if( sem != SEM_FAILED )
-    sem_wait(sem);
   file = open(pipe, O_WRONLY);
   if( file >= 0 ){
     write(file, messaggio, strlen(messaggio)+1);
     close(file);
     res = TRUE;
-  }
-  if( sem != SEM_FAILED ){
-    sem_post(sem);
-    sem_close(sem);
   }
   return res;
 
@@ -76,18 +70,11 @@ boolean read_msg( const string pipe, string str, int lunghezza_massima ){
   boolean res = FALSE;
   char percorso[100];
   sprintf(percorso, "/sem_%s", pipe);
-  sem_t* sem = sem_open(percorso, O_RDWR);
-  if( sem != SEM_FAILED )
-    sem_wait(sem);
   int file = open(pipe, O_RDONLY);
   if( file > 0 ){
     read(file, str, lunghezza_massima);
     close(file);
     res = TRUE;
-  }
-  if( sem != SEM_FAILED ){
-    sem_post(sem);
-    sem_close(sem);
   }
   return res;
 
@@ -135,8 +122,7 @@ boolean crea_pipe( const int id, const string base_path){
     res = TRUE;
   sprintf(percorso, "/sem_%s/%d_int", base_path, id);
   sem_unlink(percorso);
-  sem_t* sem = sem_open(percorso, O_CREAT, 0644, 1);
-  sem_close(sem);
+  sem = sem_open(percorso, O_CREAT, 0644, 1);
   return res;
 
 }
@@ -151,6 +137,7 @@ void ripulisci( const int id, const string base_path ){
   sprintf(percorso, "%s/%d_ext", base_path, id );
   unlink(percorso);
   sprintf(percorso, "/sem_%s/%d_int", base_path, id);
+  sem_close(sem);
   sem_unlink(percorso);
 
 }
