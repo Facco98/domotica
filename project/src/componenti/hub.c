@@ -124,7 +124,7 @@ int main( int argn, char** argv ){
   */
 
   lista_pipes = crea_lista();
-
+  append(lista_pipes, "/tmp/-2");
   tipi_figli = crea_lista();
   stati_attesi = crea_lista();
 
@@ -759,6 +759,7 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
       nodo_stringa* it = figli -> testa;
       strcpy(stato, it -> val);
       figli -> testa = figli -> testa -> succ;
+      free(it -> val);
       free(it);
       if( strcmp(stato, "]") != 0 ){
         decodifica_hub(stato);
