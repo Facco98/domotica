@@ -731,7 +731,7 @@ void genera_figlio(coda_stringhe* separata){
 
 boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe* confronti){
   //calcola se c'è stato override manuale
-  boolean res = TRUE;
+  boolean res = FALSE;
   char copia[1024];
   strcpy(copia, str);
   coda_stringhe* coda = crea_coda_da_stringa(str, " ");
@@ -805,7 +805,8 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
       char precedente[20];
 
       get(confronti, i, precedente);
-
+      printf("[PRECEDENTE]%s\n", precedente);
+      printf("[ATTUALE]%s\n", confronto);
       res = strcmp(precedente, confronto) == 0 ? FALSE : TRUE;
 
     }
