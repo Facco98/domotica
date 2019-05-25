@@ -686,6 +686,7 @@ void gestisci_begin(int x)
     sprintf(msg1, "%s %d", GET_STATUS, ID_UNIVERSALE);
     send_msg(pipe_figlio, msg1);
     read_msg(pipe_figlio, stato, 1023);
+    aggiorna_stati(stato + strlen(GET_STATUS_RESPONSE)+1);
 
     //imposto la alarm per inviare un segnale quando scade il timer
     alarm(0);

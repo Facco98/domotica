@@ -805,8 +805,6 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
       char precedente[20];
 
       get(confronti, i, precedente);
-      printf("[PRECEDENTE]%s\n", precedente);
-      printf("[ATTUALE]%s\n", confronto);
       res = strcmp(precedente, confronto) == 0 ? FALSE : TRUE;
 
     }
