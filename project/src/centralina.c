@@ -527,6 +527,38 @@ void gestisci_info(coda_stringhe* separata, lista_stringhe* lista_pipes){
 
   }
 
+  if( it == NULL ){
+
+    it = da_creare -> testa;
+
+    flag = FALSE;
+    while( it != NULL && flag == FALSE ){
+
+      // Cerco tra i miei figli quello che mi può portare al figlio.
+      string pipe = it -> val;
+
+      sprintf(msg, "%s %d", ID, id_comp);
+      if( send_msg(pipe, msg)==FALSE || read_msg(pipe, msg, 199)==FALSE ){
+
+        nodo_stringa* l = it;
+        rimuovi_nodo(lista_pipes, it);
+        it = it -> succ;
+        free(l-> val);
+        free(l);
+        flag = TRUE;
+
+      } else {
+
+        if( strcmp(msg,"TRUE") == 0 )
+          flag = TRUE;
+        else
+          it = it -> succ;
+      }
+
+    }
+
+  }
+
   //invio il messaggio al dispositivo individuato prima, che lo manda al dispositivo interessato
   if( it != NULL ){
     sprintf(msg, "%s %d", GET_STATUS, id_comp);
@@ -541,7 +573,7 @@ void gestisci_info(coda_stringhe* separata, lista_stringhe* lista_pipes){
 
   } else{
 
-    printf("Non collegato direttamente\n");
+    printf("Dispositivo non trovato nella rete\n");
 
   }
 
