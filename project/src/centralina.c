@@ -729,7 +729,7 @@ void stampa_componente_info(string msg, int indent){
       }
 
     }
-
+    distruggi(figli);
     int i = 0;
     for( i = 0; i < indent+1; i++ )
       printf("  ");
@@ -789,6 +789,7 @@ void stampa_componente_info(string msg, int indent){
 
 
   }
+  distruggi(coda);
 
 
 }
