@@ -590,6 +590,7 @@ void stampa_componente_info(string msg, int indent){
     char id[20], tmp[1024], stato[20];
     primo(coda, id, TRUE);
     primo(coda, stato, TRUE);
+    primo(coda, tmp, TRUE);
 
     printf("HUB id: %s override: %s [\n", id, stato);
 

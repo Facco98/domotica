@@ -96,6 +96,7 @@ void distruggi( lista_stringhe* lista ){
 
       nodo_stringa* tmp = nodo;
       nodo = nodo -> succ;
+      free(tmp -> val);
       free(tmp);
 
     }

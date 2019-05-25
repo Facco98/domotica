@@ -282,7 +282,7 @@ void ascolta_e_interpreta(registro* registri[], int numero_registri, boolean* ap
     printf("Comando non supportato: %s\n", nome_comando); //OK
     send_msg(pipe_interna, "DONE");
   }
-
+  distruggi(istruzioni);
 
 
 
@@ -330,6 +330,7 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
   registro* riempimento = registri[2];
   registro* temperatura = registri[3];
 
+  boolean res = FALSE;
   char id_comp[20];
   primo(istruzioni, id_comp, TRUE); //recupero l'id indicato nel messaggio, se sono io faccio robe
   int id_ric = atoi(id_comp);
@@ -340,16 +341,7 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
 
     char pos[20];
     primo(istruzioni, pos, TRUE);
-    /*a questo punto possono succedere diverse cose
-      * posso aprire il frigo                                     //OK
-      *posso chiudere il frigo                                    //OK
-                                              //in questi casi mi comporto come fossi una finestra
-      * posso dovermi chiudere automaticamente 			          //fatto, bisogna capire quando si modifica questo valore (delay)
-      *posso dover regolare il termostato                         //OK
-      *
-      */
-//Se è un Hmessaggio tolgo la H dall'inizio e procedo normalmente
-    //in seguito il codice per aprire o chiudere il frigo (tramite comando), la chiusura automatica non è ancora implementata né la gestione del termostato
+
      if(strcmp(azione, "OPEN") == 0 && strcmp(pos, "ON") == 0)//se devo aprire il frigo
       {
         if(*stato == FALSE)//se il frigo è CHIUSO
@@ -360,6 +352,7 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
           tempo_utilizzo -> da_calcolare = TRUE;
           *apri = FALSE; //interruttore torna su off
           alarm(chiusura -> valore.integer); //tra x valore del registro chiusura mi arriva un SIGALARM
+          res = TRUE;
         }
       }
       else if(strcmp(azione, "CLOSE") == 0 && strcmp(pos, "ON") == 0)
@@ -373,11 +366,13 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
           tempo_utilizzo -> valore.integer += (ora - apertura);
           tempo_utilizzo -> da_calcolare = FALSE;
           alarm(0); //cancella l'alarm di chiusura se inviato precedentemente
+          res = TRUE;
         }
       }
     else if (strcmp(azione, "TEMPERATURE") ==  0)
     { //controllo se devo impostare la temperatura
       temperatura->valore.integer = atoi(pos);  //imposto la temperatura del frigo alla temperatura voluta
+      res = TRUE;
     }
     else if (strcmp(azione, "DELAY") == 0) { // se devo modificare il ritardo
       chiusura -> valore.integer = atoi(pos); //imposto il registro chiusura al valore voluto
@@ -385,11 +380,15 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
 
         alarm(0);
         alarm(chiusura -> valore.integer);
+        res = TRUE;
 
       }
     }
   }
-  send_msg(pipe_interna, "TRUE");
+  if( res == TRUE )
+    send_msg(pipe_interna, "TRUE");
+  else
+    send_msg(pipe_interna, "FALSE");
 }
 
 void gestisci_STATUSGET(coda_stringhe* istruzioni, registro* registri[], int numero_registri, boolean* stato){

@@ -156,6 +156,7 @@ int main( int argn, char** argv ){
       distruggi(c);
 
     }
+    distruggi(coda);
 
 
   }
@@ -226,6 +227,7 @@ void ascolta_e_interpreta(){
     send_msg(pipe_interna, "DONE");
 
   }
+  distruggi(separata);
 
 }
 
@@ -442,6 +444,9 @@ void gestisci_LABELUP(coda_stringhe* separata){
   primo(separata, id_ric, FALSE);
   int id_comp = atoi(id_ric);
   char msg[200];
+
+  boolean ret = FALSE;
+
   if( id_comp == id || id_comp == ID_UNIVERSALE ){
 
     // Prendo il nome dell'interruttore e la nuova posizione.
@@ -468,7 +473,7 @@ void gestisci_LABELUP(coda_stringhe* separata){
       strcat(msg, " ");
       strcat(msg, tmp);
     }
-    free(separata);
+    //free(separata);
 
   }
 
@@ -477,6 +482,7 @@ void gestisci_LABELUP(coda_stringhe* separata){
 
     string pipe = it -> val;
     char res[10];
+    strcpy(res, "");
     if( send_msg(pipe, msg) == FALSE || read_msg(pipe, res, 9) == FALSE ){
 
       nodo_stringa* tmp = it;
@@ -485,7 +491,7 @@ void gestisci_LABELUP(coda_stringhe* separata){
       free(tmp -> val);
       free(tmp);
 
-    } else if( id_comp == id || id_comp == ID_UNIVERSALE ){
+    } else if( ( id_comp == id || id_comp == ID_UNIVERSALE ) && strcmp(res, "TRUE") == 0 ){
 
 
       char tmp[200];
@@ -495,13 +501,18 @@ void gestisci_LABELUP(coda_stringhe* separata){
       char stato[1024];
       read_msg(pipe, stato, 1023);
       aggiorna_stati(stato+strlen(GET_STATUS_RESPONSE)+1);
+      ret = TRUE;
+
       it = it -> succ;
 
     } else
       it = it -> succ;
 
   }
-  send_msg(pipe_interna, "TRUE");
+  if( ret == TRUE )
+    send_msg(pipe_interna, "TRUE");
+  else
+    send_msg(pipe_interna, "FALSE");
 
 }
 
@@ -603,7 +614,7 @@ void gestisci_SPAWN(coda_stringhe* separata){
   if( id_comp == id || id_comp == ID_UNIVERSALE ){
 
     genera_figlio(separata);
-    distruggi(separata);
+    //distruggi(separata);
 
   } else {
     //ricostruire il messaggio e rinviarlo sotto
@@ -621,7 +632,7 @@ void gestisci_SPAWN(coda_stringhe* separata){
       strcat(msg, " ");
       strcat(msg, tmp);
     }
-    free(separata);
+    //free(separata);
 
     nodo_stringa* it = lista_pipes -> testa;
     while( it != NULL ){

@@ -128,6 +128,7 @@ int main (int argn, char** argv)  //argomenti servono ??
       decodifica_controllo(argv[6]);
       coda_stringhe* status = crea_coda_da_stringa(argv[6], " ");
       genera_figlio(status);
+      distruggi(status);
     }
   }
 
@@ -268,7 +269,7 @@ void ascolta_e_interpreta(registro* registri[], int numero_registri)
     printf("Comando non supportato: %s\n", comando);
     send_msg(pipe_interna, "DONE");
   }
-
+  distruggi(istruzioni);
 
 }
 
@@ -375,7 +376,7 @@ void gestisci_STATUSGET(coda_stringhe* istruzioni)
     {
       send_msg(pipe_interna, "DONE");
     }
-    free(istruzioni);
+    //free(istruzioni);
 
   }
 
@@ -396,7 +397,7 @@ void gestisci_CONFIRM(coda_stringhe* istruzioni)
   {
     send_msg(pipe_interna, "FALSE");
   }
-  free(istruzioni);
+  //free(istruzioni);
 
 }
 
@@ -560,7 +561,7 @@ void genera_figlio(coda_stringhe* status)
 
     }
     sprintf(pipe_figlio, "%s/%s", (string) PERCORSO_BASE_DEFAULT, tmp);
-    distruggi(status);
+    //distruggi(status);
 
   }
 
@@ -574,6 +575,8 @@ void genera_figlio(coda_stringhe* status)
 LABELUP id interruttore(begin/end) nuovo_stato(=valore int)
 
 */
+
+
 void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], int numero_registri)
 {
   registro* begin = registri[0];
@@ -583,6 +586,7 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], int numer
   char id_ric[50];
 	primo(istruzioni, id_ric, FALSE);
 	int id_comp = atoi(id_ric);
+  boolean ret = FALSE;
 
   if( id_comp == id || id_comp == ID_UNIVERSALE ) //se è l'azione è per me
   {
@@ -598,10 +602,12 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], int numer
       signal(SIGALRM, gestisci_begin); //da fare --> l agestisci begin gestirà la end
       alarm(begin -> valore.integer); //in secondi
       //alarm => fra tot tempo fai qualcosa
+      ret = TRUE;
     }
     else if(strcmp(interruttore, "END") == 0) //se devo agire sul registro end
     {
       end -> valore.integer = atoi(nuovo_valore);
+      ret = TRUE;
       //farà qualcosa al figlio
     }
 
@@ -621,14 +627,20 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], int numer
         send_msg(pipe_figlio, msg);
         read_msg(pipe_figlio, msg, 19);
 
-        //printf("[RICEVO]\n");
-        char comando[200];
-        sprintf(comando, "%s %d", GET_STATUS, ID_UNIVERSALE); //preparo il messaggio
-        send_msg(pipe_figlio, comando);
+        ret = strcmp(msg, "TRUE") == 0 ? TRUE : FALSE;
 
-        char stato[1024];
-        read_msg(pipe_figlio, stato, 1023); // leggo risposta dello stato del figlio
-        aggiorna_stati(stato + strlen(GET_STATUS_RESPONSE) + 1);
+        //printf("[RICEVO]\n");
+
+        if( ret == TRUE ){
+
+          char comando[200];
+          sprintf(comando, "%s %d", GET_STATUS, ID_UNIVERSALE); //preparo il messaggio
+          send_msg(pipe_figlio, comando);
+
+          char stato[1024];
+          read_msg(pipe_figlio, stato, 1023); // leggo risposta dello stato del figlio
+          aggiorna_stati(stato + strlen(GET_STATUS_RESPONSE) + 1);
+        }
       }
 
 
@@ -687,9 +699,9 @@ void gestisci_begin(int x)
     send_msg(pipe_figlio, msg1);
     read_msg(pipe_figlio, stato, 1023);
 
-    aggiorna_stati(stato + strlen(GET_STATUS_RESPONSE)+1);
+    //aggiorna_stati(stato + strlen(GET_STATUS_RESPONSE)+1);
 
-
+    alarm(0);
     signal(SIGALRM, gestisci_end);
     alarm(registri[1] -> valore.integer);
   }
@@ -715,7 +727,6 @@ void gestisci_end(int x)
     read_msg(pipe_figlio, stato, 1023);
 
     aggiorna_stati(stato + strlen(GET_STATUS_RESPONSE)+1);
-    aggiorna_stati(stato);
   }
 }
 
@@ -750,7 +761,7 @@ void gestisci_ID(coda_stringhe* istruzioni)
       send_msg(pipe_interna, "FALSE");
 
   }
-  free(istruzioni);
+  //free(istruzioni);
 
 }
 
@@ -784,6 +795,7 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
       nodo_stringa* it = figli -> testa;
       strcpy(stato, it -> val);
       figli -> testa = figli -> testa -> succ;
+      free(it -> val);
       free(it);
       if( strcmp(stato, "]") != 0 ){
         decodifica_controllo(stato);
@@ -892,16 +904,31 @@ void aggiorna_stati(string str){
   primo(coda, tipo, FALSE);
   if( strcmp(tipo, "hub") == 0 || strcmp(tipo, "timer") == 0 ){
 
-    decodifica_hub(copia);
-    coda_stringhe* figli = crea_coda_da_stringa(copia, " ");
-    char stato[400];
-    primo(figli, stato, FALSE);
-    primo(figli, stato, FALSE);
-    primo(figli, stato, FALSE);
-    primo(figli, stato, FALSE);
-    while(primo(figli, stato, FALSE) == TRUE )
-      if( strcmp(stato, "]") != 0)
+    char stato[1024];
+    primo(coda, stato, FALSE); // tipo
+    primo(coda, stato, FALSE); // id
+    primo(coda, stato, FALSE); // stato
+    primo(coda, stato, FALSE); // [ BEGIN
+    if( strcmp(tipo, "timer") == 0 ){
+
+      primo(coda, stato, FALSE);
+      primo(coda, stato, FALSE); //figlio del timer.
+
+    }
+    decodifica_figli(stato);
+    coda_stringhe* figli = crea_coda_da_stringa(stato, " ");
+    while( figli -> testa != NULL ){
+      nodo_stringa* it = figli -> testa;
+      strcpy(stato, it -> val);
+      figli -> testa = figli -> testa -> succ;
+      free(it -> val);
+      free(it);
+      if( strcmp(stato, "]") != 0 ){
+        decodifica_controllo(stato);
         aggiorna_stati(stato);
+      }
+    }
+    distruggi(figli);
     distruggi(coda);
 
   } else{

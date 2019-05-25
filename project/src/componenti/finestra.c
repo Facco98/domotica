@@ -185,6 +185,7 @@ void ascolta_e_interpreta (registro* registri[], int numero_registri, boolean* s
     printf("Comando non supportato: %s\n", nome_comando);
     send_msg(pipe_interna, "DONE");
   }
+  distruggi(istruzioni);
 
 }
 
@@ -196,6 +197,9 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
   char id_comp[20];
   primo(istruzioni, id_comp, TRUE); //recupero l'id indicato nel messaggio
   int id_ric = atoi(id_comp);
+
+  boolean res = FALSE;
+
   //se il comando è indirizzato alla finestra (l'id è il mio) agisco di conseguenza
   if( id_ric == id || id_ric == ID_UNIVERSALE )
   {
@@ -215,6 +219,7 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
           tempo_utilizzo -> da_calcolare = TRUE;
           *apri = FALSE; //interruttore torna su off
         }
+        res = TRUE;
       }
       else if(strcmp(azione, "CLOSE") == 0 && strcmp(pos, "ON") == 0) //se deco CHIUDERE la finestra
       {
@@ -227,15 +232,15 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
           tempo_utilizzo -> valore.integer += (ora - apertura);
           tempo_utilizzo -> da_calcolare = FALSE;
         }
+        res = TRUE;
       }
 
   }
-  else //se l'id non è il mio, il  messaggio non è per me, quindi lo ignoro
-  {
-    distruggi_coda(istruzioni); //elimino il messaggio arrivato
-
-  }
-  send_msg(pipe_interna, "TRUE"); //rispondo sulla pipe interna di aver concluso l'azione
+  //rispondo sulla pipe interna di aver concluso l'azione
+  if( res == TRUE )
+    send_msg(pipe_interna, "TRUE");
+  else
+    send_msg(pipe_interna, "FALSE");
 
 }
 

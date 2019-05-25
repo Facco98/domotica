@@ -212,7 +212,7 @@ void ascolta_e_interpreta( registro* registri[], int numero_registri, boolean* a
     send_msg(pipe_interna, "DONE");
 
   }
-  free(separata);
+  distruggi(separata);
 
 }
 
@@ -224,6 +224,7 @@ void gestisci_LABELUP( coda_stringhe* separata, registro* registri[], boolean* a
   char id_comp[20];
   primo(separata, id_comp, FALSE); //recupero l'id del componente interessato
   int id_ric = atoi(id_comp);
+  boolean res = FALSE;
   //se l'id è il mio (= sono io a dover eseguire il comando)
   if( id_ric == id || id_ric == ID_UNIVERSALE ){
 
@@ -253,11 +254,15 @@ void gestisci_LABELUP( coda_stringhe* separata, registro* registri[], boolean* a
         }
         *accesa = FALSE; //aggiorno lo stato (= "spengo la lampadina")
       }
+      res = TRUE;
 
     }
   }
-  send_msg(pipe_interna, "TRUE"); //informo gli altri processi che costituiscono la lampadina che ho terminato
-
+  //informo gli altri processi che costituiscono la lampadina che ho terminato
+  if( res == TRUE )
+    send_msg(pipe_interna, "TRUE");
+  else
+    send_msg(pipe_interna, "FALSE");
 }
 
 void gestisci_STATUSGET( coda_stringhe* separata, registro* registri[], int numero_registri, boolean* accesa ){
