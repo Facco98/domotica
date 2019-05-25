@@ -40,19 +40,17 @@ void leggi_e_manda_messaggi()
 
 	if (strcmp (tipo_msg, "help") == 0){
 		printf ("I comandi disponibili sono i seguenti:\n");
-		printf ("         - help: stampa la lista dei comandi disponibili\n");
-		printf ("         - switch <id> <label> <pos>");
-		printf ("                                    dove <id> è l'id del dispositivo a cui mandare il messaggio, ");
-		printf ("                                    <label> è l'interruttore o il registro del dispositivo a cui mandare il messaggio e ");
-		printf ("                                    <pos> è la posizione o il valore su cui si vuole impostarlo. \n");
+		printf ("- help: stampa la lista dei comandi disponibili\n");
+		printf ("- switch <id> <label> <pos>");
+		printf ("dove <id> è l'id del dispositivo a cui mandare il messaggio, <label> è l'interruttore o il registro del dispositivo a cui mandare il messaggio e <pos> è la posizione o il valore su cui si vuole impostarlo. \n");
 		printf ("\n ATTENZIONE: altri tipi di comandi o comandi verso dispositivi non esistenti non sono supportati \n");
-		printf ("I comandi disponibili per dispositivo sono, in formato <label> <pos>: \n");
-		printf ("fridge --> OPEN ON, CLOSE ON, DELAY <n>, TEMPERATURE <n>, SET_FILL <n> (dove n è un valore)");
-		printf ("window --> OPEN ON, CLOSE ON");
-		printf ("bulb   --> ACCENSIONE ON");
-		printf ("timer  --> BEGIN <n>, END <n>, <interruttori dei dispositivi figli>");
-		printf ("hub    --> <interruttori dei dispositivi figli>");
-		printf ("centralina --> GENERALE ON, GENERALE OFF, <interruttori dei dispositivi figli>");
+		printf ("\nI comandi disponibili per dispositivo sono: \n");
+		printf ("fridge --> 'switch <id> APERTURA ON/OFF' per aprire/chiudere il frigo, 'switch <id> DELAY <n>' e 'switch <id> TEMPERATURE <n>' per impostare il ritardo di chiusura e la temperatura interna, infine 'fill <id> <n>' per modificare il livello di riempimento del frigo");
+		printf ("window --> 'switch <id> OPEN ON/CLOSE ON' per aprire/chiudere la finestra");
+		printf ("bulb --> 'switch <id> ACCENSIONE ON/OFF' per accendere/spegnere la lampadina");
+		printf ("timer --> 'switch <id> BEGIN <n> / END <n>' per  impostare gli intervalli di tempo di accensione o apertura del dispositivo figlio e i comandi del dispositivo figlio");
+		printf ("hub --> <interruttori dei dispositivi figli>");
+		printf ("centralina --> switch 0 GENERALE ON/OFF per accendere/spegnere la centralina e i comandi dei dispositivi figli");
 	}
 	else if( strcmp(tipo_msg, "switch") == 0 )
 	{
