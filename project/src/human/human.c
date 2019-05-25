@@ -71,6 +71,23 @@ void leggi_e_manda_messaggi()
 			send_msg( percorso_pipe, msg );
 
 		}
+	} else if( strcmp(tipo_msg, "fill") == 0 ){
+
+		if( coda -> n >= 2 ){
+
+			char id[20], perc[20];
+			primo(coda, id, FALSE);
+			primo(coda, perc, FALSE);
+
+			char msg[200];
+			sprintf(msg, "SET_FILL %s %s", id, perc);
+
+			char pipe[200];
+			sprintf(pipe, "%s/%s_ext", (string) PERCORSO_BASE_DEFAULT, id);
+			send_msg(pipe, msg);
+
+		}
+
 	} else {
 
 		printf("Comando non valido: %s\n", tipo_msg);

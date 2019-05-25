@@ -190,8 +190,9 @@ void crea_processi_supporto(registro* registri[], int numero_registri, boolean* 
     while(1) //continuo a trasferire messaggi da pipe_esterna a pipe_interna
     {
       char msg[200];
-      sem_wait(sem);
+
       read_msg(pipe_esterna, msg, 200);
+      sem_wait(sem);
       send_msg(pipe_interna, msg);
       read_msg(pipe_interna, msg, 199);
       sem_post(sem);
@@ -252,6 +253,7 @@ void ascolta_e_interpreta(registro* registri[], int numero_registri, boolean* ap
     perror("Errore in lettura");
   }
 
+  printf("[FRIDGE]%s\n", messaggio);
   //elimino "\n" finale dal messaggio
   strtok(messaggio, "\n");
 
@@ -296,11 +298,16 @@ void ascolta_e_interpreta(registro* registri[], int numero_registri, boolean* ap
   }
   else if (strcmp(nome_comando, "SET_FILL") ==  0)
   { //controllo se devo impostare il riempimento
-    char pos[50];
-    primo(istruzioni, pos, TRUE);
-    int perc = strtol(pos, &a, 10);
-    if( perc <= 100 && perc >= 0 )
-      riempimento->valore.integer = perc;  //imposto il riempimento del frigo al riempimento voluto
+    char id_c[20];
+    primo(istruzioni, id_c, TRUE);
+    if( strtol(id_c, &a, 10) == id || strtol(id_c, &a, 10) == ID_UNIVERSALE ){
+      char pos[50];
+      primo(istruzioni, pos, TRUE);
+      int perc = strtol(pos, &a, 10);
+      if( perc <= 100 && perc >= 0 )
+        riempimento->valore.integer = perc;
+    } //imposto il riempimento del frigo al riempimento voluto
+    send_msg(pipe_interna, "DONE");
   }
   else //qualsiasi altro comando non supportato
   {
@@ -431,7 +438,8 @@ void gestisci_STATUSGET(coda_stringhe* istruzioni, registro* registri[], int num
     }
 
     send_msg(pipe_interna, res); //invio la risposta sulla pipe interna ( che verrà poi inviata alla pipe con il padre dal processo assegnato)
-  }
+  } else
+    send_msg(pipe_interna, "DONE");
 }
 
 
