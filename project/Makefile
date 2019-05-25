@@ -19,7 +19,7 @@ LIBS=$(STRUTTURE_DATI_LIB) $(COMUNICAZIONE_LIB)
 COMPONENTS=$(OUT_FOLDER)/centralina.out $(OUT_FOLDER)/hub.out $(OUT_FOLDER)/fridge.out $(OUT_FOLDER)/bulb.out \
  $(OUT_FOLDER)/window.out $(OUT_FOLDER)/timer.out
 
-.PHONY: help build clean libraries componenti umano run run_human rum spiegazione_processi_pipe
+.PHONY: help build clean libraries componenti umano run run_human rummm spiegazione_processi_pipe
 
 help:
 	@echo "Ricette disponibili"
@@ -41,11 +41,11 @@ clean:
 
 run:
 	@echo "Running ... "
-	cd $(OUT_FOLDER) && ./centralina.out
+	@cd $(OUT_FOLDER) && ./centralina.out
 
 run_human:
 	@echo "External interaction running ..."
-	cd $(COMPILED_UMANO_FOLDER) && ./human.out
+	@cd $(COMPILED_UMANO_FOLDER) && ./human.out
 
 
 # Generazione della cartella di output
@@ -156,7 +156,7 @@ spiegazione_processi_pipe:
 
 
 #easter egg rum: citazione a Jack Sparrow
-rum:
+rummm:
 	@echo "Perché hai bruciato il RUUUUUUUMMM???!!?"
 	@echo "WHY IS THE RUUM GOOOONEEE???!!?"
 
