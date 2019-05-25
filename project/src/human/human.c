@@ -25,9 +25,10 @@ int main(int argn, char** argv){
 //manda un messaggio al dispositivo
 void leggi_e_manda_messaggi()
 {
+	printf("\n");
+	printf("Digitare help per la lista di comandi disponibili\n");
 	printf("%s\n", "Inserire l'id dispositivo e il tipo di messaggio:");
 	//stampare i tipi di messaggi disponibili. Attendere in input gli id e il tipo di messaggio
-	printf("Digitare help per la lista di comandi disponibili\n");
 
 	char input_string[200];
 	fgets(input_string, 199, stdin);
@@ -40,19 +41,18 @@ void leggi_e_manda_messaggi()
 	// stampo i tipi di comandi disponibili
 
 	if (strcmp (tipo_msg, "help") == 0){
-		printf ("I comandi disponibili sono i seguenti: \n");
+		printf ("\nCOMANDI DISPONIBILI :  \n");
 		printf ("- help: stampa la lista dei comandi disponibili \n");
-		printf ("- switch <id> <label> <pos>, ");
-		printf ("dove <id> è l'id del dispositivo a cui mandare il messaggio, <label> è l'interruttore o il registro del dispositivo a cui mandare il messaggio e <pos> è la posizione o il valore su cui si vuole impostarlo. \n");
-		printf ("\n ATTENZIONE: altri tipi di comandi o comandi verso dispositivi non esistenti non sono supportati \n\n");
-		printf ("\n I comandi disponibili per dispositivo sono: \n");
-		printf (" fridge --> 'switch <id> APERTURA ON/OFF' per aprire/chiudere il frigo, 'switch <id> DELAY <n>' e 'switch <id> TEMPERATURE <n>' per impostare il ritardo di chiusura e la temperatura interna, infine 'fill <id> <n>' per modificare il livello di riempimento del frigo \n");
-		printf (" window --> 'switch <id> OPEN ON/CLOSE ON' per aprire/chiudere la finestra \n");
-		printf (" bulb --> 'switch <id> ACCENSIONE ON/OFF' per accendere/spegnere la lampadina \n");
-		printf (" timer --> 'switch <id> BEGIN <n> / END <n>' per  impostare gli intervalli di tempo di accensione o apertura del dispositivo figlio e i comandi del dispositivo figlio \n");
-		printf (" hub --> <interruttori dei dispositivi figli> \n");
-		printf (" centralina --> switch 0 GENERALE ON/OFF per accendere/spegnere la centralina e i comandi dei dispositivi figli \n");
-		printf ("- exit: chiudi");
+		printf ("- switch <id> <label> <pos>\n");
+		printf("- fill <id> <n> :  per modificare il livello di riempimento del frigo \n");
+		printf("- exit: chiudi\n\n");
+		printf("<label> <pos>\n");
+		printf (" fridge --> APERTURA ON/OFF,  DELAY <n>, TEMPERATURE <n>\n");
+		printf (" window --> OPEN ON/CLOSE ON\n");
+		printf (" bulb   --> ACCENSIONE ON/OFF\n");
+		printf (" timer  --> BEGIN <n> / END <n>\n");
+		printf (" hub    --> <interruttori dei dispositivi figli> \n");
+		printf (" centralina --> GENERALE ON/OFF\n");
 	}
 	else if( strcmp(tipo_msg, "switch") == 0 )
 	{
