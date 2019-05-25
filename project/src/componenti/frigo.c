@@ -253,7 +253,6 @@ void ascolta_e_interpreta(registro* registri[], int numero_registri, boolean* ap
     perror("Errore in lettura");
   }
 
-  printf("[FRIDGE]%s\n", messaggio);
   //elimino "\n" finale dal messaggio
   strtok(messaggio, "\n");
 
