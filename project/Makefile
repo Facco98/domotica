@@ -97,46 +97,46 @@ componenti: $(COMPONENTS)
 $(OUT_FOLDER)/centralina.out: $(SRC_FOLDER)/centralina.c  $(COMPILED_LIBRARIES_FOLDER)/comunicazione.o $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o \
 $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o $(COMPILED_LIBRARIES_FOLDER)/lista_stringhe.o
 	@echo "Sto compilando la componente 'centralina'"
-	gcc -std=gnu90  $(SRC_FOLDER)/centralina.c $(COMPILED_LIBRARIES_FOLDER)/* -o $(OUT_FOLDER)/centralina.out -I $(SRC_FOLDER)
+	gcc -std=gnu90 -pthread $(SRC_FOLDER)/centralina.c $(COMPILED_LIBRARIES_FOLDER)/* -o $(OUT_FOLDER)/centralina.out -I $(SRC_FOLDER)
 
 #Generazione di hub
 $(OUT_FOLDER)/hub.out: $(SRC_FOLDER)/componenti/hub.c $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o \
 	$(COMPILED_LIBRARIES_FOLDER)/comunicazione.o
 	@echo "Sto compilando la componente 'hub'"
-	gcc -std=gnu90  $(SRC_FOLDER)/componenti/hub.c $(COMPILED_LIBRARIES_FOLDER)/* -o $(OUT_FOLDER)/hub.out -I $(SRC_FOLDER)
+	gcc -std=gnu90 -pthread $(SRC_FOLDER)/componenti/hub.c $(COMPILED_LIBRARIES_FOLDER)/* -o $(OUT_FOLDER)/hub.out -I $(SRC_FOLDER)
 
 #Generazione di timer
 
 $(OUT_FOLDER)/timer.out: $(SRC_FOLDER)/componenti/timer.c $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o \
 	$(COMPILED_LIBRARIES_FOLDER)/comunicazione.o
 	@echo "Sto compilando la componente 'timer'"
-	gcc -std=gnu90 $(SRC_FOLDER)/componenti/timer.c $(COMPILED_LIBRARIES_FOLDER)/* -o $(OUT_FOLDER)/timer.out -I $(SRC_FOLDER)
+	gcc -std=gnu90 -pthread $(SRC_FOLDER)/componenti/timer.c $(COMPILED_LIBRARIES_FOLDER)/* -o $(OUT_FOLDER)/timer.out -I $(SRC_FOLDER)
 
 #Generazione della lampadina
 
 $(OUT_FOLDER)/bulb.out: $(SRC_FOLDER)/componenti/lampadina.c $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o \
 	$(COMPILED_LIBRARIES_FOLDER)/comunicazione.o
 	@echo "Sto compilando la componente 'lampadina'"
-	gcc -std=gnu90 $(SRC_FOLDER)/componenti/lampadina.c $(COMPILED_LIBRARIES_FOLDER)/* -o $(OUT_FOLDER)/bulb.out -I $(SRC_FOLDER)
+	gcc -std=gnu90 -pthread $(SRC_FOLDER)/componenti/lampadina.c $(COMPILED_LIBRARIES_FOLDER)/* -o $(OUT_FOLDER)/bulb.out -I $(SRC_FOLDER)
 
 #Generazione del frigo
 
 $(OUT_FOLDER)/fridge.out: $(SRC_FOLDER)/componenti/frigo.c $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o \
 	$(COMPILED_LIBRARIES_FOLDER)/comunicazione.o
 	@echo "Sto compilando la componente 'frigo'"
-	gcc -std=gnu90 $(SRC_FOLDER)/componenti/frigo.c $(COMPILED_LIBRARIES_FOLDER)/* -o $(OUT_FOLDER)/fridge.out -I $(SRC_FOLDER)
+	gcc -std=gnu90 -pthread $(SRC_FOLDER)/componenti/frigo.c $(COMPILED_LIBRARIES_FOLDER)/* -o $(OUT_FOLDER)/fridge.out -I $(SRC_FOLDER)
 
 #Generazione della finestra
 $(OUT_FOLDER)/window.out: $(SRC_FOLDER)/componenti/finestra.c $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o \
 	$(COMPILED_LIBRARIES_FOLDER)/comunicazione.o
 	@echo "Sto compilando la componente 'finestra'"
-	gcc -std=gnu90 $(SRC_FOLDER)/componenti/finestra.c $(COMPILED_LIBRARIES_FOLDER)/* -o $(OUT_FOLDER)/window.out -I $(SRC_FOLDER)
+	gcc -std=gnu90 -pthread $(SRC_FOLDER)/componenti/finestra.c $(COMPILED_LIBRARIES_FOLDER)/* -o $(OUT_FOLDER)/window.out -I $(SRC_FOLDER)
 
 
 # Regole per la generazione dell'umano
 
 umano: $(COMPILED_UMANO_FOLDER)/human.out
-	
+
 $(COMPILED_UMANO_FOLDER):
 	@echo "Sto creando la cartella $(COMPILED_UMANO_FOLDER)"
 	@mkdir $(COMPILED_UMANO_FOLDER)
@@ -145,7 +145,7 @@ $(COMPILED_UMANO_FOLDER):
 $(COMPILED_UMANO_FOLDER)/human.out: $(COMPILED_UMANO_FOLDER) $(SRC_FOLDER)/human/human.c $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o \
 	$(COMPILED_LIBRARIES_FOLDER)/comunicazione.o
 	@echo "Sto compilando il file 'umano'"
-	gcc -std=gnu90 $(SRC_FOLDER)/human/human.c $(COMPILED_LIBRARIES_FOLDER)/* -o $(COMPILED_UMANO_FOLDER)/human.out -I $(SRC_FOLDER)
+	gcc -std=gnu90 -pthread $(SRC_FOLDER)/human/human.c $(COMPILED_LIBRARIES_FOLDER)/* -o $(COMPILED_UMANO_FOLDER)/human.out -I $(SRC_FOLDER)
 
 
 #easter egg disegno: disegno/spiegazione dei processi e delle pipe di un dispositivo
