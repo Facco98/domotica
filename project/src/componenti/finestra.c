@@ -28,7 +28,7 @@ void gestisci_ID(coda_stringhe* istruzioni);
 void termina(int x);
 
 //gestisce la creazione dei processi che costiutiscono il componente (finestra)
-void crea_processi_supporto(registro* registri[], int numero_registri, boolean* stato, boolean* apri, boolean* chiudi);
+void rocessi_supporto(registro* registri[], int numero_registri, boolean* stato, boolean* apri, boolean* chiudi);
 
 //funzione per interpretare messaggi
 void ascolta_e_interpreta (registro* registri[], int numero_registri, boolean* stato, boolean* apri, boolean* chiudi);
@@ -40,7 +40,6 @@ char pipe_interna[50]; //pipe per comunicare all'interno della finestra
 char pipe_esterna[50]; //pipe per comunicare con l'umano
 
 pid_t figli[2]; //memorizzo i process_id dei figli (i processi che costituiscono la finestra)
-char* a;
 
 int main (int argn, char** argv)
 {
@@ -69,10 +68,8 @@ int main (int argn, char** argv)
   }
 
   //recupero l'id del componente che deve sempre essere passato per primo
-  id = strtol(argv[1], &a, 10);
+  id = atoi(argv[1]);
 
-  if( id == 0 )
-    exit(0);
   //FORMATO ARGOMENTI: nomefile(argv[0]) id(argv[1]) stato(argv[2]) tempo_di_utilizzo(argv[3])
   if(argn >= 3) //FORMATO INPUT : file id stato
   {
@@ -92,7 +89,7 @@ int main (int argn, char** argv)
   if(argn >= 4) //FORMATO INPUT : file id stato tempo
   {
     string tempo = argv[3];
-    tempo_utilizzo.valore.integer = strtol(tempo, &a, 10); //aggiorno il registro
+    tempo_utilizzo.valore.integer = atoi(tempo); //aggiorno il registro
   }
 
 
@@ -164,7 +161,7 @@ void ascolta_e_interpreta (registro* registri[], int numero_registri, boolean* s
   {
     char tmp[20];
     primo(istruzioni, tmp, TRUE);
-    int id_ric = strtol(tmp, &a, 10);
+    int id_ric = atoi(tmp);
     if( id_ric == id || id_ric == ID_UNIVERSALE ){
 
       termina(0);
@@ -198,7 +195,7 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
 
   char id_comp[20];
   primo(istruzioni, id_comp, TRUE); //recupero l'id indicato nel messaggio
-  int id_ric = strtol(id_comp, &a, 10);
+  int id_ric = atoi(id_comp);
 
   boolean res = FALSE;
 
@@ -250,7 +247,7 @@ void gestisci_STATUSGET(coda_stringhe* istruzioni, registro* registri[], int num
 {
   char indice_ric[10];
   primo(istruzioni, indice_ric, TRUE); //recupero l'id del dispositivo interessato
-  int indice = strtol(indice_ric, &a, 10);
+  int indice = atoi(indice_ric);
 
   if( indice == ID_UNIVERSALE || indice == id ) //se sono io il dispositivo prescelto
   {
@@ -276,7 +273,7 @@ void gestisci_ID(coda_stringhe* istruzioni)
   char tmp[10];
   primo(istruzioni, tmp, TRUE); //ricavo l'id dal messaggio
 
-  if( strtol(tmp, &a, 10) == id ) //se l'id è il mio
+  if( atoi(tmp) == id ) //se l'id è il mio
   {
     send_msg(pipe_interna, "TRUE"); //rispondo TRUE sulla pipe_interna (che verrà inviato alla pipe_padre)
   }

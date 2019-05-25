@@ -70,8 +70,6 @@ char pipe_esterna[50]; //pipe per comunicare con l'umano
 
 pid_t figli[2];//memorizzo i process_id dei figli (i processi che costituiscono la lampadina)
 
-char* a;
-
 int main( int argn, char** argv ){
 
   /*
@@ -99,9 +97,7 @@ int main( int argn, char** argv ){
   * L'id del componente. deve essere fornito come primo argomento sulla
   * linea di comando.
   */
-  id = strtol(argv[1], &a, 10);
-  if( id == 0 )
-    exit(0);
+  id = atoi(argv[1]);
 
   /*
   * E' possibile fornire anche gli altri valori al posto di quelli standard in questo
@@ -120,7 +116,7 @@ int main( int argn, char** argv ){
 
   if( argn >= 4 ){ //recupero il tempo di utilizzo
     string tempo = argv[3]; //aggiorno il registro time
-    tempo_utilizzo.valore.integer = strtol(tempo, &a, 10);
+    tempo_utilizzo.valore.integer = atoi(tempo);
   }
 
   /* creo le pipe destinate alla comunicazione con l'umano (pipe_esterna)
@@ -194,7 +190,7 @@ void ascolta_e_interpreta( registro* registri[], int numero_registri, boolean* a
 
     char tmp[20];
     primo(separata, tmp, FALSE);
-    int id_ric = strtol(tmp, &a, 10);
+    int id_ric = atoi(tmp);
     if( id_ric == id || id_ric == ID_UNIVERSALE ){ //se sono io il dispositivo da rimuovere
 
       termina(0);
@@ -227,7 +223,7 @@ void gestisci_LABELUP( coda_stringhe* separata, registro* registri[], boolean* a
 
   char id_comp[20];
   primo(separata, id_comp, FALSE); //recupero l'id del componente interessato
-  int id_ric = strtol(id_comp, &a, 10);
+  int id_ric = atoi(id_comp);
   boolean res = FALSE;
   //se l'id è il mio (= sono io a dover eseguire il comando)
   if( id_ric == id || id_ric == ID_UNIVERSALE ){
@@ -273,7 +269,7 @@ void gestisci_STATUSGET( coda_stringhe* separata, registro* registri[], int nume
 
     char indice_ric[10];
     primo(separata, indice_ric, FALSE); //recupero l'indice
-    int indice = strtol(indice_ric, &a, 10);
+    int indice = atoi(indice_ric);
     //se sono il dispositivo che deve eseguire il comando
     if( indice == ID_UNIVERSALE || indice == id ){
       int i = 0;
@@ -298,7 +294,7 @@ void gestisci_ID(coda_stringhe* separata){
 
   char tmp[10];
   primo(separata, tmp, FALSE); //recupero l'id
-  if( strtol(tmp, &a, 10) == id ) //se corrisponde al mio
+  if( atoi(tmp) == id ) //se corrisponde al mio
     send_msg(pipe_interna, "TRUE"); //restituisco TRUE
   else //se non corrisponde al mio
     send_msg(pipe_interna, "FALSE"); //restituisco FALSE

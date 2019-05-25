@@ -62,8 +62,6 @@ void gestisci_end(int x);
 //sostituisce gli '_' con gli spazi ' ' all'interno di una stringa
 void decodifica_controllo(string tmp);
 
-char* a;
-
 
 int id; //id del dispositivo
 
@@ -111,22 +109,19 @@ int main (int argn, char** argv)
     exit(130);
   }
 
-  id = strtol(argv[1], &a, 10); //recupero l'id del componente
-
-  if( id == 0 )
-    exit(0);
+  id = atoi(argv[1]); //recupero l'id del componente
 
   //se ricevo più argomenti da riga di Comando
   //FORMATO INPUT : nome_file id stato_timer begin end [dati_del_figlio]
   //datidelfiglio ==> stringa separata da underscore
   if(argn >= 4) //recupero registro begin
   {
-    registri[0]->valore.integer = strtol(argv[3], &a, 10);
+    registri[0]->valore.integer = atoi(argv[3]);
   }
 
   if(argn >= 5) //recupero registro end
   {
-    registri[1]->valore.integer = strtol(argv[4], &a, 10);
+    registri[1]->valore.integer = atoi(argv[4]);
   }
 
   if(argn >= 7) //recupero i dati del figlio
@@ -283,7 +278,7 @@ void gestisci_STATUSGET(coda_stringhe* istruzioni)
   //printf("[TIMER STATUSGET INIZIO]\n");
   char id_ric[50];
   primo(istruzioni, id_ric, FALSE); //recupero l'id
-  int id_comp = strtol(id_ric, &a, 10);
+  int id_comp = atoi(id_ric);
 
   //printf("[TIMER STATUSGET]\n");
   boolean override = FALSE;
@@ -396,7 +391,7 @@ void gestisci_CONFIRM(coda_stringhe* istruzioni)
   // Recupero l'ID e rispondo se è il mio o no.
   char id_ric[20];
   primo(istruzioni, id_ric, FALSE);
-  int id_comp = strtol(id_ric, &a, 10);
+  int id_comp = atoi(id_ric);
   if( id_comp == id || id_comp == ID_UNIVERSALE ) //se l'id è mio
   {
     send_msg(pipe_interna, "TRUE");
@@ -440,7 +435,7 @@ void gestisci_REMOVE(coda_stringhe* istruzioni)
   // Recupero l'ID e in caso mi termino.
   char id_ric[20];
   primo(istruzioni, id_ric, FALSE);
-  int id_comp = strtol(id_ric, &a, 10);
+  int id_comp = atoi(id_ric);
   if( id_comp == id || id_comp == ID_UNIVERSALE ) //se l'id corrisponde al mio
   {
     termina(0);
@@ -478,7 +473,7 @@ void gestisci_SPAWN(coda_stringhe* istruzioni)
   //controllo se sono io a dover generare un figlio se si genero
   char id_ric[20];
   primo(istruzioni, id_ric, FALSE);
-  int id_comp = strtol(id_ric, &a, 10);
+  int id_comp = atoi(id_ric);
   if( id_comp == id || id_comp == ID_UNIVERSALE ) //se l'id è mio
   {
     genera_figlio(istruzioni); //genero il figlio
@@ -571,7 +566,7 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], int numer
   //recupero l'id
   char id_ric[50];
 	primo(istruzioni, id_ric, FALSE);
-	int id_comp = strtol(id_ric, &a, 10);
+	int id_comp = atoi(id_ric);
   boolean ret = FALSE;
 
   if( id_comp == id || id_comp == ID_UNIVERSALE ) //se l'azione è per me
@@ -582,16 +577,16 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], int numer
     primo(istruzioni, interruttore, FALSE); //recupero l'interruttore da gestire
     primo(istruzioni, nuovo_valore, FALSE); //recupero il valore
 
-    if(strcmp(interruttore, "BEGIN") == 0 && (strtol(nuovo_valore, &a, 10) >= 1)) //se devo agire sul registro begin
+    if(strcmp(interruttore, "BEGIN") == 0 && (atoi(nuovo_valore) >= 1)) //se devo agire sul registro begin
     {
-      begin -> valore.integer = strtol(nuovo_valore, &a, 10); //imposto valore del registro
+      begin -> valore.integer = atoi(nuovo_valore); //imposto valore del registro
       signal(SIGALRM, gestisci_begin);//imposto alarm che attiva il timer
       alarm(begin -> valore.integer); //in secondi
       ret = TRUE;
     }
-    else if(strcmp(interruttore, "END") == 0 && (strtol(nuovo_valore, &a, 10) >= 1)) //se devo agire sul registro end
+    else if(strcmp(interruttore, "END") == 0 && (atoi(nuovo_valore) >= 1)) //se devo agire sul registro end
     {
-      end -> valore.integer = strtol(nuovo_valore, &a, 10);
+      end -> valore.integer = atoi(nuovo_valore);
       ret = TRUE;
     }
 
@@ -731,7 +726,7 @@ void gestisci_ID(coda_stringhe* istruzioni)
   // Recupero l'ID e rispondo se riesco a raggiungerlo
   char id_ric[20];
   primo(istruzioni, id_ric, FALSE);
-  int id_comp = strtol(id_ric, &a, 10);
+  int id_comp = atoi(id_ric);
 
   //se l'id è il mio -> rispondo TRUE (= sono io)
   if( id_comp == id || id_comp == ID_UNIVERSALE )
