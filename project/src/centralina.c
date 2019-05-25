@@ -714,15 +714,19 @@ void stampa_componente_info(string msg, int indent){
     primo(coda, id, TRUE);
     primo(coda, stato, TRUE);
     primo(coda, tmp, TRUE);
+    primo(coda, tmp, TRUE);
+
+    decodifica_figli(tmp);
+    coda_stringhe* figli = crea_coda_da_stringa(tmp, " ");
 
     printf("HUB id: %s override: %s [\n", id, stato);
     //chiedo a tutti i miei figli il loro stato
-    while(primo(coda, tmp, FALSE) == TRUE){
+    while(primo(figli, tmp, FALSE) == TRUE){
       //stampo lo stato di ogni figlio
-      if( strcmp(tmp, "]") == 0 )
-        break;
-      decodifica_controllo(tmp);
-      stampa_componente_info(tmp, indent+1);
+      if( strcmp(tmp, "]") != 0 ){
+        decodifica_controllo(tmp);
+        stampa_componente_info(tmp, indent+1);
+      }
 
     }
 
