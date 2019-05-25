@@ -250,7 +250,7 @@ void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* 
 
   } else if( strcmp( comando, "del") == 0 ){ //rimuove un dispositivo
     //controllo di avere abbastanza argomenti
-    if( separata -> n >= 3 )
+    if( separata -> n >= 1 )
       gestisci_del(separata, lista_pipes, da_creare);
     else
       printf("Argomento mancante\n");
