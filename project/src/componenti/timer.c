@@ -580,7 +580,7 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], int numer
     if(strcmp(interruttore, "BEGIN") == 0 && (atoi(nuovo_valore) >= 1)) //se devo agire sul registro begin
     {
       begin -> valore.integer = atoi(nuovo_valore); //imposto valore del registro
-      signal(SIGALRM, gestisci_begin);
+      signal(SIGALRM, gestisci_begin);//imposto alarm che attiva il timer
       alarm(begin -> valore.integer); //in secondi
       ret = TRUE;
     }
@@ -657,24 +657,32 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], int numer
 
 void gestisci_begin(int x)
 {
-  if(strcmp(pipe_figlio, "") != 0)
+  //quando il tiemr si attiva, deve azionare i dispositivo collegato
+  if(strcmp(pipe_figlio, "") != 0) //se il figlio esiste
   {
-    char msg1[200], msg2[200];
+    //invio messaggio di apertura e chiusura
+    char msg1[200], msg2[200], msg3[200];
     sprintf(msg1, "%s %d %s %s", UPDATE_LABEL, ID_UNIVERSALE, "ACCENSIONE", "ON");
     sprintf(msg2, "%s %d %s %s", UPDATE_LABEL, ID_UNIVERSALE, "OPEN", "ON");
+    sprintf(msg3, "%s %d %s %s", UPDATE_LABEL, ID_UNIVERSALE, "APERTURA", "ON");
 
+
+    //leggo la risposta del filgio
     send_msg(pipe_figlio, msg1);
     read_msg(pipe_figlio, msg1, 199);
     send_msg(pipe_figlio, msg2);
     read_msg(pipe_figlio, msg2, 199);
+    send_msg(pipe_figlio, msg3);
+    read_msg(pipe_figlio, msg3, 199);
 
+
+    //recupero lo stato del figlio
     char stato[1024];
     sprintf(msg1, "%s %d", GET_STATUS, ID_UNIVERSALE);
     send_msg(pipe_figlio, msg1);
     read_msg(pipe_figlio, stato, 1023);
 
-    //aggiorna_stati(stato + strlen(GET_STATUS_RESPONSE)+1);
-
+    //imposto la alarm per inviare un segnale quando scade il timer
     alarm(0);
     signal(SIGALRM, gestisci_end);
     alarm(registri[1] -> valore.integer);
@@ -684,31 +692,38 @@ void gestisci_begin(int x)
 
 void gestisci_end(int x)
 {
-  if(strcmp(pipe_figlio, "") != 0)
+  //quando scade il timer deve chiudere/spegnere il dispositivo collegato
+  if(strcmp(pipe_figlio, "") != 0) //se figlio esiste
   {
-    char msg1[200], msg2[200];
+    //preparo messaggio da inviare
+    char msg1[200], msg2[200], msg3[200];
     sprintf(msg1, "%s %d %s %s", UPDATE_LABEL, ID_UNIVERSALE, "ACCENSIONE", "OFF");
     sprintf(msg2, "%s %d %s %s", UPDATE_LABEL, ID_UNIVERSALE, "CLOSE", "ON");
+    sprintf(msg3, "%s %d %s %s", UPDATE_LABEL, ID_UNIVERSALE, "APERUTRA", "OFF");
 
+    //invio messaggio al figlio
     send_msg(pipe_figlio, msg1);
     read_msg(pipe_figlio, msg1, 199);
     send_msg(pipe_figlio, msg2);
     read_msg(pipe_figlio, msg2, 199);
+    send_msg(pipe_figlio, msg3);
+    read_msg(pipe_figlio, msg3, 199);
 
+    //chiedo al figlio il suo nuovo stato
     char stato[1024];
     sprintf(msg1, "%s %d", GET_STATUS, ID_UNIVERSALE);
     send_msg(pipe_figlio, msg1);
     read_msg(pipe_figlio, stato, 1023);
 
+    //aggiorno lo stato atteso del figlio
     aggiorna_stati(stato + strlen(GET_STATUS_RESPONSE)+1);
   }
 }
 
 
-//restituisce True se l'id è il proprio altrimenti interroga il figlio se è il suo id
 void gestisci_ID(coda_stringhe* istruzioni)
 {
-  // Recupero l'ID e rispondo se è il mio o no.
+  // Recupero l'ID e rispondo se riesco a raggiungerlo
   char id_ric[20];
   primo(istruzioni, id_ric, FALSE);
   int id_comp = atoi(id_ric);
@@ -718,7 +733,7 @@ void gestisci_ID(coda_stringhe* istruzioni)
   {
     send_msg(pipe_interna, "TRUE");
   }
-  else //se non sono io devo chiedere a mio figlio se lid è il suo
+  else //se non sono io devo chiedere a mio figlio se è in grado di raggiungerlo
   {
     if(strcmp(pipe_figlio, "") != 0) //se filgio esiste
     {
@@ -732,15 +747,16 @@ void gestisci_ID(coda_stringhe* istruzioni)
       send_msg(pipe_interna, res); //invio la risposta ricevuta nella pipe interna
 
     } else
+    {
       send_msg(pipe_interna, "FALSE");
-
+    }
   }
-  //free(istruzioni);
 
 }
 
-boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe* confronti){
-
+boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe* confronti)
+{
+  //calcola se c'è stato override manuale
   boolean res = FALSE;
   char copia[1024];
   strcpy(copia, str);
@@ -748,8 +764,8 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
 
   char tipo[20];
   primo(coda, tipo, FALSE);
-  printf("[TIPO]%s\n", tipo);
-
+  //printf("[TIPO]%s\n", tipo);
+  //se è un hub o un timer devo controllare anche i filgi
   if( strcmp(tipo, "hub") == 0 || strcmp(tipo, "timer") == 0 ){
 
     char stato[1024];
@@ -778,7 +794,7 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
     }
     distruggi(figli);
 
-  } else {
+  } else { //ogni altr dispositivo
 
     nodo_stringa* it = tipi_figli -> testa;
 
@@ -786,7 +802,7 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
     primo(coda, confronto, FALSE);
     primo(coda, confronto, FALSE);
 
-    printf("[TO CHECK]%s\n", confronto);
+    //printf("[TO CHECK]%s\n", confronto);
     int i = 0;
     boolean trovato = FALSE;
     while( it != NULL && trovato == FALSE ){
@@ -813,8 +829,8 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
       char precedente[20];
 
       get(confronti, i, precedente);
-      printf("[CONFRONTO]%s\n", confronto);
-      printf("[PRECEDENTE]%s\n", precedente);
+      //printf("[CONFRONTO]%s\n", confronto);
+      //printf("[PRECEDENTE]%s\n", precedente);
       res = strcmp(precedente, confronto) == 0 ? FALSE : TRUE;
 
     }
@@ -826,7 +842,7 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
 }
 
 void decodifica_figli( string tmp ){
-
+  //in una stringa, sostituisce le ',' con ' '
   int count = 0;
   int j;
   for( j = 0; tmp[j] != '\0'; j++ ){
@@ -839,10 +855,8 @@ void decodifica_figli( string tmp ){
 
 }
 
-
-
 void aggiorna_stati(string str){
-
+  //aggiorna la lista degli stati attesi dei figli
   char copia[1024];
   strcpy(copia, str);
 
@@ -850,6 +864,7 @@ void aggiorna_stati(string str){
   char tipo[50];
 
   primo(coda, tipo, FALSE);
+  //se è un hub o un timer deve controllare anche i figli
   if( strcmp(tipo, "hub") == 0 || strcmp(tipo, "timer") == 0 ){
 
     char stato[1024];
