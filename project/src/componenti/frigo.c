@@ -47,6 +47,7 @@ pid_t figli[2]; //memorizzo i process_id dei figli (i processi che costituiscono
 boolean stato; //stato del frigo, interruttore per l'apertura/chiusura
 registro* registri[4]; //registri del frigo, sono 4: tempo di utilizzo, tempo dopo cui il frigo si richiude automaticamente, percentuale di riempimento e temperatura interna
 
+char* a;
 
 int main (int argn, char** argv)
 {
@@ -66,7 +67,7 @@ int main (int argn, char** argv)
   strcpy(chiusura.nome, "delay");
   chiusura.da_calcolare = FALSE;
   chiusura.valore.integer = 10; //imposto il valore di default pari a 10 secondi
-  chiusura.is_intero = TRUE; 
+  chiusura.is_intero = TRUE;
 
   //percentuale di riempimento
   registro riempimento;
@@ -96,7 +97,9 @@ int main (int argn, char** argv)
   }
 
   //recupero l'id
-  id = atoi(argv[1]);
+  id = strtol(argv[1], &a, 10);
+  if( id == 0 )
+    exit(0);
 // se gli argomenti sono più di 3 allora posso mettere i valori in input, sovrascritti a quelli di default
   //in ordine:
   //recupero lo stato
@@ -112,19 +115,19 @@ int main (int argn, char** argv)
 
   //recupero registri[0] ossia tempo_utilizzo
   if (argn >=  4){
-  	registri[0] -> valore.integer = atoi(argv[3]);
+  	registri[0] -> valore.integer = strtol(argv[3], &a, 10);
   }
 	//recupero registri[1] ossia chiusura
    if (argn >=  5){
-  	registri[1] -> valore.integer = atoi(argv[4]);
+  	registri[1] -> valore.integer = strtol(argv[4], &a, 10);
   }
 	//recupero registri[2] ossia riempimento
    if (argn >=  6){
-  	registri[2] -> valore.integer = atoi(argv[5]);
+  	registri[2] -> valore.integer = strtol(argv[5], &a, 10);
   }
 	//recupero registri[3] ossia temperatura
    if (argn >=  7){
-  	registri[3] -> valore.integer = atoi(argv[6]);
+  	registri[3] -> valore.integer = strtol(argv[6], &a, 10);
   }
 
 // se il frigo è aperto imposto la chiusura al valore del registro di chiusura
@@ -244,7 +247,7 @@ void ascolta_e_interpreta(registro* registri[], int numero_registri, boolean* ap
 
   //resto in ascolto sulla pipe interna
   char messaggio[100];
-  while( read_msg(pipe_interna, messaggio, 99) == FALSE) //leggo messaggio, se non riesco a leggerlo mando un perror 
+  while( read_msg(pipe_interna, messaggio, 99) == FALSE) //leggo messaggio, se non riesco a leggerlo mando un perror
   {
     perror("Errore in lettura");
   }
@@ -275,7 +278,7 @@ void ascolta_e_interpreta(registro* registri[], int numero_registri, boolean* ap
   {
     char tmp[20];
     primo(istruzioni, tmp, TRUE);
-    int id_ric = atoi(tmp);
+    int id_ric = strtol(tmp, &a, 10);
     if( id_ric == id || id_ric == ID_UNIVERSALE )
     {
       termina(0);
@@ -285,7 +288,7 @@ void ascolta_e_interpreta(registro* registri[], int numero_registri, boolean* ap
   }
   else if( strcmp(nome_comando, ID) == 0 ) //verifica se è il mio id
   {
-    gestisci_ID(istruzioni); 
+    gestisci_ID(istruzioni);
   }
   else if(strcmp(nome_comando, "CONFIRM") == 0)	//verifica se è il mio id
   {
@@ -295,7 +298,7 @@ void ascolta_e_interpreta(registro* registri[], int numero_registri, boolean* ap
   { //controllo se devo impostare il riempimento
     char pos[50];
     primo(istruzioni, pos, TRUE);
-    int perc = atoi(pos);
+    int perc = strtol(pos, &a, 10);
     if( perc <= 100 && perc >= 0 )
       riempimento->valore.integer = perc;  //imposto il riempimento del frigo al riempimento voluto
   }
@@ -317,7 +320,7 @@ void gestisci_ID(coda_stringhe* istruzioni)
   char tmp[10];
   primo(istruzioni, tmp, TRUE); //ricavo l'id dal messaggio
 
-  if( atoi(tmp) == id ) //se l'id corrisponde al mio allora invio TRUE sula pipe interna
+  if( strtol(tmp, &a, 10) == id ) //se l'id corrisponde al mio allora invio TRUE sula pipe interna
   {
     send_msg(pipe_interna, "TRUE");
   }
@@ -350,7 +353,7 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
   boolean res = FALSE;
   char id_comp[20];
   primo(istruzioni, id_comp, TRUE); //recupero l'id indicato nel messaggio
-  int id_ric = atoi(id_comp);
+  int id_ric = strtol(id_comp, &a, 10);
 
    //se il comando è indirizzato al frigo (l'id è il mio) agisco di conseguenza
   if( id_ric == id || id_ric == ID_UNIVERSALE ){
@@ -386,11 +389,11 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
       }
     else if (strcmp(azione, "TEMPERATURE") ==  0)
     { //controllo se devo impostare la temperatura
-      temperatura->valore.integer = atoi(pos);  //imposto la temperatura del frigo alla temperatura voluta
+      temperatura->valore.integer = strtol(pos, &a, 10);  //imposto la temperatura del frigo alla temperatura voluta
       res = TRUE;
     }
-    else if (strcmp(azione, "DELAY") == 0 && atoi(pos) >= 1) { // se devo modificare il ritardo di chiusura e questo è maggiore di 1
-      chiusura -> valore.integer = atoi(pos); //imposto il registro chiusura al valore voluto
+    else if (strcmp(azione, "DELAY") == 0 && strtol(pos, &a, 10) >= 1) { // se devo modificare il ritardo di chiusura e questo è maggiore di 1
+      chiusura -> valore.integer = strtol(pos, &a, 10); //imposto il registro chiusura al valore voluto
       if( chiusura -> valore.integer >= 0 && *stato == TRUE ){
         alarm(0); //cancella l'alarm di chiusura se inviato precedentemente
         alarm(chiusura -> valore.integer); //invia un alarm di chiusura al nuovo valore desiderato
@@ -411,7 +414,7 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
 void gestisci_STATUSGET(coda_stringhe* istruzioni, registro* registri[], int numero_registri, boolean* stato){
   char indice_ric[10];
   primo(istruzioni, indice_ric, TRUE); //recupero l'id del dispositivo interessato
-  int indice = atoi(indice_ric);
+  int indice = strtol(indice_ric, &a, 10);
 
   if( indice == ID_UNIVERSALE || indice == id ) //se sono io il dispositivo prescelto
   {
