@@ -81,9 +81,13 @@ void gestisci_REMOVE(coda_stringhe* separata);
 */
 void gestisci_LABELUP(coda_stringhe* separata);
 
+//funzione pe rgenerare un figlio
 void genera_figlio(coda_stringhe* separata);
 
+//funzione ch ecalcola se c'è stato override manuale
 boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe* confronti);
+
+//fnzione che aggiorna gli stati attesi dei figli
 void aggiorna_stati(string str);
 
 /*
@@ -91,7 +95,10 @@ void aggiorna_stati(string str);
 */
 void termina(int x);
 
+//funzione che sostituisce gli '_' con gli ' ' in una stringa
 void decodifica_hub(string str);
+
+//funzion eche sostituisce ',' con ' '
 void decodifica_figli( string tmp );
 
 /*
@@ -107,6 +114,10 @@ int main( int argn, char** argv ){
   if( argn < 2 )
     exit(130);
   id = atoi(argv[1]);
+
+  /*
+  * Inizializzo la lista delle PIPE dei miei figli.
+  */
 
   lista_pipes = crea_lista();
   append(lista_pipes, "/tmp/10");
@@ -161,10 +172,6 @@ int main( int argn, char** argv ){
 
   }
 
-  /*
-  * Inizializzo la lista delle PIPE dei miei figli.
-  */
-
 
   /*
   * Creo le variabili che contengono i percorsi delle PIPE.
@@ -184,34 +191,35 @@ void ascolta_e_interpreta(){
   read_msg(pipe_interna, messaggio_in, 199);
   strtok(messaggio_in, "\n");
 
-  printf("[HUB]%s\n", messaggio_in);
+  //printf("[HUB]%s\n", messaggio_in);
   // Divido la stringa per gli spazi.
   coda_stringhe* separata = crea_coda_da_stringa(messaggio_in, " ");
 
+  //Recupero il comando e lo gestisco
   char comando[50];
   primo(separata, comando, FALSE);
 
-  if( strcmp( comando, GET_STATUS ) == 0 ){
+  if( strcmp( comando, GET_STATUS ) == 0 ){ //richiesta dello STATO
 
     gestisci_STATUSGET(separata);
 
-  } else if( strcmp(comando, UPDATE_LABEL) == 0 ){
+  } else if( strcmp(comando, UPDATE_LABEL) == 0 ){ //AGGIORNAMENTO degli interruttori
 
     gestisci_LABELUP(separata);
 
-  } else if( strcmp( comando, ID ) == 0 ) {
+  } else if( strcmp( comando, ID ) == 0 ) { //id raggiungibile attraverso l'hub
 
     gestisci_ID(separata);
 
-  } else if( strcmp(comando, REMOVE) == 0 ){
+  } else if( strcmp(comando, REMOVE) == 0 ){ //rimuovi il dispositivo
 
     gestisci_REMOVE(separata);
 
-  } else if( strcmp(comando, "SPAWN") == 0 ){
+  } else if( strcmp(comando, "SPAWN") == 0 ){ //aggiungi un figlio
 
     gestisci_SPAWN(separata);
 
-  }  else if( strcmp(comando, "CONFIRM") == 0 ){
+  }  else if( strcmp(comando, "CONFIRM") == 0 ){ //id corrisponde al mio
 
     char tmp[20];
     primo(separata, tmp, FALSE);
@@ -271,8 +279,8 @@ void termina(int x){
 void crea_processi_supporto(){
 
   crea_pipe(id, (string) PERCORSO_BASE_DEFAULT);
-  pid_t pid = fork();
-  if( pid == 0 ){
+  pid_t pid = fork(); //genero un processo identico a me
+  if( pid == 0 ){ //se sono il  figlio
 
     // Se sono il figlio sto perennemente in ascolto sulla pipe con l'umano
     // e scrivo tutto su quella interna
@@ -285,11 +293,11 @@ void crea_processi_supporto(){
       sem_post(sem);
     }
 
-  } else if( pid > 0 ){
+  } else if( pid > 0 ){ //se sono il padre
 
-    figli[0] = pid;
-    pid = fork();
-    if( pid == 0 ){
+    figli[0] = pid; //memorizzo il process-id del figlio appena generato
+    pid = fork(); //genero un processo
+    if( pid == 0 ){ //se sono il filgio
 
       // Se sono il figlio leggo dalla pipe con il controllore e invio su quella
       // interna, aspettando la risposta.
@@ -304,13 +312,13 @@ void crea_processi_supporto(){
         sem_post(sem);
       }
 
-    } else if( pid > 0 ) {
+    } else if( pid > 0 ) { //se sono il padre
 
       // Se sono il padre sto in ascolto sulla pipe interna e interpreto i messaggi.
-      figli[1] = pid;
+      figli[1] = pid; //salvo il process-id del figlio
       signal(SIGINT, termina);
       while(1){
-        ascolta_e_interpreta();
+        ascolta_e_interpreta(); //gestisco i messaggi in arrivo
       }
 
     }
@@ -325,6 +333,7 @@ void gestisci_STATUSGET(coda_stringhe* separata){
   primo(separata, id_ric, FALSE);
   int id_comp = atoi(id_ric);
 
+  //se l'id è il mio
   if( id_comp == id || id_comp == ID_UNIVERSALE ){
 
     // Creo il messaggio contenente la risposta.
@@ -376,7 +385,7 @@ void gestisci_STATUSGET(coda_stringhe* separata){
 
 
     }
-    // Rispondo sulla pipe_interna.
+    // Rispondo sulla pipe_interna, con il mio stato e quello dei figli
     char tmp[20];
     sprintf(tmp, " %s [ ", override == TRUE ? "TRUE":"FALSE" );
     strcat(my_status, tmp);
@@ -385,7 +394,7 @@ void gestisci_STATUSGET(coda_stringhe* separata){
     send_msg(pipe_interna, my_status);
     free(response);
 
-  } else {
+  } else { //se l'id non è il mio, rimndo il messaggio a tutti i miei figli
 
     char msg[200];
     sprintf(msg, "%s %s", ID, id_ric);
@@ -441,6 +450,7 @@ void gestisci_LABELUP(coda_stringhe* separata){
 
   boolean ret = FALSE;
 
+  //se l'id è mio
   if( id_comp == id || id_comp == ID_UNIVERSALE ){
 
     // Prendo il nome dell'interruttore e la nuova posizione.
@@ -454,7 +464,7 @@ void gestisci_LABELUP(coda_stringhe* separata){
 
 
 
-  } else {
+  } else { //se l'id non è mio rinvio il messaggio a tutti i miei figli
 
     sprintf(msg, "%s %s", UPDATE_LABEL, id_ric);
     char tmp[20];
@@ -471,6 +481,7 @@ void gestisci_LABELUP(coda_stringhe* separata){
 
   }
 
+  //chiedo lo stato ai  miei figli per aggiornare la lista degli stati attesi
   nodo_stringa* it = lista_pipes -> testa;
   while( it != NULL ){
 
@@ -516,9 +527,9 @@ void gestisci_ID(coda_stringhe* separata){
   char id_ric[20];
   primo(separata, id_ric, FALSE);
   int id_comp = atoi(id_ric);
-  if( id_comp == id || id_comp == ID_UNIVERSALE )
+  if( id_comp == id || id_comp == ID_UNIVERSALE ) //se id è mio
     send_msg(pipe_interna, "TRUE");
-  else{
+  else{ //se id non è mio, invio ai miei figli il messaggio
 
     char msg[20];
     sprintf(msg, "%s %s", ID, id_ric);
@@ -556,9 +567,9 @@ void gestisci_REMOVE(coda_stringhe* separata){
   char id_ric[20];
   primo(separata, id_ric, TRUE);
   int id_comp = atoi(id_ric);
-  if( id_comp == id || id_comp == ID_UNIVERSALE )
+  if( id_comp == id || id_comp == ID_UNIVERSALE ) //se id è mio, termino
     termina(0);
-  else{
+  else{ //se id non è mio, invio messaggio di REMOVE a tutti i miei figli
 
 
     char remove_msg[200], confirm_msg[50];
@@ -600,7 +611,7 @@ void gestisci_REMOVE(coda_stringhe* separata){
 }
 
 void gestisci_SPAWN(coda_stringhe* separata){
-
+  //controllo l'id, se è il mio genero un figlio, altrimenti invio il messaggio ai miei figli
 
   char id_ric[20];
   primo(separata, id_ric, FALSE);
@@ -612,7 +623,6 @@ void gestisci_SPAWN(coda_stringhe* separata){
 
   } else {
     //ricostruire il messaggio e rinviarlo sotto
-    //vedi da hub per ricostruire la stringa
     char msg[1024];
     sprintf(msg, "%s %s", "SPAWN", id_ric);
     char tmp[200];
@@ -657,16 +667,16 @@ void gestisci_SPAWN(coda_stringhe* separata){
 }
 
 void genera_figlio(coda_stringhe* separata){
-
+  //genera un nuovo figlio
   char tmp[40], percorso[50];
   primo(separata, tmp, FALSE);
   sprintf(percorso, "./%s.out", tmp);
 
 
 
-  pid_t pid = fork();
+  pid_t pid = fork(); //genero un processo identico a me
 
-  if( pid == 0 ){
+  if( pid == 0 ){ //se sono il figlio, cambio l'immagine del processo
 
     char* params[] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
     // Se sono il figlio cambio l'immagine.
@@ -704,7 +714,7 @@ void genera_figlio(coda_stringhe* separata){
 }
 
 boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe* confronti){
-
+  //calcola se c'è stato override manuale
   boolean res = TRUE;
   char copia[1024];
   strcpy(copia, str);
@@ -713,7 +723,7 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
   char tipo[20];
   primo(coda, tipo, FALSE);
 
-
+  //se è un timer o un hub deve chiedere anche ai suoi figli
   if( strcmp(tipo, "hub") == 0 || strcmp(tipo, "timer") == 0 ){
 
     char stato[1024];
@@ -741,7 +751,7 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
     }
     distruggi(figli);
 
-  } else {
+  } else { //altri tipi di dispositivi
 
     nodo_stringa* it = tipi_figli -> testa;
 
@@ -787,7 +797,7 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
 }
 
 void decodifica_figli( string tmp ){
-
+  //in una strigna, sostituisce ',' con ' '
   int count = 0;
   int j;
   for( j = 0; tmp[j] != '\0'; j++ ){
@@ -802,7 +812,7 @@ void decodifica_figli( string tmp ){
 
 
 void decodifica_hub(string tmp){
-
+  //in una stringa, sostituisce '_' con ' '
   int count = 0, j;
   for( j = 0; tmp[j] != '\0'; j++ ){
     if( tmp[j] == '[' || tmp[j] == ']'){
@@ -829,7 +839,7 @@ void decodifica_hub(string tmp){
 }
 
 void aggiorna_stati(string str){
-
+  //aggiorna la lista degli stati attesi dei figli
   char copia[1024];
   strcpy(copia, str);
 
@@ -837,6 +847,7 @@ void aggiorna_stati(string str){
   char tipo[50];
 
   primo(coda, tipo, FALSE);
+  //se è un hub o un timer deve chiedere anche ai suoi figli
   if( strcmp(tipo, "hub") == 0 || strcmp(tipo, "timer") == 0 ){
 
     decodifica_hub(copia);
@@ -851,7 +862,7 @@ void aggiorna_stati(string str){
         aggiorna_stati(stato);
     distruggi(coda);
 
-  } else{
+  } else{ //altri dispositivi
 
 
     nodo_stringa* it = tipi_figli -> testa;
