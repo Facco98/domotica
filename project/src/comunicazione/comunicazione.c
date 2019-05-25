@@ -119,9 +119,9 @@ boolean crea_pipe( const int id, const string base_path){
   unlink(percorso);
   if( mkfifo(percorso, 0666) >= 0 )
     res = TRUE;
-  sprintf(percorso, "/sem_%s/%d_int", base_path, id);
+  sprintf(percorso, "/sem_%d_int", id);
   sem_unlink(percorso);
-  sem = sem_open(percorso, O_CREAT, 0644, 1);
+  sem = sem_open(percorso, O_CREAT, 0666, 1);
   return res;
 
 }
@@ -135,7 +135,7 @@ void ripulisci( const int id, const string base_path ){
   unlink(percorso);
   sprintf(percorso, "%s/%d_ext", base_path, id );
   unlink(percorso);
-  sprintf(percorso, "/sem_%s/%d_int", base_path, id);
+  sprintf(percorso, "/sem_%d_int", id);
   sem_close(sem);
   sem_unlink(percorso);
 
