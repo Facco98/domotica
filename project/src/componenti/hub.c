@@ -124,7 +124,7 @@ int main( int argn, char** argv ){
   */
 
   lista_pipes = crea_lista();
-  append(lista_pipes, "/tmp/-2");
+  //append(lista_pipes, "/tmp/-2");
   tipi_figli = crea_lista();
   stati_attesi = crea_lista();
 
@@ -340,8 +340,8 @@ void gestisci_STATUSGET(coda_stringhe* separata){
   if( id_comp == id || id_comp == ID_UNIVERSALE ){
 
     // Creo il messaggio contenente la risposta.
-    char* response = (char*) malloc(sizeof(char) * 200 * lista_pipes -> n);
-    string my_status = (char*) malloc(sizeof(char) * 200 * lista_pipes -> n);
+    char* response = (char*) malloc(sizeof(char) * 1024 * (lista_pipes -> n+1));
+    string my_status = (char*) malloc(sizeof(char) * 1024 * (lista_pipes -> n+1));
     sprintf(my_status, "%s hub %d" ,GET_STATUS_RESPONSE, id);
     strcpy(response, "");
 
