@@ -355,14 +355,15 @@ void gestisci_del( coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
   //gestisce la rimozione di un dispositivo
 
   char id_ric[20];
+
+  //recupera l'id del dispositivo da rimuovere
+  primo(separata, id_ric, TRUE);
   if( strtol(id_ric, &a, 10) == id ){ //se si tenta di rimuovere la centralina, dà errore
 
     printf("Non puoi rimuovere la centralina\n");
     return;
 
   }
-  //recupera l'id del dispositivo da rimuovere
-  primo(separata, id_ric, TRUE);
   char remove_msg[200], confirm_msg[50];
   sprintf(remove_msg, "%s %s", REMOVE, id_ric);
   sprintf(confirm_msg, "%s %s", "CONFIRM", id_ric);
