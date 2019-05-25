@@ -8,26 +8,26 @@
 #include "comunicazione/comunicazione.h"
 
 
-//funzione sempre eseguita dall'umano, fino a quando non muore
+//funzione che manda messaggi ai dispositivi
 void leggi_e_manda_messaggi();
 
 // funzione che restituisce l'id da un messaggio
 int trova_id (string input);
 
-//nel ciclo la funzione leggi_e_manda_messaggi() che è sempre eseguita
-//main
 int main(int argn, char** argv){
+	//l'umano continua a inviare messaggi
 	while (1){
 		leggi_e_manda_messaggi();
 	}
 }
 
 
-//la funzione manda_messaggi_e_interpreta() manda un messaggio e aspetta la risposta del dispositivo
-void leggi_e_manda_messaggi(){
+//manda un messaggio al dispositivo
+void leggi_e_manda_messaggi()
+{
 	printf("%s\n", "Inserire l'id dispositivo e il tipo di messaggio:");
 	//stampare i tipi di messaggi disponibili. Attendere in input gli id e il tipo di messaggio
-	printf("Digitare help per la lista di comandi disponibili");
+	printf("Digitare help per la lista di comandi disponibili\n");
 
 	char input_string[200];
 	fgets(input_string, 199, stdin);
@@ -53,7 +53,10 @@ void leggi_e_manda_messaggi(){
 		printf ("timer  --> BEGIN <n>, END <n>, <interruttori dei dispositivi figli>");
 		printf ("hub    --> <interruttori dei dispositivi figli>");
 		printf ("centralina --> GENERALE ON, GENERALE OFF, <interruttori dei dispositivi figli>");
-	} else if( strcmp(tipo_msg, "switch") == 0 ){
+	}
+	else if( strcmp(tipo_msg, "switch") == 0 )
+	{
+		//se è un ocmando switch lo invio al dispositivo collegato
 		if( coda -> n >= 3 ){
 			char id[20], label[100], pos[100];
 			primo(coda, id, FALSE);
