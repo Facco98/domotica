@@ -22,14 +22,12 @@ COMPONENTS=$(OUT_FOLDER)/centralina.out $(OUT_FOLDER)/hub.out $(OUT_FOLDER)/frid
 .PHONY: help build clean libraries componenti umano run run_human rummm spiegazione_processi_pipe
 
 help:
-	@echo "Ricette disponibili"
-	@echo "                   - help: per mostrare questa lista (comandi disponibili)"
-	@echo "                   - clean: rimuove file temporanei e riporta allo stato iniziale"
-	@echo "                   - build: compila il progetto con il tool gcc e il flag -std=gnu90"
-	@echo "                   - run: esegue il progetto"
-	@echo "                   - run_human: esegue il file per l'interazione esterna (umano)"
-	@echo "                   - easter eggs: ricetta spiegazione_processi_pipe (disegno/spiegazione)"
-		#altre ricette?
+	@echo "RICETTE DISPONIBILI"
+	@echo "- help: per mostrare questa lista (comandi disponibili)"
+	@echo "- clean: rimuove file temporanei e riporta allo stato iniziale"
+	@echo "- build: compila il progetto con il tool gcc e il flag -std=gnu90"
+	@echo "- run: esegue il progetto"
+	@echo "- run_human: esegue il file per l'interazione esterna (umano)"
 
 build: libraries componenti umano
 
@@ -89,10 +87,8 @@ $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o: $(SRC_FOLDER)/strutture_dati/tip
 	gcc -std=gnu90 -c $(SRC_FOLDER)/strutture_dati/tipi_componente.c -o $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o -I $(SRC_FOLDER)
 
 
-
 # Regole per la generazione dei componenti.
 componenti: $(COMPONENTS)
-
 
 $(OUT_FOLDER)/centralina.out: $(SRC_FOLDER)/centralina.c  $(COMPILED_LIBRARIES_FOLDER)/comunicazione.o $(COMPILED_LIBRARIES_FOLDER)/tipi_componente.o \
 $(COMPILED_LIBRARIES_FOLDER)/coda_stringhe.o $(COMPILED_LIBRARIES_FOLDER)/lista_stringhe.o
@@ -159,23 +155,3 @@ spiegazione_processi_pipe:
 rummm:
 	@echo "Perché hai bruciato il RUUUUUUUMMM???!!?"
 	@echo "WHY IS THE RUUM GOOOONEEE???!!?"
-
-
-
-#--------------------------------------to do list: makefile edition-------------------------------------------
-#IMPLEMENTATO, DA CONTROLLARE
-#- controllare la correttezza di umano
-#- controllare la correttezza di componenti
-#- controllare la correttezza di clean (modificato)
-#- controllare la correttezza delle cartelle nuove aggiunte
-#- controllare run
-
-#DA IMPLEMENTARE (*)
-#- eliminare gli echo inutili in questo file
-#- eliminare i commenti inutili in questo file
-#- mostrare altre ricette disponibili in help
-#- commentare diffusamente
-
-#DA IMPLEMENTARE (**)
-
-#- (creare altre ricette ?)
