@@ -172,8 +172,6 @@ void decodifica_controllo(string tmp){
 void crea_processi_supporto(registro* registri[], int numero_registri)
 {
 
-  mkfifo(pipe_interna, 0666);
-  mkfifo(pipe_esterna, 0666);
   crea_pipe(id, (string) PERCORSO_BASE_DEFAULT);
   pid_t pid = fork();
    //genera un processo identico a se stesso (timer)
@@ -266,7 +264,6 @@ void ascolta_e_interpreta(registro* registri[], int numero_registri)
   }
   else //altri comandi non supportati
   {
-    printf("Comando non supportato: %s\n", comando);
     send_msg(pipe_interna, "DONE");
   }
   distruggi(istruzioni);
@@ -413,9 +410,6 @@ void termina (int x)
 
   close(file); //chiudo il file descriptor
 
-  char path[200];
-  sprintf(path, "%s/%d", (string) PERCORSO_BASE_DEFAULT, id);
-
   //mando al figlio messaggio di morte
   char msg[50];
   sprintf(msg, "%s %d", REMOVE, ID_UNIVERSALE);
@@ -425,11 +419,7 @@ void termina (int x)
   }
 
   // Distruggo tutte le pipe.
-  char percorso[200];
-  sprintf(percorso, "%s/%d", (string) PERCORSO_BASE_DEFAULT, id);
-  unlink(percorso); //pipe con il figlio
-  unlink(pipe_esterna); //pipe con umano
-  unlink(pipe_interna); //pipe interna
+  ripulisci(id, (string) PERCORSO_BASE_DEFAULT);
   exit(0); //chiudi tutto
 
 }

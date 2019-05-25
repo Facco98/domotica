@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <semaphore.h>
 
 char GET_STATUS[] = "STATUSGET";
 char GET_STATUS_RESPONSE[] = "STATUSGETRES";
@@ -28,11 +29,20 @@ boolean send_msg( const string pipe, const string messaggio ){
   boolean res = FALSE;
   if( access(pipe, F_OK) == -1 )
     return FALSE;
+  char percorso[100];
+  sprintf(percorso, "/sem_%s", pipe);
+  sem_t* sem = sem_open(percorso, O_RDWR);
+  if( sem != SEM_FAILED )
+    sem_wait(sem);
   file = open(pipe, O_WRONLY);
   if( file >= 0 ){
     write(file, messaggio, strlen(messaggio)+1);
     close(file);
     res = TRUE;
+  }
+  if( sem != SEM_FAILED ){
+    sem_post(sem);
+    sem_close(sem);
   }
   return res;
 
@@ -64,11 +74,20 @@ boolean manda_messaggio( const int id_destinatario, const string base_path, cons
 boolean read_msg( const string pipe, string str, int lunghezza_massima ){
 
   boolean res = FALSE;
+  char percorso[100];
+  sprintf(percorso, "/sem_%s", pipe);
+  sem_t* sem = sem_open(percorso, O_RDWR);
+  if( sem != SEM_FAILED )
+    sem_wait(sem);
   int file = open(pipe, O_RDONLY);
   if( file > 0 ){
     read(file, str, lunghezza_massima);
     close(file);
     res = TRUE;
+  }
+  if( sem != SEM_FAILED ){
+    sem_post(sem);
+    sem_close(sem);
   }
   return res;
 
@@ -103,8 +122,35 @@ boolean crea_pipe( const int id, const string base_path){
   char percorso[100];
   sprintf(percorso, "%s/%d", base_path, id );
   boolean res = FALSE;
+  unlink(percorso);
   if( mkfifo(percorso, 0666) >= 0 )
     res = TRUE;
+  sprintf(percorso, "%s/%d_int", base_path, id );
+  unlink(percorso);
+  if( mkfifo(percorso, 0666) >= 0 )
+    res = TRUE;
+  sprintf(percorso, "%s/%d_ext", base_path, id );
+  unlink(percorso);
+  if( mkfifo(percorso, 0666) >= 0 )
+    res = TRUE;
+  sprintf(percorso, "/sem_%s/%d_int", base_path, id);
+  sem_unlink(percorso);
+  sem_t* sem = sem_open(percorso, O_CREAT, 0644, 1);
+  sem_close(sem);
   return res;
+
+}
+
+void ripulisci( const int id, const string base_path ){
+
+  char percorso[100];
+  sprintf(percorso, "%s/%d", base_path, id );
+  unlink(percorso);
+  sprintf(percorso, "%s/%d_int", base_path, id );
+  unlink(percorso);
+  sprintf(percorso, "%s/%d_ext", base_path, id );
+  unlink(percorso);
+  sprintf(percorso, "/sem_%s/%d_int", base_path, id);
+  sem_unlink(percorso);
 
 }

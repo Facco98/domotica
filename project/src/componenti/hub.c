@@ -223,7 +223,6 @@ void ascolta_e_interpreta(){
 
   } else {
 
-    printf("Comando non supportato\n");
     send_msg(pipe_interna, "DONE");
 
   }
@@ -251,9 +250,6 @@ void termina(int x){
 
   // Chiudo il file descriptor.
   close(file);
-  char path[200];
-  sprintf(path, "%s/%d", (string) PERCORSO_BASE_DEFAULT, id);
-
   // Invio a tutti i miei figli il comando REMOVE
   nodo_stringa* it = lista_pipes -> testa;
   while( it != NULL ){
@@ -267,17 +263,13 @@ void termina(int x){
   }
 
   // Distruggo tutte le pipe.
-  unlink(path);
-  unlink(pipe_esterna);
-  unlink(pipe_interna);
+  ripulisci(id, (string) PERCORSO_BASE_DEFAULT);
   exit(0);
 
 }
 
 void crea_processi_supporto(){
 
-  mkfifo(pipe_interna, 0666);
-  mkfifo(pipe_esterna, 0666);
   crea_pipe(id, (string) PERCORSO_BASE_DEFAULT);
   pid_t pid = fork();
   if( pid == 0 ){

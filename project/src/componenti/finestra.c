@@ -182,7 +182,6 @@ void ascolta_e_interpreta (registro* registri[], int numero_registri, boolean* s
 
   else //un qualsiasi altro comando non previsto
   {
-    printf("Comando non supportato: %s\n", nome_comando);
     send_msg(pipe_interna, "DONE");
   }
   distruggi(istruzioni);
@@ -290,13 +289,7 @@ void termina(int x)
 
   kill(figli[0], SIGKILL); //uccidi primo figlio
   kill(figli[1], SIGKILL); //uccidi secondo figlio
-  close(file);
-
-  char pipe[50];
-  sprintf(pipe, "/tmp/%d", id);
-  unlink(pipe); //elimino la pipe con il padre
-  unlink(pipe_esterna); //elimino pipe_esterna
-  unlink(pipe_interna); //elimino pipe_interna
+  ripulisci(id, (string) PERCORSO_BASE_DEFAULT);
   exit(0); //mi chiudo
 
 }
@@ -304,8 +297,6 @@ void termina(int x)
 void crea_processi_supporto(registro* registri[], int numero_registri, boolean* stato, boolean* apri, boolean* chiudi)
 {
   crea_pipe(id, (string) PERCORSO_BASE_DEFAULT); //creo la mia pipe destinata alle comunicazioni con il processo padre
-  mkfifo(pipe_interna, 0666); //genero la pipe interna
-  mkfifo(pipe_esterna, 0666); //genero la pipe esterna che comunica con l'umano
 
   pid_t pid = fork(); //genero un processo identico a me (finestra)
   if( pid == 0 ) //se sono il figlio (= processo appena generato)

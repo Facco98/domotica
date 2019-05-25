@@ -162,10 +162,10 @@ boolean calcola_registro_intero( const registro* registro, int* res )
 void crea_processi_supporto(registro* registri[], int numero_registri, boolean* aperto, b* apri, b* chiudi)
 {
 
+  crea_pipe(id, (string) PERCORSO_BASE_DEFAULT); //creo pipe per comunicazione con il dispositivo padre
   pid_t pid = fork(); //genero un processo identico a me
   if( pid == 0 ) //se sono il figlio
   {
-    mkfifo(pipe_esterna, 0666); //creo la pipe per la comunicazione con l'umano
     while(1) //continuo a trasferire messaggi da pipe_esterna a pipe_interna
     {
       char msg[200];
@@ -180,7 +180,7 @@ void crea_processi_supporto(registro* registri[], int numero_registri, boolean* 
     pid = fork(); //genero un nuovo processo identico a me
     if( pid == 0 ) //se sono il figlio
     {
-      crea_pipe(id, (string) PERCORSO_BASE_DEFAULT); //creo pipe per comunicazione con il dispositivo padre
+
       while(1) //leggo e invio messaggi da pipe con padre (= dispositivo sopra) a pipe_interna
       {
         char msg[200];
@@ -199,7 +199,6 @@ void crea_processi_supporto(registro* registri[], int numero_registri, boolean* 
       figli[1] = pid; //memorizzo process-id del figlio sopra generato (seconda fork)
       signal(SIGINT, termina); //muoio se necessario
       signal(SIGALRM, chiuditi_alarm);		//se ricevo un SIGALARM, mi chiudo se necessario
-      mkfifo(pipe_interna, 0666); //genero pipe_interna
       while(1) //resto in ascolto su pipe interna e interpreto
       {
         ascolta_e_interpreta(registri, numero_registri, aperto, apri, chiudi);
@@ -279,7 +278,6 @@ void ascolta_e_interpreta(registro* registri[], int numero_registri, boolean* ap
   }
   else
   {
-    printf("Comando non supportato: %s\n", nome_comando); //OK
     send_msg(pipe_interna, "DONE");
   }
   distruggi(istruzioni);
@@ -312,11 +310,7 @@ void termina(int x)
   kill(figli[1], SIGKILL);
   close(file);
 
-  char pipe[50];
-  sprintf(pipe, "/tmp/%d", id);
-  unlink(pipe);
-  unlink(pipe_esterna);
-  unlink(pipe_interna);
+  ripulisci(id, (string) PERCORSO_BASE_DEFAULT);
   exit(0);
 
 }

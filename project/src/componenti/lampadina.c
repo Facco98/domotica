@@ -311,11 +311,7 @@ void termina(int x){
   close(file);
 
   // Distruggo tutte le FIFO create.
-  char pipe[50];
-  sprintf(pipe, "/tmp/%d", id);
-  unlink(pipe);
-  unlink(pipe_esterna);
-  unlink(pipe_interna);
+  ripulisci(id, (string) PERCORSO_BASE_DEFAULT);
   exit(0);
 
 }
@@ -323,8 +319,6 @@ void termina(int x){
 void crea_processi_supporto(registro* registri[], int numero_registri, boolean* accesa){
 
   crea_pipe(id, (string) PERCORSO_BASE_DEFAULT); //creo pipe per comunicare con il processo padre
-  mkfifo(pipe_interna, 0666);//creo pipe per comunicare all'interno della lampadina
-  mkfifo(pipe_esterna, 0666); //creo la pipe per comunicare con l'umano
 
   pid_t pid = fork(); //genero un processo identico a me
   if( pid == 0 ){ //se sono il filgio
