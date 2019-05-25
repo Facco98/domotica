@@ -450,7 +450,7 @@ void gestisci_REMOVE(coda_stringhe* istruzioni)
     if(strcmp(pipe_figlio, "") != 0) //se il figlio esiste
     {
       //chiedo a mio figlio se è lui che deve morire
-      char msg[20];
+      char msg[200];
       char res[20];
       sprintf(msg, "%s %s", "CONFIRM", id_ric);
 
@@ -743,7 +743,7 @@ void gestisci_ID(coda_stringhe* istruzioni)
   {
     if(strcmp(pipe_figlio, "") != 0) //se filgio esiste
     {
-      char msg[20];
+      char msg[200];
       char res[20];
       sprintf(msg, "%s %s", ID, id_ric);
 

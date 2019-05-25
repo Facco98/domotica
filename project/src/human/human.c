@@ -65,7 +65,7 @@ void leggi_e_manda_messaggi()
 			//invio a quell'id il messaggio in input
 			primo(coda, label, FALSE);
 			primo(coda, pos, FALSE);
-			char msg[200];
+			char msg[2000];
 			sprintf(msg, "%s %s %s %s", UPDATE_LABEL, id, label, pos);
 			send_msg( percorso_pipe, msg );
 
@@ -78,7 +78,7 @@ void leggi_e_manda_messaggi()
 			primo(coda, id, FALSE);
 			primo(coda, perc, FALSE);
 
-			char msg[200];
+			char msg[2000];
 			sprintf(msg, "SET_FILL %s %s", id, perc);
 
 			char pipe[200];
