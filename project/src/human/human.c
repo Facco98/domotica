@@ -37,6 +37,7 @@ void leggi_e_manda_messaggi()
 	coda_stringhe* coda = crea_coda_da_stringa(input_string, " ");
 	char tipo_msg[50];
 	primo(coda, tipo_msg, FALSE);
+	// stampo i tipi di comandi disponibili
 
 	if (strcmp (tipo_msg, "help") == 0){
 		printf ("I comandi disponibili sono i seguenti: \n");
@@ -51,17 +52,17 @@ void leggi_e_manda_messaggi()
 		printf (" timer --> 'switch <id> BEGIN <n> / END <n>' per  impostare gli intervalli di tempo di accensione o apertura del dispositivo figlio e i comandi del dispositivo figlio \n");
 		printf (" hub --> <interruttori dei dispositivi figli> \n");
 		printf (" centralina --> switch 0 GENERALE ON/OFF per accendere/spegnere la centralina e i comandi dei dispositivi figli \n");
+		printf ("- exit: chiudi")
 	}
 	else if( strcmp(tipo_msg, "switch") == 0 )
 	{
-		//se è un ocmando switch lo invio al dispositivo collegato
+		//se è un comando switch lo invio al dispositivo collegato
 		if( coda -> n >= 3 ){
 			char id[20], label[100], pos[100];
 			primo(coda, id, FALSE);
 			char percorso_pipe[200];
 			sprintf(percorso_pipe, "%s/%s_ext", (string) PERCORSO_BASE_DEFAULT, id);
 			//invio a quell'id il messaggio in input
-
 			primo(coda, label, FALSE);
 			primo(coda, pos, FALSE);
 			char msg[200];
@@ -69,7 +70,7 @@ void leggi_e_manda_messaggi()
 			send_msg( percorso_pipe, msg );
 
 		}
-	} else if( strcmp(tipo_msg, "fill") == 0 ){
+	} else if( strcmp(tipo_msg, "fill") == 0 ){ //se il comando è di tipo fill mando un messaggio SET_FILL (frigo)
 
 		if( coda -> n >= 2 ){
 
@@ -86,14 +87,15 @@ void leggi_e_manda_messaggi()
 
 		}
 
+	} else if (strcmp (tipo_msg, "exit") == 0) { //se il comando è exit allora esco
+		exit (0);
+
 	} else {
 
 		printf("Comando non valido: %s\n", tipo_msg);
 
 	}
-	distruggi(coda);
-
-
+	distruggi(coda); //elimina la coda dei messaggi
 }
 
 boolean calcola_registro_intero( const registro* r, int* res ){
