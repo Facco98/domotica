@@ -52,7 +52,7 @@ void leggi_e_manda_messaggi()
 		printf (" timer --> 'switch <id> BEGIN <n> / END <n>' per  impostare gli intervalli di tempo di accensione o apertura del dispositivo figlio e i comandi del dispositivo figlio \n");
 		printf (" hub --> <interruttori dei dispositivi figli> \n");
 		printf (" centralina --> switch 0 GENERALE ON/OFF per accendere/spegnere la centralina e i comandi dei dispositivi figli \n");
-		printf ("- exit: chiudi")
+		printf ("- exit: chiudi");
 	}
 	else if( strcmp(tipo_msg, "switch") == 0 )
 	{
