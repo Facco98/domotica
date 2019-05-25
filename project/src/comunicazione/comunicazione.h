@@ -2,6 +2,7 @@
 #define PROGETTODOMOTICA_COMUNICAZIONE_H
 
 #include "strutture_dati/tipi_base.h"
+#include <semaphore.h>
 
 extern int file;
 extern char GET_STATUS[], GET_STATUS_RESPONSE[], ID[], UPDATE_LABEL[], REMOVE[];

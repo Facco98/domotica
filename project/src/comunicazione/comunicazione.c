@@ -5,7 +5,6 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <semaphore.h>
 
 char GET_STATUS[] = "STATUSGET";
 char GET_STATUS_RESPONSE[] = "STATUSGETRES";
