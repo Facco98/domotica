@@ -11,46 +11,49 @@
 
 typedef boolean b;
 
-boolean calcola_registro_stringa( const registro* registro, string res );
-boolean calcola_registro_intero( const registro* registro, int* res );
-//gestisce i tre processi che costituiscono il componente (frigo)
-void crea_processi_supporto(registro* registri[], int numero_registri, boolean* aperto, boolean* apri, boolean* chiudi);
-//verifica sul mio id
+//funzione che calcola il valore stringa di un registro, FALSE in caso di error, TRUE altrimenti
+boolean calcola_registro_stringa( const registro* registro, string res);
+
+//funzione per calcolare il valore di un registro, in particolare quello relativo al tempo di utilizzo
+boolean calcola_registro_intero( const registro* registro, int* res);
+
+//funzione che gestisce i tre processi che costituiscono il componente (frigo)
+void crea_processi_supporto(registro* registri[], int numero_registri, boolean* aperto);
+
+//funzione che verifica sul mio id
 void gestisci_ID(coda_stringhe* istruzioni);
-//terminare processo/i del frigo
+
+//funzione per terminare processo/i del frigo
 void termina(int x);
-//modificare lo stato degli interruttori
-void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* stato, boolean* apri, boolean* chiudi);
+
+//funzione per modificare lo stato degli interruttori
+void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* stato);
+
 //funzione per gestire la richiesta dello stato del frigo
 void gestisci_STATUSGET(coda_stringhe* istruzioni, registro* registri[], int numero_registri, boolean* stato);
+
 //funzione per chiudere il frigo (da utilizzare se è passato troppo tempo)
 void chiuditi_alarm(int x);
-void ascolta_e_interpreta(registro* registri[], int numero_registri, boolean* aperto, boolean* apri, boolean* chiudi);
+
+//funzione per interpretare messaggi
+void ascolta_e_interpreta(registro* registri[], int numero_registri, boolean* aperto);
 
 
-long apertura;
-
-int id;
-
-char pipe_interna[50];
-char pipe_esterna[50];
-
-pid_t figli[2];
-boolean stato;
-registro* registri[4];
+long apertura; //indica quanto il frigo è stato aperto
+int id; //id del frigo
+char pipe_interna[50]; //pipe per comunicare all'interno del frigo
+char pipe_esterna[50];  //pipe per comunicare con l'umano
+pid_t figli[2]; //memorizzo i process_id dei figli (i processi che costituiscono il frigo)
+boolean stato; //stato del frigo, interruttore per l'apertura/chiusura
+registro* registri[4]; //registri del frigo, sono 4: tempo di utilizzo, tempo dopo cui il frigo si richiude automaticamente, percentuale di riempimento e temperatura interna
 
 
 int main (int argn, char** argv)
 {
-  //stato
-  stato = FALSE; //indica se il frigo è aperto o chiuso
-  boolean apri = FALSE;
-  boolean chiudi = FALSE;
-  //interruttori ??
+  //stato del frigo e interruttore che ne indica l'apertura/chiusura
+  stato = FALSE; //indica se il frigo è aperto o chiuso. Se il frigo è aperto allora è impostato a TRUE, altrimenti a FALSE
 
-  //termostato
-
-  //registri (tot 4)
+  //registri (totale 4)
   //tempo_di_utilizzo
   registro tempo_utilizzo;
   strcpy(tempo_utilizzo.nome, "time");
@@ -62,9 +65,8 @@ int main (int argn, char** argv)
   registro chiusura;
   strcpy(chiusura.nome, "delay");
   chiusura.da_calcolare = FALSE;
-  chiusura.valore.integer = 0;
-  chiusura.is_intero = TRUE;
-
+  chiusura.valore.integer = 10; //imposto il valore di default pari a 10 secondi
+  chiusura.is_intero = TRUE; 
 
   //percentuale di riempimento
   registro riempimento;
@@ -73,7 +75,6 @@ int main (int argn, char** argv)
   riempimento.valore.integer = 0;
   riempimento.is_intero = TRUE;
 
-
   //temperatura interna
   registro temperatura;
   strcpy(temperatura.nome, "temp");
@@ -81,17 +82,17 @@ int main (int argn, char** argv)
   temperatura.valore.integer = 0;
   temperatura.is_intero = TRUE;
 
-//i quattro registri
+//imposto quattro registri ai quattro appena creati
   int numero_registri = 4;
   registri[0] = &tempo_utilizzo;
   registri[1] = &chiusura;
   registri[2] = &riempimento;
   registri[3] = &temperatura;
 
-  //controllo se argomenti input sono meno di due
+  //controllo se argomenti input sono meno di due: nomefile(argv[0]) id(argv[1]) stato(argv[2]) tempo_di_utilizzo(argv[3]) delay(argv[4]) riempimento (argv[5]) temperatura (argv[6])
   if( argn < 2 )
   {
-    exit(130);
+    exit(0);
   }
 
   //recupero l'id
@@ -126,6 +127,7 @@ int main (int argn, char** argv)
   	registri[3] -> valore.integer = atoi(argv[6]);
   }
 
+// se il frigo è aperto imposto la chiusura al valore del registro di chiusura
   if (stato == TRUE){
   	alarm(registri[1]->valore.integer);		//in secondi
   }
@@ -135,7 +137,7 @@ int main (int argn, char** argv)
   sprintf(pipe_esterna, "%s/%d_ext", (string) PERCORSO_BASE_DEFAULT, id);
 
   //gestisco i processi che costituiscono il frigo
-  crea_processi_supporto(registri, numero_registri, &stato, &apri, &chiudi);
+  crea_processi_supporto(registri, numero_registri, &stato);
 
 }
 
@@ -147,19 +149,35 @@ boolean calcola_registro_stringa( const registro* registro, string res )
 
 boolean calcola_registro_intero( const registro* registro, int* res )
 {
-
+//se non serve calcolare il registro o se non è un registro intero, restituisco FALSE
   if( registro -> da_calcolare == FALSE || registro -> is_intero == FALSE )
     return FALSE;
+
+  //se il registro si chiama "time", calcolo il tempo di utilizzo
   if( strcmp(registro -> nome, "time") == 0 ){
-
     long ora = (long) time(NULL);
-    *res = (registro -> valore.integer + (ora) - apertura);
-
+    *res = (registri[0] -> valore.integer + (ora) - apertura);
   }
+
+  //se il registro si chiama "delay", restituisco il registro di ritardo di chiusura
+    if( strcmp(registro -> nome, "delay") == 0 ){
+    *res = (registri[1] -> valore.integer );
+  }
+
+//se il registro si chiama "perc", restituisco il registro di percentuale di riempimento
+    if( strcmp(registro -> nome, "perc") == 0 ){
+    *res = (registri[2] -> valore.integer );
+  }
+
+//se il registro si chiama "temp", restituisco il registro di temperatura interna
+    if( strcmp(registro -> nome, "temp") == 0 ){
+    *res = (registri[3] -> valore.integer );
+  }
+
   return TRUE;
 }
 
-void crea_processi_supporto(registro* registri[], int numero_registri, boolean* aperto, b* apri, b* chiudi)
+void crea_processi_supporto(registro* registri[], int numero_registri, boolean* aperto)
 {
 
   crea_pipe(id, (string) PERCORSO_BASE_DEFAULT); //creo pipe per comunicazione con il dispositivo padre
@@ -187,15 +205,15 @@ void crea_processi_supporto(registro* registri[], int numero_registri, boolean* 
       while(1) //leggo e invio messaggi da pipe con padre (= dispositivo sopra) a pipe_interna
       {
         char msg[200];
-        leggi_messaggio(id, (string) PERCORSO_BASE_DEFAULT, msg, 199);
-        sem_wait(sem);
-        send_msg(pipe_interna, msg);
-        read_msg(pipe_interna, msg, 199);
+        leggi_messaggio(id, (string) PERCORSO_BASE_DEFAULT, msg, 199);  //legge messaggio da pipe con il padre
+        sem_wait(sem); //aspetto il semaforo
+        send_msg(pipe_interna, msg); //scrive sulla pipe interna il messaggio preso dal padre
+        read_msg(pipe_interna, msg, 199); //legge dalla pipe interna
         if( strcmp(msg, "DONE") != 0 ) //invio sulla pipe_padre tutto ciò che non è "DONE"
         {
           manda_messaggio(id, (string) PERCORSO_BASE_DEFAULT, msg);
         }
-        sem_post(sem);
+        sem_post(sem);  //aspetto il semaforo
       }
 
     }
@@ -206,7 +224,8 @@ void crea_processi_supporto(registro* registri[], int numero_registri, boolean* 
       signal(SIGALRM, chiuditi_alarm);		//se ricevo un SIGALARM, mi chiudo se necessario
       while(1) //resto in ascolto su pipe interna e interpreto
       {
-        ascolta_e_interpreta(registri, numero_registri, aperto, apri, chiudi);
+        //gestisce i messaggi in arrivo
+        ascolta_e_interpreta(registri, numero_registri, aperto);
       }
 
     }
@@ -215,18 +234,17 @@ void crea_processi_supporto(registro* registri[], int numero_registri, boolean* 
 
 }
 
-void ascolta_e_interpreta(registro* registri[], int numero_registri, boolean* aperto, boolean* apri, boolean* chiudi)
+void ascolta_e_interpreta(registro* registri[], int numero_registri, boolean* aperto)
 {
-  //qua è corretto mettere tutti i registri, così posso controllare se il tempo di utilizzo > chiusura allora chiudo il frigo?
+  //memorizzo i registri (variabili globali)
   registro* tempo_utilizzo = registri[0];
   registro* chiusura = registri[1];
   registro* riempimento = registri[2];
   registro* temperatura = registri[3];
 
-
   //resto in ascolto sulla pipe interna
   char messaggio[100];
-  while( read_msg(pipe_interna, messaggio, 99) == FALSE) //leggo messaggio
+  while( read_msg(pipe_interna, messaggio, 99) == FALSE) //leggo messaggio, se non riesco a leggerlo mando un perror 
   {
     perror("Errore in lettura");
   }
@@ -239,21 +257,21 @@ void ascolta_e_interpreta(registro* registri[], int numero_registri, boolean* ap
 
   //recupero il nome del comando
   char nome_comando[20];
-  if(!primo(istruzioni, nome_comando, TRUE) )
+  if(!primo(istruzioni, nome_comando, TRUE) ) //se estraggo da coda vuota, messaggio di errore
   {
-    exit(140);
+    exit(0);
   }
 
   //gestisco il comando
   if( strcmp(nome_comando, GET_STATUS) == 0 )
   {
-    gestisci_STATUSGET(istruzioni, registri, numero_registri, aperto); //recuperare lo stato del frigo CONTROLLARE SE CORRETTA
+    gestisci_STATUSGET(istruzioni, registri, numero_registri, aperto); //se il comando vuole recuperare lo stato del frigo chiamo questa funzione
   }
-  else if( strcmp(nome_comando, UPDATE_LABEL) == 0 ) //aggiornare interruttori CONTROLLARE SE CORRETTA
+  else if( strcmp(nome_comando, UPDATE_LABEL) == 0 ) // se il comando vuole aggiornare interruttori chiamo questa funzione
   {
-    gestisci_LABELUP(istruzioni, registri, aperto, apri, chiudi);
+    gestisci_LABELUP(istruzioni, registri, aperto);
   }
-  else if( strcmp(nome_comando, REMOVE) == 0 ) //rimuovere dispositivo //OK
+  else if( strcmp(nome_comando, REMOVE) == 0 ) //se il comando vuole rimuovere il dispositivo lo rimuovo
   {
     char tmp[20];
     primo(istruzioni, tmp, TRUE);
@@ -267,7 +285,7 @@ void ascolta_e_interpreta(registro* registri[], int numero_registri, boolean* ap
   }
   else if( strcmp(nome_comando, ID) == 0 ) //verifica se è il mio id
   {
-    gestisci_ID(istruzioni); //OK
+    gestisci_ID(istruzioni); 
   }
   else if(strcmp(nome_comando, "CONFIRM") == 0)	//verifica se è il mio id
   {
@@ -281,30 +299,31 @@ void ascolta_e_interpreta(registro* registri[], int numero_registri, boolean* ap
     if( perc <= 100 && perc >= 0 )
       riempimento->valore.integer = perc;  //imposto il riempimento del frigo al riempimento voluto
   }
-  else
+  else //qualsiasi altro comando non supportato
   {
-    send_msg(pipe_interna, "DONE");
+    send_msg(pipe_interna, "DONE"); //invio DONE sulla pipe interna
   }
-  distruggi(istruzioni);
+  distruggi(istruzioni); //elimino il comando arrivato
 
 
 
 }
 
-// risponde alla domanda: posso  raggiungere il dispositivo con ID id passando da te?
-//per i dispositivi foglia è identica a prima: se sono io true, altrimenti false
+// funzione risponde alla domanda: posso raggiungere il dispositivo con ID id passando da te?
+//per i dispositivi foglia (come il frigo) funziona in questo modo
 
 void gestisci_ID(coda_stringhe* istruzioni)
 {
   char tmp[10];
-  primo(istruzioni, tmp, TRUE);
-  if( atoi(tmp) == id )
+  primo(istruzioni, tmp, TRUE); //ricavo l'id dal messaggio
+
+  if( atoi(tmp) == id ) //se l'id corrisponde al mio allora invio TRUE sula pipe interna
   {
     send_msg(pipe_interna, "TRUE");
   }
   else
   {
-    send_msg(pipe_interna, "FALSE");
+    send_msg(pipe_interna, "FALSE"); // altrimenti invio FALSE sula pipe interna
   }
 }
 
@@ -314,14 +333,13 @@ void termina(int x)
   kill(figli[0], SIGKILL);
   kill(figli[1], SIGKILL);
   close(file);
-
   ripulisci(id, (string) PERCORSO_BASE_DEFAULT);
-  exit(0);
+  exit(0); //mi chiudo
 
 }
 
 //funzione per gestire l'aggiornamento per gli interruttori
-void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* stato, boolean* apri, boolean* chiudi){
+void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* stato){
 
   //recupero i registri
   registro* tempo_utilizzo = registri[0];
@@ -331,34 +349,32 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
 
   boolean res = FALSE;
   char id_comp[20];
-  primo(istruzioni, id_comp, TRUE); //recupero l'id indicato nel messaggio, se sono io faccio robe
+  primo(istruzioni, id_comp, TRUE); //recupero l'id indicato nel messaggio
   int id_ric = atoi(id_comp);
-  // cosa fare se sono io che devo fare le cose, effettivamente
+
+   //se il comando è indirizzato al frigo (l'id è il mio) agisco di conseguenza
   if( id_ric == id || id_ric == ID_UNIVERSALE ){
     char azione[20]; //azione da compiere sul frigo (= OPEN | CLOSE)
     primo(istruzioni, azione, TRUE); //estraggo dalla coda di stringhe l'azione da compiere
 
-    char pos[20];
-    primo(istruzioni, pos, TRUE);
+    char pos[20];  //nuova posizione dell'interruttore interessato
+    primo(istruzioni, pos, TRUE); //recupero dalla coda di stringhe la nuova posizione dell'interruttore
 
-     if(strcmp(azione, "OPEN") == 0 && strcmp(pos, "ON") == 0)//se devo aprire il frigo
+     if(strcmp(azione, "APERTURA") == 0 && strcmp(pos, "ON") == 0)//se devo aprire il frigo
       {
         if(*stato == FALSE)//se il frigo è CHIUSO
         {
-          *apri = TRUE; //"schiaccio" interruttore di apertura
           *stato = TRUE; //"Apro" il frigo
           apertura = (long) time(NULL); //salvo l'ora in cui ho aperto il frigo
           tempo_utilizzo -> da_calcolare = TRUE;
-          *apri = FALSE; //interruttore torna su off
           alarm(chiusura -> valore.integer); //tra x valore del registro chiusura mi arriva un SIGALARM
           res = TRUE;
         }
       }
-      else if(strcmp(azione, "CLOSE") == 0 && strcmp(pos, "ON") == 0)
+      else if(strcmp(azione, "APERTURA") == 0 && strcmp(pos, "OFF") == 0) //se devo chiudere il frigo
       {
         if(*stato == TRUE) //se il frigo è APERTO
         {
-          *chiudi = TRUE; //"schiaccio" l'interruttore per chiudere il frigo
           *stato = FALSE; //"chiudo" il frigo
           //salvo il l'intervallo di tempo che è rimasto aperto
           long ora = (long) time(NULL);
@@ -373,25 +389,26 @@ void gestisci_LABELUP(coda_stringhe* istruzioni, registro* registri[], boolean* 
       temperatura->valore.integer = atoi(pos);  //imposto la temperatura del frigo alla temperatura voluta
       res = TRUE;
     }
-    else if (strcmp(azione, "DELAY") == 0) { // se devo modificare il ritardo
+    else if (strcmp(azione, "DELAY") == 0 && atoi(pos) >= 1) { // se devo modificare il ritardo di chiusura e questo è maggiore di 1
       chiusura -> valore.integer = atoi(pos); //imposto il registro chiusura al valore voluto
       if( chiusura -> valore.integer >= 0 && *stato == TRUE ){
-
-        alarm(0);
-        alarm(chiusura -> valore.integer);
+        alarm(0); //cancella l'alarm di chiusura se inviato precedentemente
+        alarm(chiusura -> valore.integer); //invia un alarm di chiusura al nuovo valore desiderato
         res = TRUE;
 
       }
     }
   }
+
+  //rispondo sulla pipe interna di aver concluso (o non concluso) l'azione desiderata
   if( res == TRUE )
     send_msg(pipe_interna, "TRUE");
   else
     send_msg(pipe_interna, "FALSE");
 }
 
+//funzione per rispondere con lo stato di tutti i registri
 void gestisci_STATUSGET(coda_stringhe* istruzioni, registro* registri[], int numero_registri, boolean* stato){
-//copia-incollata (praticamente) dalla finestra, l'implementazione è la stessa, praticamente, perché rispondo con lo stato di tutti i registri
   char indice_ric[10];
   primo(istruzioni, indice_ric, TRUE); //recupero l'id del dispositivo interessato
   int indice = atoi(indice_ric);
@@ -400,6 +417,7 @@ void gestisci_STATUSGET(coda_stringhe* istruzioni, registro* registri[], int num
   {
     int i = 0;
     char res[1024*2];
+    //preparo il messaggio di risposta in cui indico il mio stato
     sprintf(res, "%s fridge %d %s", GET_STATUS_RESPONSE, id, *stato == TRUE ? "OPEN" : "CLOSE" ); //risponde il proprio stato (aperto o chiuso)
     for( i = 0; i < numero_registri; i++ ) // stampa i registri
     {
@@ -426,16 +444,3 @@ void chiuditi_alarm(int x){
 	alarm(0); //cancella l'alarm di chiusura se inviato precedentemente
 
 }
-
-
-/*Commenti, dubbi, perplessità, note
-------------------------------------------------------TODO-----------------------------------------------------
-Override manuale per il registro di riempimento
-
-------------------------------------------------------Cose implementate ma da controllare:-------------------------------------
-Implementata la funzione  gestisci_STATUSGET (da testare).
-Implementata la funzione  gestisci_LABELUP (da testare).
-Implementata void chiuditi_alarm(int x): chiude (da usare se arriva sigalarm).
-Come gestire il registro temperatura.
-Come gestire il registro di chiusura (delay).
-*/

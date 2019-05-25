@@ -19,6 +19,7 @@ La comunicazione del dispositivo è implementata tramite l'utilizzo di tre pipe,
 - pipe_esterna: pipe sulla quale legge il processo 2 e scrive il processo rappresentante l'interazione esterna. E' la pipe destinata alle comunicazioni con l'umano.
 - pipe <id>: pipe su cui leggono e scrivono i processi 3 e il controllore del dispositivo. E' la pipe destinata alle comunicazioni con il processo padre.
 
+Le pipe sono gestite con l'utilizzo di un semaforo.
 Questo sistema di gestione è comune per tutti le tipologie di dispositivi emulate da questo progetto.
 
 
@@ -105,7 +106,7 @@ Sono presenti delle easter eggs:
 La ricetta "build" compila le componenti e le dipendenze in file .out dei vari dispositivi denominati in inglese (grazie al flag -o).
 
 
-Exit:
+Exit
 Il sistema risponde con una exit(0) quando:
 - viene inviato nella linea di comando della centralina il comando exit, per uscire dal sistema e scollegare tutto
 - la centralina deve generare un dispositivo non direttamente connesso ad essa. Vi è la generazione di un figlio, il quale si auto-rimuove dopo aver generato un nipote
@@ -124,9 +125,20 @@ Il progetto funziona sui seguenti ambienti testati:
 - macOS Mojave (14.1.2)
 - macOS High Sierra (13.4.1)
 
+Librerie incluse
+Nei file di sistema sono state incluse le seguenti librerie:
+- comunicazione.h, tipi_base.h, tipi_componente.h, coda_stringhe.h e lista_stringhe.h: librerie create ad hoc per la gestione della comunicazione tra dispositivi, dei tipi base, dei componenti e la gestione di code e liste di stringhe;
+- <stdio.h> e <stdlib.h>: inclusa per 
+- <sys/types.h> : inclusa per 
+- <sys/stat.h> : inclusa per 
+- <unistd.h> : inclusa per 
+- <signal.h> : inclusa per
+- <string.h> : inclusa per
+- <time.h> : inclusa per
 
 ----------------------------------------------------- [TODO]-----------------------------------------------------------------------
 Controllare la correttezza, la grammatica e la sintassi di questo file.
 Controllare che non ci sia nient'altro da aggiungere in questo file.
-Aggiungere librerie incluse (e perché) 
+Aggiungere il motivo per cui sono state incluse quelle librerie
+
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------
