@@ -313,7 +313,7 @@ void gestisci_list(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
       if( prefix(GET_STATUS_RESPONSE, msg) == TRUE ){
         flag = TRUE;
         stampa_componente_list(msg+13, 0);
-        printf("[STAMPA FATTA]\n");
+        //printf("[STAMPA FATTA]\n");
 
       }
       it = it -> succ;
