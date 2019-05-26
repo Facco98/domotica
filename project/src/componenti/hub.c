@@ -804,6 +804,9 @@ boolean calcola_override(string str, lista_stringhe* tipi_figli, lista_stringhe*
       char precedente[20];
 
       get(confronti, i, precedente);
+      //printf("[TIPO %d]%s\n", id, tipo);
+      //printf("[PREC %d]%s\n", id, precedente);
+      //printf("[CONF %d]%s\n", id, confronto);
       res = strcmp(precedente, confronto) == 0 ? FALSE : TRUE;
 
     }
@@ -865,24 +868,37 @@ void aggiorna_stati(string str){
   char tipo[50];
 
   primo(coda, tipo, FALSE);
-  //se è un hub o un timer deve chiedere anche ai suoi figli
+  //se è un hub o un timer deve controllare anche i figli
   if( strcmp(tipo, "hub") == 0 || strcmp(tipo, "timer") == 0 ){
 
-    decodifica_figli(copia);
-    coda_stringhe* figli = crea_coda_da_stringa(copia, " ");
-    char stato[400];
-    primo(figli, stato, FALSE);
-    primo(figli, stato, FALSE);
-    primo(figli, stato, FALSE);
-    primo(figli, stato, FALSE);
-    while(primo(figli, stato, FALSE) == TRUE )
-      if( strcmp(stato, "]") != 0){
+    char stato[1024];
+    primo(coda, stato, FALSE); // tipo
+    primo(coda, stato, FALSE); // id
+    primo(coda, stato, FALSE); // stato
+    primo(coda, stato, FALSE); // [ BEGIN
+    if( strcmp(tipo, "timer") == 0 ){
+
+      primo(coda, stato, FALSE);
+      primo(coda, stato, FALSE); //figlio del timer.
+
+    }
+    decodifica_figli(stato);
+    coda_stringhe* figli = crea_coda_da_stringa(stato, " ");
+    while( figli -> testa != NULL ){
+      nodo_stringa* it = figli -> testa;
+      strcpy(stato, it -> val);
+      figli -> testa = figli -> testa -> succ;
+      free(it -> val);
+      free(it);
+      if( strcmp(stato, "]") != 0 ){
         decodifica_hub(stato);
         aggiorna_stati(stato);
       }
+    }
+    distruggi(figli);
     distruggi(coda);
 
-  } else{ //altri dispositivi
+  } else{
 
 
     nodo_stringa* it = tipi_figli -> testa;
