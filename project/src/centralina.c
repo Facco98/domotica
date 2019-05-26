@@ -209,7 +209,7 @@ void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* 
       *accesa = strcmp(pos, "ON") == 0 ? TRUE : FALSE; //imposto l'interruttore
 
     }
-    free(separata);
+    //free(separata);
 
   } else if( strcmp(comando, "exit") == 0 ){ //se ricevo comando per chiudere tutto
 
@@ -293,29 +293,30 @@ void gestisci_list(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
   while(it != NULL){
 
     // Chiedo lo stato a ogni mio figlio e lo stampo
+    //printf("[VALIDA]%s", it -> val == NULL ? "NO" : "TRUE");
+
+    //printf("[PIPE]%s\n", it -> val);
     string pipe_figlio = it -> val;
     char messaggio[1024];
     sprintf(messaggio, "%s %d", GET_STATUS, ID_UNIVERSALE);
     send_msg(pipe_figlio, messaggio);
     boolean flag = FALSE;
     char msg[1024];
-    while(flag == FALSE && it != NULL){
-
-      if( read_msg(pipe_figlio, msg, 1023) == FALSE ){
-        nodo_stringa* tmp = it;
-        rimuovi_nodo(lista_pipes, it);
+    if( read_msg(pipe_figlio, msg, 1023) == FALSE ){
+      nodo_stringa* tmp = it;
+      rimuovi_nodo(lista_pipes, it);
+      flag = TRUE;
+      it = it -> succ;
+      free(tmp -> val);
+      free(tmp);
+    } else {
+      if( prefix(GET_STATUS_RESPONSE, msg) == TRUE ){
         flag = TRUE;
-        it = it -> succ;
-        free(tmp -> val);
-        free(tmp);
-      } else {
-        if( prefix(GET_STATUS_RESPONSE, msg) == TRUE ){
-          flag = TRUE;
-          stampa_componente_list(msg+13, 0);
+        stampa_componente_list(msg+13, 0);
+        printf("[STAMPA FATTA]\n");
 
-        }
-        it = it -> succ;
       }
+      it = it -> succ;
     }
   }
 
@@ -339,6 +340,7 @@ void gestisci_list(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
         rimuovi_nodo(lista_pipes, it);
         flag = TRUE;
         it = it -> succ;
+        free(tmp -> val);
         free(tmp);
       } else {
         if( prefix(GET_STATUS_RESPONSE, msg) == TRUE ){
@@ -677,7 +679,7 @@ void stampa_componente_list(string msg, int indent){
 
 
   }
-  else { //qualsiasi altro dispositivo
+  else{ //qualsiasi altro dispositivo
     //restituisco lo stato
     char id[20], stato[20];
     primo(coda, id, FALSE);
