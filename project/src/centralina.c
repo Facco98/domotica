@@ -10,28 +10,28 @@
 #include "strutture_dati/lista_stringhe.h"
 
 //Funzione che gestisce i comandi da tastiera.
-void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* lista_pipes, lista_stringhe* da_creare, lista_stringhe* dispositivi_ammessi, boolean* stato);
+void gestisci_comando( coda_stringhe* separata, string comando, boolean* accesa);
 
 //funzione che gestisce il comano list(elenco di dispositivi disponibili)
-void gestisci_list( coda_stringhe* separata, lista_stringhe* lista_pipes, lista_stringhe* da_creare);
+void gestisci_list( coda_stringhe* separata);
 
 //funzione che gestisce il comando del (rimozione di un dispositivo)
-void gestisci_del( coda_stringhe* separata, lista_stringhe* lista_pipes, lista_stringhe* da_creare);
+void gestisci_del( coda_stringhe* separata);
 
 //funzione che gestisce il comando exit (chiudere tutto)
-void gestisci_exit(coda_stringhe* separata,lista_stringhe* lista_pipes, lista_stringhe* da_creare);
+void gestisci_exit(coda_stringhe* separata);
 
 //funzione che gestisce il comando info (stato di un dispositivo specifico)
-void gestisci_info( coda_stringhe* separata, lista_stringhe* lista_pipes);
+void gestisci_info( coda_stringhe* separata);
 
 //funzione che gestisce il comando switch (cambiare lo stato di un dispositivo)
-void gestisci_switch( coda_stringhe* separata, lista_stringhe* lista_pipes);
+void gestisci_switch( coda_stringhe* separata);
 
 //funzione che gestisce comando add (aggiunge un dispositivo)
-void gestisci_add(coda_stringhe* separate, lista_stringhe* lista_figli, lista_stringhe* da_creare, lista_stringhe* dispositivi_ammessi);
+void gestisci_add(coda_stringhe* separate);
 
 //funzione che gestisce il comando link (collegar eun dispositivo ad un altro)
-void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_stringhe* da_creare);
+void gestisci_link(coda_stringhe* separata);
 
 //funzione per gestire la stampa dei componenti per il comando list
 void stampa_componente_list(string msg, int indent);
@@ -49,7 +49,7 @@ void decodifica_controllo( string str );
 void decodifica_figli( string tmp );
 
 //funzione per creare un dispositivo non direttamente connesso alla centralina
-void crea_dispositivo_non_connesso(string tipo, lista_stringhe* lista_pipes, lista_stringhe* da_creare);
+void crea_dispositivo_non_connesso(string tipo);
 
 //funzione per creare i processi che costituiscono la centralina
 void crea_processi_supporto();
@@ -183,7 +183,7 @@ void crea_processi_supporto(){
         primo(coda, comando, FALSE);
 
         //gestisce il comando appena ricevuto
-        gestisci_comando(coda, comando, lista_figli, da_creare, dispositivi_ammessi, &accesa);
+        gestisci_comando(coda, comando, &accesa);
 
       }
 
@@ -193,7 +193,7 @@ void crea_processi_supporto(){
 
 }
 
-void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* lista_pipes, lista_stringhe* da_creare, lista_stringhe* dispositivi_ammessi, boolean* accesa){
+void gestisci_comando( coda_stringhe* separata, string comando, boolean* accesa){
   //gestisce i comandi ricevuti
   if( strcmp(comando, "LABELUP") == 0 ){ //aggiornamento interruttore
 
@@ -213,7 +213,7 @@ void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* 
 
   } else if( strcmp(comando, "exit") == 0 ){ //se ricevo comando per chiudere tutto
 
-    gestisci_exit(separata, lista_pipes, da_creare);
+    gestisci_exit(separata);
 
   } else if( *accesa == FALSE ){ //se la centralina è spenta, informo l'utente
     printf("La centralina è spenta\n");
@@ -232,40 +232,40 @@ void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* 
 
   } else if( strcmp(comando, "list") == 0 ){ //chiede lista dei dispoditivi disponibili
 
-    gestisci_list(separata, lista_pipes, da_creare);
+    gestisci_list(separata);
 
   } else if( strcmp(comando, "add") == 0 ){ //aggiunge un dispositivo
     //controllo di avere abbastanza argomenti
     if( separata -> n >= 1 )
-      gestisci_add(separata, lista_pipes, da_creare, dispositivi_ammessi);
+      gestisci_add(separata);
     else
       printf("Argomento mancante\n");
 
   } else if( strcmp(comando, "link") == 0 ){ //collega due dispositivi
     //controllo di avere abbastanza argomenti
     if( separata -> n >= 3 )
-      gestisci_link(separata, lista_pipes, da_creare);
+      gestisci_link(separata);
     else
       printf("Argomento mancante\n");
 
   } else if( strcmp( comando, "del") == 0 ){ //rimuove un dispositivo
     //controllo di avere abbastanza argomenti
     if( separata -> n >= 1 )
-      gestisci_del(separata, lista_pipes, da_creare);
+      gestisci_del(separata);
     else
       printf("Argomento mancante\n");
 
   } else if( strcmp(comando, "switch") == 0 ){ //aggiornamento di un interruttore
     //controllo di avere abbastanza argomenti
     if( separata -> n >= 3 )
-      gestisci_switch(separata, lista_pipes);
+      gestisci_switch(separata);
     else
       printf("Argomento mancante\n");
 
   } else if( strcmp(comando, "info") == 0 ){ //richiede lo stato di un particolare dispositivo
     //controllo di avere abbastanza argomenti
     if( separata ->n >= 1 )
-      gestisci_info(separata, lista_pipes);
+      gestisci_info(separata);
     else
       printf("Argomento mancante");
 
@@ -286,16 +286,16 @@ boolean calcola_registro_stringa( const registro* r, string output){
   return TRUE;
 }
 
-void gestisci_list(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_stringhe* da_creare){
+void gestisci_list(coda_stringhe* separata){
 
   //
-  nodo_stringa* it = lista_pipes -> testa;
+  nodo_stringa* it = lista_figli -> testa;
   while(it != NULL){
 
     // Chiedo lo stato a ogni mio figlio e lo stampo
-    //printf("[VALIDA]%s\n", it -> val == NULL ? "NO" : "TRUE");
+    ////printf("[VALIDA]%s\n", it -> val == NULL ? "NO" : "TRUE");
 
-    //printf("[PIPE]%s\n", it -> val);
+    ////printf("[PIPE]%s\n", it -> val);
     string pipe_figlio = it -> val;
     char messaggio[1024];
     sprintf(messaggio, "%s %d", GET_STATUS, ID_UNIVERSALE);
@@ -304,7 +304,7 @@ void gestisci_list(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
     char msg[1024];
     if( read_msg(pipe_figlio, msg, 1023) == FALSE ){
       nodo_stringa* tmp = it;
-      rimuovi_nodo(lista_pipes, it);
+      rimuovi_nodo(lista_figli, it);
       flag = TRUE;
       it = it -> succ;
       free(tmp -> val);
@@ -313,7 +313,7 @@ void gestisci_list(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
       if( prefix(GET_STATUS_RESPONSE, msg) == TRUE ){
         flag = TRUE;
         stampa_componente_list(msg+13, 0);
-        //printf("[STAMPA FATTA]\n");
+        ////printf("[STAMPA FATTA]\n");
 
       }
       it = it -> succ;
@@ -337,7 +337,7 @@ void gestisci_list(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
 
       if( read_msg(pipe_figlio, msg, 1023) == FALSE ){
         nodo_stringa* tmp = it;
-        rimuovi_nodo(lista_pipes, it);
+        rimuovi_nodo(lista_figli, it);
         flag = TRUE;
         it = it -> succ;
         free(tmp -> val);
@@ -354,7 +354,7 @@ void gestisci_list(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
   }
 }
 
-void gestisci_del( coda_stringhe* separata, lista_stringhe* lista_pipes, lista_stringhe* da_creare){
+void gestisci_del( coda_stringhe* separata){
   //gestisce la rimozione di un dispositivo
 
   char id_ric[20];
@@ -370,17 +370,17 @@ void gestisci_del( coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
   char remove_msg[200], confirm_msg[50];
   sprintf(remove_msg, "%s %s", REMOVE, id_ric);
   sprintf(confirm_msg, "%s %s", "CONFIRM", id_ric);
-  nodo_stringa* it = lista_pipes -> testa;
+  nodo_stringa* it = lista_figli -> testa;
 
   while( it != NULL ){
 
-    //printf("[HUB PIPE]%s\n", it -> val);
+    ////printf("[HUB PIPE]%s\n", it -> val);
 
     char res[10];
     if( send_msg( it -> val, confirm_msg ) == FALSE || read_msg(it -> val, res, 9) == FALSE ){
 
       nodo_stringa* l = it;
-      rimuovi_nodo(lista_pipes, it);
+      rimuovi_nodo(lista_figli, it);
       it = it -> succ;
       free(l -> val);
       free(l);
@@ -390,13 +390,13 @@ void gestisci_del( coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
       // Se il dispotivio è direttamente mio figlio lo elimino dalla lista delle pipe.
       send_msg(it -> val, remove_msg);
       nodo_stringa* l = it;
-      rimuovi_nodo(lista_pipes, it);
+      rimuovi_nodo(lista_figli, it);
       it = it -> succ;
       free( l -> val);
       free(l);
 
     } else{
-      //printf("[RES-CONFIRM]%s\n", res);
+      ////printf("[RES-CONFIRM]%s\n", res);
       send_msg(it -> val, remove_msg);
       read_msg(it -> val, res, 9);
       it = it -> succ;
@@ -436,7 +436,7 @@ void gestisci_del( coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
 
 }
 
-void gestisci_switch(coda_stringhe* separata, lista_stringhe* lista_pipes){
+void gestisci_switch(coda_stringhe* separata){
   //gestisce l'aggiornamento di un interruttore
   char label[20], pos[20];
   primo(separata, label, TRUE); //recupera il nome dell'interruttore
@@ -457,7 +457,7 @@ void gestisci_switch(coda_stringhe* separata, lista_stringhe* lista_pipes){
   }
 
   //invia ad ogni figlio il messaggio per aggiornare l'interruttore
-  nodo_stringa* it = lista_pipes -> testa;
+  nodo_stringa* it = lista_figli -> testa;
 
   while( it != NULL){
 
@@ -468,7 +468,7 @@ void gestisci_switch(coda_stringhe* separata, lista_stringhe* lista_pipes){
     if( send_msg(pipe, msg ) == FALSE || read_msg(pipe, res, 9) == FALSE ){
 
       nodo_stringa* tmp = it;
-      rimuovi_nodo(lista_pipes, it);
+      rimuovi_nodo(lista_figli, it);
       it = it -> succ;
       free(tmp -> val);
       free(tmp);
@@ -480,7 +480,7 @@ void gestisci_switch(coda_stringhe* separata, lista_stringhe* lista_pipes){
 
 }
 
-void gestisci_exit(coda_stringhe* separata,lista_stringhe* lista_pipes, lista_stringhe* da_creare){
+void gestisci_exit(coda_stringhe* separata){
   //se riceve messaggio di chiudere tutto, chiama la funzione termina
   //che manda ad ogni figlio il messaggio di morire
 
@@ -488,7 +488,7 @@ void gestisci_exit(coda_stringhe* separata,lista_stringhe* lista_pipes, lista_st
 
 }
 
-void gestisci_info(coda_stringhe* separata, lista_stringhe* lista_pipes){
+void gestisci_info(coda_stringhe* separata){
   //se riceve comando info
   char tmp[20];
   primo(separata, tmp, TRUE); //recupera l'id del componente di cui si richiede la info
@@ -503,7 +503,7 @@ void gestisci_info(coda_stringhe* separata, lista_stringhe* lista_pipes){
 
 
   char msg[200];
-  nodo_stringa* it = lista_pipes -> testa;
+  nodo_stringa* it = lista_figli -> testa;
   boolean flag = FALSE;
   while( it != NULL && flag == FALSE ){
 
@@ -514,7 +514,7 @@ void gestisci_info(coda_stringhe* separata, lista_stringhe* lista_pipes){
     if( send_msg(pipe, msg)==FALSE || read_msg(pipe, msg, 199)==FALSE ){
 
       nodo_stringa* l = it;
-      rimuovi_nodo(lista_pipes, it);
+      rimuovi_nodo(lista_figli, it);
       it = it -> succ;
       free(l-> val);
       free(l);
@@ -544,7 +544,7 @@ void gestisci_info(coda_stringhe* separata, lista_stringhe* lista_pipes){
       if( send_msg(pipe, msg)==FALSE || read_msg(pipe, msg, 199)==FALSE ){
 
         nodo_stringa* l = it;
-        rimuovi_nodo(lista_pipes, it);
+        rimuovi_nodo(lista_figli, it);
         it = it -> succ;
         free(l-> val);
         free(l);
@@ -567,7 +567,7 @@ void gestisci_info(coda_stringhe* separata, lista_stringhe* lista_pipes){
     sprintf(msg, "%s %d", GET_STATUS, id_comp);
     string pipe = it -> val;
     if( send_msg(pipe, msg) == FALSE || read_msg(pipe, msg, 199) == FALSE ){
-      rimuovi_nodo(lista_pipes, it);
+      rimuovi_nodo(lista_figli, it);
       free(it -> val);
       free(it);
     } else{
@@ -582,8 +582,7 @@ void gestisci_info(coda_stringhe* separata, lista_stringhe* lista_pipes){
 
 }
 
-void gestisci_add(coda_stringhe* separata, lista_stringhe* lista_figli,
-  lista_stringhe* da_creare, lista_stringhe* dispositivi_ammessi){
+void gestisci_add(coda_stringhe* separata){
     //gestisce l'aggiunta di un nuovo dispositivo
   char tipo[20];
   primo(separata, tipo, TRUE); //recupero il tipo di dispositivo
@@ -599,7 +598,7 @@ void gestisci_add(coda_stringhe* separata, lista_stringhe* lista_figli,
 
   if( ammesso == TRUE ){ //un avolta trovato il dispositivo
     //creo il dispositivo
-    crea_dispositivo_non_connesso(tipo, lista_figli, da_creare);
+    crea_dispositivo_non_connesso(tipo);
     printf("Aggiunto %s con id %d\n", tipo, id_successivo-1 );
 
   } else { //se il dispositivo non è valido
@@ -612,7 +611,7 @@ void gestisci_add(coda_stringhe* separata, lista_stringhe* lista_figli,
 
 void stampa_componente_list(string msg, int indent){
 
-  //printf("[MSG]%s\n", msg);
+  ////printf("[MSG]%s\n", msg);
   coda_stringhe* coda = crea_coda_da_stringa(msg, " "); //recupero il messaggio
   char tipo[20];
   primo(coda, tipo, FALSE); //recupero il tipo
@@ -694,7 +693,7 @@ void stampa_componente_list(string msg, int indent){
 
 void stampa_componente_info(string msg, int indent){
   //gesisce la stampa del comando info
-  //printf("[MSG]%s\n", msg);
+  ////printf("[MSG]%s\n", msg);
   coda_stringhe* coda = crea_coda_da_stringa(msg, " "); //recupero il messaggio
   char tipo[20];
   primo(coda, tipo, TRUE); //recupero il tipo del dispositivo scelto
@@ -810,7 +809,7 @@ boolean suffix(const char *str, const char *suffix){
     return FALSE;
 }
 
-void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_stringhe* da_creare){
+void gestisci_link(coda_stringhe* separata){
 
 
   // Recupero l'id del padre e del figlio.
@@ -827,7 +826,7 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
   }
 
   // Cerco la pipe per comunicare col padre
-  nodo_stringa* pipe_padre = lista_pipes -> testa;
+  nodo_stringa* pipe_padre = lista_figli -> testa;
   char msg[2000];
   char status[1024];
   sprintf(msg, "%s %s", ID, id_padre);
@@ -839,7 +838,7 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
     if( send_msg(pipe, msg) == FALSE || read_msg(pipe, res, 9) == FALSE ){
 
       nodo_stringa* l = pipe_padre;
-      rimuovi_nodo(lista_pipes, pipe_padre);
+      rimuovi_nodo(lista_figli, pipe_padre);
       pipe_padre = pipe_padre -> succ;
       free(l -> val);
       free(l);
@@ -914,7 +913,7 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
   if( trovato == FALSE ){
 
     // Se non lo ho trovato lo cerco nell'albero.
-    pipe_figlio = lista_pipes -> testa;
+    pipe_figlio = lista_figli -> testa;
     trovato = FALSE;
     sprintf(msg, "%s %s", ID, id_componente);
     while( pipe_figlio != NULL && trovato == FALSE ){
@@ -924,7 +923,7 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
       if( send_msg(pipe, msg) == FALSE || read_msg(pipe, res, 9) == FALSE ){
 
         nodo_stringa* l = pipe_figlio;
-        rimuovi_nodo(lista_pipes, pipe_figlio);
+        rimuovi_nodo(lista_figli, pipe_figlio);
         pipe_figlio = pipe_figlio -> succ;
         free(l -> val);
         free(l);
@@ -964,7 +963,7 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
     read_msg(pipe_figlio -> val, msg, 199);
     if( strcmp(msg, "TRUE") == 0 ){
 
-      rimuovi_nodo(lista_pipes, pipe_figlio);
+      rimuovi_nodo(lista_figli, pipe_figlio);
       da_rimuovere = TRUE;
     }
 
@@ -975,6 +974,27 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
   if( da_rimuovere == FALSE && nuovo == FALSE ){
     char res[10];
     read_msg(pipe_figlio -> val, res, 9);
+  } else if( da_rimuovere == TRUE ){
+
+    //printf("[DA RIMUOVERE] %s\n", pipe_figlio -> val);
+    //printf("[S]%s\n", pipe_figlio -> prec -> succ -> val);
+
+    nodo_stringa* it = lista_figli -> testa;
+    while( it != NULL && it -> succ != NULL){
+
+      //printf("[LISTA]%s\n", it -> val);
+      if( strcmp(it -> succ -> val, pipe_figlio -> val) == 0 ){
+        it -> succ = it -> succ -> succ;
+
+      }
+      it = it -> succ;
+
+
+
+    }
+    free(pipe_figlio -> val);
+    free(pipe_figlio);
+
   }
 
   // Se sono il figlio.
@@ -991,7 +1011,7 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
       // Aggiungo la pipe del nuovo figlio.
       char tmp[50];
       sprintf(tmp, "%s/%s", (string) PERCORSO_BASE_DEFAULT, id_componente);
-      append(lista_pipes, tmp);
+      append(lista_figli, tmp);
 
     }
 
@@ -1000,10 +1020,6 @@ void gestisci_link(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
     // Mando al nuovo padre di generare il figlio.
     sprintf(msg, "%s %s %s", "SPAWN", id_padre, status);
     send_msg(pipe_padre -> val, msg);
-    if( da_rimuovere == TRUE ){
-      free(pipe_figlio -> val);
-      free(pipe_figlio);
-    }
 
   }
 
@@ -1084,7 +1100,7 @@ void decodifica_controllo(string tmp){
 }
 
 
-void crea_dispositivo_non_connesso(string tipo, lista_stringhe* lista_pipes, lista_stringhe* da_creare){
+void crea_dispositivo_non_connesso(string tipo){
   //crea un dispositivo non direttamente connesso alla centraina
   int id_dispositivo = id_successivo++;
   pid_t pid = fork(); //genero un processo
