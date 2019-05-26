@@ -466,6 +466,10 @@ void gestisci_REMOVE(coda_stringhe* istruzioni)
       {
         //elimino mio figlio
         strcpy(pipe_figlio, "");
+      } else {
+
+        read_msg(pipe_figlio, res, 19);
+
       }
 
     }

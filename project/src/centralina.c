@@ -293,7 +293,7 @@ void gestisci_list(coda_stringhe* separata, lista_stringhe* lista_pipes, lista_s
   while(it != NULL){
 
     // Chiedo lo stato a ogni mio figlio e lo stampo
-    //printf("[VALIDA]%s", it -> val == NULL ? "NO" : "TRUE");
+    //printf("[VALIDA]%s\n", it -> val == NULL ? "NO" : "TRUE");
 
     //printf("[PIPE]%s\n", it -> val);
     string pipe_figlio = it -> val;
