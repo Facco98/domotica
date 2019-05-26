@@ -272,8 +272,9 @@ void gestisci_comando( coda_stringhe* separata, string comando, lista_stringhe* 
   } else { //qualsiasi altro comando non previsto
 
     printf("Comando sconosciuto: %s\n", comando);
-    free(separata);
+
   }
+  distruggi(separata);
 
 }
 
