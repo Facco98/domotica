@@ -995,6 +995,24 @@ void gestisci_link(coda_stringhe* separata){
     free(pipe_figlio -> val);
     free(pipe_figlio);
 
+  } else if( nuovo == TRUE ){
+
+    nodo_stringa* it = da_creare -> testa;
+    while( it != NULL && it -> succ != NULL){
+
+      //printf("[LISTA]%s\n", it -> val);
+      if( strcmp(it -> succ -> val, pipe_figlio -> val) == 0 ){
+        it -> succ = it -> succ -> succ;
+
+      }
+      it = it -> succ;
+
+
+
+    }
+    free(pipe_figlio -> val);
+    free(pipe_figlio);
+
   }
 
   // Se sono il figlio.
